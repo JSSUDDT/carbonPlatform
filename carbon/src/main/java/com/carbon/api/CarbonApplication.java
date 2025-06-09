@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import java.util.TimeZone;
 
 @SpringBootApplication
-@EntityScan(basePackages = "com.carbon.api.entity")
+@EntityScan(basePackages = "com.carbon.api.entity") thi si s a test on 0609
 public class CarbonApplication {
 
     public static void main(String[] args) {
