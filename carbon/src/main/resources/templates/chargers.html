@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="#{chargers.title}">充電樁管理 - 碳權平台</title>
+    <!-- Bootstrap 4 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
+    <!-- 自定義CSS -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        /* 彩色國旗圖標 */
+        .flag-icon {
+            width: 20px;
+            height: 15px;
+            margin-right: 8px;
+            vertical-align: middle;
+            border-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        /* 操作按钮样式 */
+        .action-buttons {
+            white-space: nowrap;
+        }
+        
+        .action-buttons .btn {
+            margin-right: 5px;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+        <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="#">
+            <i class="fas fa-leaf mr-2"></i><span th:text="#{app.name}">碳權平台</span>
+        </a>
+        <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-toggle="collapse" data-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <ul class="navbar-nav px-3 ml-auto d-flex flex-row">
+            <!-- 語言選擇器 -->
+            <li class="nav-item dropdown mr-3">
+                <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-globe-asia mr-2"></i><span th:text="#{language.select}">語言</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="languageDropdown">
+                    <button class="dropdown-item language-switch-btn" data-lang="en">
+                        <img src="https://cdn.jsdelivr.net/npm/flag-icon-css@3.5.0/flags/4x3/us.svg" class="flag-icon" alt="USA flag">
+                        <span th:text="#{language.en}">English</span>
+                    </button>
+                    <button class="dropdown-item language-switch-btn" data-lang="zh_TW">
+                        <img src="https://cdn.jsdelivr.net/npm/flag-icon-css@3.5.0/flags/4x3/tw.svg" class="flag-icon" alt="Taiwan flag">
+                        <span th:text="#{language.zh}">繁體中文</span>
+                    </button>
+                </div>
+            </li>
+            <li class="nav-item text-nowrap">
+                <a class="nav-link" href="#" onclick="logout()">
+                    <i class="fas fa-sign-out-alt mr-2"></i><span th:text="#{nav.logout}">退出</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 引入側邊欄組件 -->
+            <div th:replace="sidebar :: sidebar"></div>
+            
+            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        <i class="fas fa-plug text-primary mr-2"></i>
+                        <span th:text="#{chargers.title}">充電樁管理</span>
+                    </h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="input-group mr-2">
+                            <input type="text" class="form-control" id="searchInput" th:placeholder="#{chargers.search}" placeholder="搜索充電樁...">
+                        </div>
+                        <button class="btn btn-outline-secondary" id="refreshBtn">
+                            <i class="fas fa-sync-alt mr-1"></i><span th:text="#{chargers.refresh}">刷新</span>
+                        </button>
+                        <select class="custom-select" id="statusFilter" style="width: auto;">
+                            <option value="" th:text="#{chargers.allStatus}">全部狀態</option>
+                            <option value="1" th:text="#{chargers.enabled}">啟用</option>
+                            <option value="0" th:text="#{chargers.disabled}">禁用</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="alert alert-primary eco-info-box p-3 mb-4">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <i class="fas fa-info-circle fa-2x text-primary"></i>
+                        </div>
+                        <div class="col">
+                            <h5 class="m-0" th:text="#{sidebar.chargers}">充電樁</h5>
+                            <p class="small m-0" th:text="#{chargers.info}">查看和管理所有充電樁信息，支持按名稱搜索、充電站和狀態篩選。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+                <div id="successAlert" class="alert alert-success d-none" role="alert"></div>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="chargersTable">
+                        <thead>
+                            <tr>
+                                <th th:text="#{chargers.id}">充電樁ID</th>
+                                <th th:text="#{chargers.connectId}">連接ID</th>
+                                <th th:text="#{chargers.stationId}">充電站ID</th>
+                                <th th:text="#{stations.name}">充電站名稱</th>
+                                <th th:text="#{chargers.vendorId}">廠商ID</th>
+                                <th th:text="#{chargers.type}">充電樁類型</th>
+                                <th th:text="#{chargers.brand}">充電樁品牌</th>
+                                <th th:text="#{chargers.kw}">充電功率(kW)</th>
+                                <th th:text="#{chargers.a}">充電電流(A)</th>
+                                <th th:text="#{chargers.v}">充電電壓(V)</th>
+                                <th th:text="#{chargers.status}">狀態</th>
+                                <th th:text="#{chargers.createTime}">創建時間</th>
+                                <th th:text="#{chargers.updateTime}">更新時間</th>
+                                <th id="actionsHeader" style="display: none;" th:text="#{chargers.actions}">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="chargersTableBody">
+                            <!-- 數據將通過JavaScript加載 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="loadingSpinner" class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only" th:text="#{message.loading}">加載中...</span>
+                    </div>
+                    <p class="mt-2" th:text="#{chargers.loading}">正在加載充電樁數據，請稍候...</p>
+                </div>
+                
+                <div class="card mt-4 bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-bolt text-warning mr-2"></i><span th:text="#{chargers.eco}">節能與可持續發展</span>
+                        </h5>
+                        <p class="card-text" th:text="#{chargers.ecoDesc}">
+                            高效的充電樁設計和管理可以減少能源損耗，提高充電效率，為電動汽車的普及做出貢獻，是實現綠色交通目標的關鍵基礎設施。
+                        </p>
+                    </div>
+                </div>
+            </main>
+        </div>
+        
+        <!-- 页脚 -->
+        <footer class="footer mt-auto py-3 bg-light">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-6">
+                        <span class="text-muted" th:text="#{footer.copyright}">© 2023 碳權平台. 保留所有權利.</span>
+                    </div>
+                    <div class="col-md-6 text-md-right">
+                        <span class="text-muted">
+                            <span th:text="#{footer.developed}">開發商</span>: 
+                            <span th:text="#{footer.company.en}">gochabar</span> / 
+                            <span th:text="#{footer.company.zh}">充壩</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 充電樁編輯模態框 -->
+    <div class="modal fade" id="chargerModal" tabindex="-1" role="dialog" aria-labelledby="chargerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="chargerModalLabel">新增充電樁</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="chargerForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="chargerId">充電樁ID <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="chargerId" name="chargerId" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="connectId">連接ID <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="connectId" name="connectId" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="vendorId">廠商ID <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="vendorId" name="vendorId" required>
+                                        <option value="">請選擇廠商</option>
+                                        <!-- 廠商選項由JS動態加載 -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="stationId">充電站 <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="stationId" name="stationId" required>
+                                        <option value="">請選擇充電站</option>
+                                        <!-- 充電站選項由JS動態加載，顯示名稱（ID） -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="chargerType">充電樁類型</label>
+                                    <select class="form-control" id="chargerType" name="chargerType">
+                                        <option value="">請選擇</option>
+                                        <option value="AC">交流充電樁</option>
+                                        <option value="DC">直流充電樁</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="chargerBrand">充電樁品牌</label>
+                                    <input type="text" class="form-control" id="chargerBrand" name="chargerBrand">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="chargerKw">充電功率(kW)</label>
+                                    <input type="text" class="form-control" id="chargerKw" name="chargerKw" placeholder="例如: 7.2">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="chargerA">充電電流(A)</label>
+                                    <input type="text" class="form-control" id="chargerA" name="chargerA" placeholder="例如: 32">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="chargerV">充電電壓(V)</label>
+                                    <input type="text" class="form-control" id="chargerV" name="chargerV" placeholder="例如: 220">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="chargerStatus">狀態</label>
+                                    <select class="form-control" id="chargerStatus" name="chargerStatus">
+                                        <option value="">請選擇</option>
+                                        <option value="1">啟用</option>
+                                        <option value="0">禁用</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveChargerBtn">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 刪除確認模態框 -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteConfirmModalLabel">確認刪除</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>您確定要刪除充電樁 <strong id="deleteChargerName"></strong> 嗎？</p>
+                    <p class="text-danger">此操作無法撤銷！</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">確認刪除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery, Bootstrap, DataTables -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+    <!-- 多語言支持 -->
+    <script th:src="@{/js/locale.js}"></script>
+    <!-- 自定義JavaScript -->
+    <script th:src="@{/js/common.js}"></script>
+    <script>
+        let dataTable;
+        let chargers = [];
+        let stations = [];
+        let vendors = [];
+        let currentUserRole = null;
+        let isEditMode = false;
+        let editingChargerId = null;
+        
+        // 初始化DataTable
+        function initDataTable() {
+            if (dataTable) {
+                dataTable.destroy();
+            }
+            
+            // 獲取當前語言
+            const currentLang = getCurrentLanguage();
+            
+            // 設置語言檔案路徑
+            let languageUrl = '/js/datatables/i18n/Chinese-traditional.json';
+            if (currentLang === 'en') {
+                languageUrl = '/js/datatables/i18n/English.json';
+            }
+            
+            console.log('Initializing DataTable with role:', currentUserRole);
+            
+            // 根據用戶角色決定是否顯示操作列
+            let columns = [
+                { data: 'chargerId' },
+                { data: 'connectId' },
+                { data: 'stationId' },
+                { data: 'stationName' },
+                { data: 'vendorId' },
+                { data: 'chargerType' },
+                { data: 'chargerBrand' },
+                { data: 'chargerKw' },
+                { data: 'chargerA' },
+                { data: 'chargerV' },
+                { 
+                    data: 'chargerStatus',
+                    render: function(data) {
+                        if (data === '1') {
+                            return `<span class="badge badge-success">${currentLang === 'en' ? 'Enabled' : '啟用'}</span>`;
+                        } else if (data === '0') {
+                            return `<span class="badge badge-secondary">${currentLang === 'en' ? 'Disabled' : '禁用'}</span>`;
+                        }
+                        return '';
+                    }
+                },
+                { data: 'createTime' },
+                { data: 'updateTime' }
+            ];
+            
+            // 如果是管理員，添加操作列
+            if (currentUserRole === 'ROLE_ADMIN') {
+                console.log('Adding action column for admin');
+                columns.push({
+                    data: null,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return `
+                            <div class="action-buttons">
+                                <button class="btn btn-sm btn-outline-primary edit-btn" data-charger-id="${row.chargerId}" title="${currentLang === 'en' ? 'Edit' : '編輯'}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger delete-btn" data-charger-id="${row.chargerId}" data-charger-name="${row.chargerId}" title="${currentLang === 'en' ? 'Delete' : '刪除'}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                    }
+                });
+            }
+            
+            dataTable = $('#chargersTable').DataTable({
+                data: chargers,
+                columns: columns,
+                language: {
+                    url: languageUrl
+                },
+                responsive: true,
+                pageLength: 10,
+                order: [0, 'asc'],
+                drawCallback: function() {
+                    console.log('DataTable draw callback, role:', currentUserRole);
+                    // 綁定編輯按鈕事件
+                    $('.edit-btn').off('click').on('click', function() {
+                        const chargerId = $(this).data('charger-id');
+                        editCharger(chargerId);
+                    });
+                    
+                    // 綁定刪除按鈕事件
+                    $('.delete-btn').off('click').on('click', function() {
+                        const chargerId = $(this).data('charger-id');
+                        const chargerName = $(this).data('charger-name');
+                        showDeleteConfirm(chargerId, chargerName);
+                    });
+                }
+            });
+        }
+        
+        // 檢查用戶角色
+        async function checkUserRole() {
+            try {
+                const response = await apiRequest('/UserRole');
+                console.log('UserRole response:', response);
+                
+                if (response && response.resultMsg) {
+                    currentUserRole = response.resultMsg;
+                    console.log('Current user role:', currentUserRole);
+                    
+                    // 如果是管理員，顯示管理功能
+                    if (currentUserRole === 'ROLE_ADMIN') {
+                        console.log('Showing admin features');
+                        $('#addChargerBtn').show();
+                        $('#actionsHeader').show();
+                        await loadStations(); // 加載充電站列表
+                    } else {
+                        console.log('Hiding admin features');
+                        $('#addChargerBtn').hide();
+                        $('#actionsHeader').hide();
+                    }
+                } else {
+                    console.log('Invalid role response:', response);
+                }
+            } catch (error) {
+                console.error('檢查用戶角色失敗:', error);
+                showAlert('error', '檢查用戶角色失敗: ' + error.message);
+            }
+        }
+        
+        // 加載充電站列表
+        async function loadStations() {
+            try {
+            const response = await apiRequest('/StationInfo');
+            
+            if (response) {
+                stations = Array.isArray(response) ? response : [];
+                    
+                    // 填充充電站下拉選單
+                    const stationSelect = $('#stationFilter');
+                    stationSelect.empty().append(`<option value="">${getCurrentLanguage() === 'en' ? 'All Stations' : '全部充電站'}</option>`);
+                    stations.forEach(station => {
+                        stationSelect.append(`<option value="${station.stationId}">${station.stationId}</option>`);
+                    });
+                }
+            } catch (error) {
+                console.error('加載充電站列表失敗:', error);
+            }
+        }
+        
+        // 加載充電樁數據
+        async function loadChargers() {
+            try {
+            showLoading();
+            
+            let endpoint = '/ChargerInfo';
+                const params = new URLSearchParams();
+                
+                // 添加搜索參數
+                const search = $('#searchInput').val().trim();
+                if (search) {
+                    params.append('search', search);
+                }
+                
+                // 添加充電站篩選參數
+                const stationId = $('#stationFilter').val();
+                if (stationId) {
+                    params.append('stationId', stationId);
+                }
+                
+                // 添加狀態篩選參數
+                const status = $('#statusFilter').val();
+            if (status) {
+                    params.append('status', status);
+            }
+            
+                if (params.toString()) {
+                    endpoint += '?' + params.toString();
+            }
+            
+            const response = await apiRequest(endpoint);
+            
+            if (response) {
+                chargers = Array.isArray(response) ? response : [];
+                    initDataTable();
+                    hideAlert();
+            } else {
+                    showAlert('error', '加載充電樁數據失敗');
+                }
+            } catch (error) {
+                console.error('加載充電樁數據失敗:', error);
+                showAlert('error', '加載充電樁數據失敗: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // 加載廠商列表（用於表單）
+        async function loadVendors() {
+            try {
+                const response = await apiRequest('/VendorInfo');
+                if (response) {
+                    vendors = Array.isArray(response) ? response : [];
+                    const vendorSelect = $('#vendorId');
+                    vendorSelect.empty().append('<option value="">請選擇廠商</option>');
+                    vendors.forEach(vendor => {
+                        vendorSelect.append(`<option value="${vendor.vendorId}">${vendor.vendorId}</option>`);
+                    });
+                }
+            } catch (error) {
+                console.error('加載廠商列表失敗:', error);
+            }
+        }
+
+        // 加載充電站列表（用於表單）
+        async function loadStationsForForm() {
+            try {
+                const response = await apiRequest('/StationInfo');
+                if (response) {
+                    stations = Array.isArray(response) ? response : [];
+                    const stationSelect = $('#stationId');
+                    stationSelect.empty().append('<option value="">請選擇充電站</option>');
+                    stations.forEach(station => {
+                        const display = station.stationName ? `${station.stationName}（${station.stationId}）` : station.stationId;
+                        stationSelect.append(`<option value="${station.stationId}">${display}</option>`);
+                    });
+                }
+            } catch (error) {
+                console.error('加載充電站列表失敗:', error);
+            }
+        }
+
+        // 新增充電樁
+        async function addCharger() {
+            isEditMode = false;
+            editingChargerId = null;
+            $('#chargerModalLabel').text(getCurrentLanguage() === 'en' ? 'Add Charger' : '新增充電樁');
+            $('#chargerForm')[0].reset();
+            $('#chargerId').prop('readonly', false);
+            await loadVendors();
+            await loadStationsForForm();
+            $('#chargerModal').modal('show');
+        }
+        
+        // 編輯充電樁
+        async function editCharger(chargerId) {
+            const charger = chargers.find(c => c.chargerId === chargerId);
+            if (!charger) {
+                showAlert('error', getCurrentLanguage() === 'en' ? 'Charger not found' : '找不到指定的充電樁');
+                return;
+            }
+            isEditMode = true;
+            editingChargerId = chargerId;
+            $('#chargerModalLabel').text(getCurrentLanguage() === 'en' ? 'Edit Charger' : '編輯充電樁');
+            await loadVendors();
+            await loadStationsForForm();
+            // 填充表單數據
+            $('#chargerId').val(charger.chargerId).prop('readonly', true);
+            $('#connectId').val(charger.connectId || '');
+            $('#vendorId').val(charger.vendorId);
+            $('#stationId').val(charger.stationId);
+            $('#chargerType').val(charger.chargerType || '');
+            $('#chargerBrand').val(charger.chargerBrand || '');
+            $('#chargerKw').val(charger.chargerKw || '');
+            $('#chargerA').val(charger.chargerA || '');
+            $('#chargerV').val(charger.chargerV || '');
+            $('#chargerStatus').val(charger.chargerStatus || '');
+            $('#chargerModal').modal('show');
+        }
+        
+        // 保存充電樁
+        async function saveCharger() {
+            const form = $('#chargerForm')[0];
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            const formData = new FormData(form);
+            const chargerData = {
+                vendorId: formData.get('vendorId'),
+                stationId: formData.get('stationId'),
+                chargerAry: [{
+                    chargerId: formData.get('chargerId'),
+                    connectId: formData.get('connectId'),
+                    chargerType: formData.get('chargerType'),
+                    chargerBrand: formData.get('chargerBrand'),
+                    chargerKw: formData.get('chargerKw'),
+                    chargerA: formData.get('chargerA'),
+                    chargerV: formData.get('chargerV'),
+                    chargerStatus: formData.get('chargerStatus'),
+                    updateStatus: 'U' // U = 新增或更新
+                }]
+            };
+            try {
+                const response = await apiRequest('/ChargerInfo', 'POST', chargerData);
+                if (response && (response.code === '0000' || response.resultCode === '0000')) {
+                    $('#chargerModal').modal('hide');
+                    const successMsg = isEditMode ?
+                        (getCurrentLanguage() === 'en' ? 'Charger updated successfully' : '充電樁更新成功') :
+                        (getCurrentLanguage() === 'en' ? 'Charger added successfully' : '充電樁新增成功');
+                    showAlert('success', successMsg);
+                    await loadChargers(); // 重新加載數據
+                } else {
+                    const errorMsg = getCurrentLanguage() === 'en'
+                        ? 'Save failed: ' + (response?.resultMsg || response?.message || 'Unknown error')
+                        : '保存失敗: ' + (response?.resultMsg || response?.message || '未知錯誤');
+                    showAlert('error', errorMsg);
+                }
+            } catch (error) {
+                console.error('保存充電樁失敗:', error);
+                const errorMsg = getCurrentLanguage() === 'en'
+                    ? 'Save failed: ' + error.message
+                    : '保存失敗: ' + error.message;
+                showAlert('error', errorMsg);
+            }
+        }
+        
+        // 顯示刪除確認對話框
+        function showDeleteConfirm(chargerId, chargerName) {
+            const confirmMsg = getCurrentLanguage() === 'en' ? 
+                `Are you sure you want to delete charger ${chargerName}?` :
+                `您確定要刪除充電樁 ${chargerName} 嗎？`;
+            const warningMsg = getCurrentLanguage() === 'en' ? 
+                'This action cannot be undone!' :
+                '此操作無法撤銷！';
+            
+            $('#deleteChargerName').text(chargerName);
+            $('#deleteConfirmModal .modal-body p:first').text(confirmMsg);
+            $('#deleteConfirmModal .modal-body p:last').text(warningMsg);
+            $('#confirmDeleteBtn').data('charger-id', chargerId);
+            $('#deleteConfirmModal').modal('show');
+        }
+        
+        // 刪除充電樁
+        async function deleteCharger(chargerId) {
+            const charger = chargers.find(c => c.chargerId === chargerId);
+            if (!charger) {
+                const errorMsg = getCurrentLanguage() === 'en' ? 
+                    'Charger not found' :
+                    '找不到指定的充電樁';
+                showAlert('error', errorMsg);
+                return;
+            }
+            
+            const deleteData = {
+                stationId: charger.stationId,
+                chargerAry: [{
+                    chargerId: chargerId,
+                    updateStatus: 'D' // D = 刪除
+                }]
+            };
+            
+            try {
+                const response = await apiRequest('/ChargerInfo', 'POST', deleteData);
+                
+                if (response && response.code === '0000') {
+                    $('#deleteConfirmModal').modal('hide');
+                    const successMsg = getCurrentLanguage() === 'en' ? 
+                        'Charger deleted successfully' :
+                        '充電樁刪除成功';
+                    showAlert('success', successMsg);
+                    await loadChargers(); // 重新加載數據
+            } else {
+                    const errorMsg = getCurrentLanguage() === 'en' ? 
+                        'Delete failed: ' + (response?.message || 'Unknown error') :
+                        '刪除失敗: ' + (response?.message || '未知錯誤');
+                    showAlert('error', errorMsg);
+                }
+            } catch (error) {
+                console.error('刪除充電樁失敗:', error);
+                const errorMsg = getCurrentLanguage() === 'en' ? 
+                    'Delete failed: ' + error.message :
+                    '刪除失敗: ' + error.message;
+                showAlert('error', errorMsg);
+            }
+        }
+        
+        // 顯示加載中
+        function showLoading() {
+            $('#loadingSpinner').show();
+            $('#chargersTable').hide();
+        }
+        
+        // 隱藏加載中
+        function hideLoading() {
+            $('#loadingSpinner').hide();
+            $('#chargersTable').show();
+        }
+        
+        // 顯示警告信息
+        function showAlert(type, message) {
+            hideAlert();
+            const alertId = type === 'error' ? '#errorAlert' : '#successAlert';
+            $(alertId).text(message).removeClass('d-none');
+            
+            // 3秒後自動隱藏成功消息
+            if (type === 'success') {
+                setTimeout(hideAlert, 3000);
+            }
+        }
+        
+        // 隱藏警告信息
+        function hideAlert() {
+            $('#errorAlert, #successAlert').addClass('d-none');
+        }
+        
+        // 頁面初始化
+        $(document).ready(async function() {
+            console.log('Page initialization started'); // 添加日誌
+            
+            // 檢查認證
+            if (!isAuthenticated()) {
+                console.log('User not authenticated, redirecting to login'); // 添加日誌
+                window.location.href = '/login';
+                return;
+            }
+            
+            // 檢查用戶角色
+            await checkUserRole();
+            console.log('User role check completed, role:', currentUserRole); // 添加日誌
+            
+            // 加載充電樁數據
+            await loadChargers();
+            console.log('Chargers loaded'); // 添加日誌
+
+            // 搜索框事件監聽
+            $('#searchInput').on('keyup', function() {
+                if (dataTable) {
+                    dataTable.search(this.value).draw();
+                }
+            });
+
+            // 刷新按鈕事件監聽
+            $('#refreshBtn').on('click', function() {
+                $('#searchInput').val('');
+                $('#stationFilter').val('');
+                $('#statusFilter').val('');
+                loadChargers();
+            });
+
+            // 篩選事件監聽
+            $('#stationFilter, #statusFilter').on('change', loadChargers);
+
+            $('#addChargerBtn').on('click', addCharger);
+            $('#saveChargerBtn').on('click', saveCharger);
+            $('#confirmDeleteBtn').on('click', function() {
+                const chargerId = $(this).data('charger-id');
+                deleteCharger(chargerId);
+            });
+
+            // 確保管理員功能正確顯示
+            if (currentUserRole === 'ROLE_ADMIN') {
+                console.log('Ensuring admin features are visible'); // 添加日誌
+                $('#addChargerBtn').show();
+                $('#actionsHeader').show();
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,62 @@
+{
+  "vendorId": "VENDOR001",
+  "stationId": "STATION001",
+  "chargerAry": [
+    {
+      "chargerId": "CHARGER001",
+      "chargerType": "DC",
+      "chargerBrand": "ABB",
+      "chargerStatus": "A",
+      "updateStatus": "U",
+      "chargerKw": "50",
+      "chargerA": "125",
+      "chargerV": "400",
+      "connectorAry": [
+        {
+          "connectId": "1",
+          "connectorType": "CCS2"
+        },
+        {
+          "connectId": "2",
+          "connectorType": "CHAdeMO"
+        }
+      ]
+    },
+    {
+      "chargerId": "CHARGER002",
+      "chargerType": "AC",
+      "chargerBrand": "Delta",
+      "chargerStatus": "A",
+      "updateStatus": "D",
+      "chargerKw": "22",
+      "chargerA": "32",
+      "chargerV": "380",
+      "connectorAry": [
+        {
+          "connectId": "1",
+          "connectorType": "Type2"
+        },
+        {
+          "connectId": "2",
+          "connectorType": "Type2"
+        }
+      ]
+    },
+    {
+      "chargerId": "CHARGER003",
+      "chargerType": "AC",
+      "chargerBrand": "Delta",
+      "chargerStatus": "A",
+      "updateStatus": "U",
+      "chargerKw": "7",
+      "chargerA": "16",
+      "chargerV": "220",
+      "connectorAry": [
+        {
+          "connectId": "1",
+          "connectorType": "Type2"
+        }
+      ]
+    }
+  ]
+} 

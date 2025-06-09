@@ -1,0 +1,31 @@
+{
+  "vendorId": "VENDOR001",
+  "transAry": [
+    {
+      "stationId": "STATION001",
+      "chargerId": "CHARGER001",
+      "connectId": "1",
+      "transNo": "TRANS2023091001",
+      "invoiceNo": "INV2023091001",
+      "startTime": "2023-09-10 08:30:00",
+      "endTime": "2023-09-10 09:45:00",
+      "kwh": "25.6",
+      "carType": "Tesla Model 3",
+      "carTonnage": "1.8",
+      "carNo": "ABC-1234"
+    },
+    {
+      "stationId": "STATION001",
+      "chargerId": "CHARGER002",
+      "connectId": "2",
+      "transNo": "TRANS2023091002",
+      "invoiceNo": "INV2023091002",
+      "startTime": "2023-09-10 10:15:00",
+      "endTime": "2023-09-10 12:30:00",
+      "kwh": "18.3",
+      "carType": "Nissan Leaf",
+      "carTonnage": "1.5",
+      "carNo": "DEF-5678"
+    }
+  ]
+} 

@@ -1,0 +1,34 @@
+{
+  "vendorId": "VENDOR001",
+  "stationAry": [
+    {
+      "stationId": "STATION001",
+      "stationKwh": "500",
+      "city": "台北市",
+      "address": "信義區信義路五段7號",
+      "storageEnable": "Y",
+      "powerSource": "Grid",
+      "gpsLatitude": "25.0339",
+      "gpsLongitude": "121.5644",
+      "stationStatus": "A",
+      "updateStatus": "U"
+    },
+    {
+      "stationId": "STATION002",
+      "stationKwh": "300",
+      "city": "台北市",
+      "address": "中山區南京東路三段219號",
+      "storageEnable": "N",
+      "powerSource": "Grid",
+      "gpsLatitude": "25.0522",
+      "gpsLongitude": "121.5439",
+      "stationStatus": "A",
+      "updateStatus": "U"
+    },
+    {
+      "stationId": "STATION003",
+      "stationStatus": "I",
+      "updateStatus": "D"
+    }
+  ]
+} 

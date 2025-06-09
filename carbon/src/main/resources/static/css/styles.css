@@ -1,0 +1,490 @@
+/* 全局样式 */
+:root {
+    --primary-color: #00A170; /* 绿色主题 - 环保 */
+    --secondary-color: #88B04B; /* 叶绿色 - 绿能 */
+    --accent-color: #34B3A9; /* 蓝绿色 - 科技感 */
+    --light-color: #E8F5E9; /* 浅绿色 - 清新 */
+    --dark-color: #1B5E20; /* 深绿色 - 稳重 */
+    --danger-color: #F44336; /* 红色 - 警告/错误 */
+    --success-color: #4CAF50; /* 绿色 - 成功 */
+    --warning-color: #FFC107; /* 黄色 - 警告 */
+    --info-color: #2196F3; /* 蓝色 - 信息 */
+    --text-color: #333333; /* 主文本颜色 */
+    --text-light: #6c757d; /* 次要文本颜色 */
+    --border-radius: 4px; /* 边框圆角 */
+}
+
+body {
+    font-family: 'Roboto', 'Noto Sans TC', sans-serif;
+    color: var(--text-color);
+    background-color: #fafafa;
+    line-height: 1.6;
+}
+
+/* 导航栏样式 */
+.navbar {
+    background: linear-gradient(90deg, var(--primary-color), var(--dark-color));
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: white !important;
+    display: flex;
+    align-items: center;
+}
+
+.navbar-brand i {
+    color: #9CFF9C;
+    animation: leaf-swing 3s ease-in-out infinite;
+}
+
+@keyframes leaf-swing {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(5deg); }
+    50% { transform: rotate(0deg); }
+    75% { transform: rotate(-5deg); }
+    100% { transform: rotate(0deg); }
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.95);
+    position: relative;
+    transition: all 0.3s;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: #ffffff;
+}
+
+.navbar-dark .navbar-nav .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background-color: #9CFF9C;
+    transition: all 0.3s;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover::after {
+    width: 80%;
+    left: 10%;
+}
+
+/* 侧边栏样式 */
+.sidebar {
+    background: linear-gradient(to bottom, var(--primary-color), var(--dark-color));
+    min-height: calc(100vh - 56px);
+    padding-top: 20px;
+    padding-bottom: 20px;
+    color: white;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.85);
+    padding: 10px 20px;
+    border-radius: 5px;
+    margin: 0 10px 5px 10px;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar .nav-link:hover, 
+.sidebar .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: white;
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.sidebar .nav-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: all 0.8s;
+}
+
+.sidebar .nav-link:hover::before {
+    left: 100%;
+}
+
+.sidebar .nav-link i {
+    margin-right: 10px;
+    color: #9CFF9C;
+}
+
+/* 綠能生態指標相關樣式 */
+.eco-indicator {
+    background: rgba(0, 161, 112, 0.3);
+    border-radius: 30px;
+    padding: 6px 15px;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.eco-text {
+    font-weight: 500;
+}
+
+.eco-pulse {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #4CAF50;
+    position: relative;
+    display: inline-block;
+}
+
+.eco-pulse::before,
+.eco-pulse::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #4CAF50;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+    opacity: 0.6;
+}
+
+.eco-pulse::after {
+    animation-delay: 0.5s;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.6;
+    }
+    70% {
+        transform: scale(2.5);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0;
+    }
+}
+
+/* 環保小提示卡片樣式 */
+.eco-tips .card {
+    border-radius: 10px;
+    overflow: hidden;
+    border: none;
+    transition: all 0.3s;
+}
+
+.eco-tips .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.eco-tips .progress-bar {
+    animation: progressAnimation 2s;
+}
+
+@keyframes progressAnimation {
+    from { width: 0; }
+}
+
+/* 卡片样式 */
+.card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s, box-shadow 0.3s;
+    margin-bottom: 20px;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: var(--light-color);
+    border-bottom: none;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* 表格样式 */
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+.table th {
+    font-weight: 600;
+    background-color: var(--light-color);
+    color: var(--primary-color);
+    border-top: none;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 161, 112, 0.05);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 161, 112, 0.1);
+}
+
+/* 按钮样式 */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: var(--dark-color);
+    border-color: var(--dark-color);
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* 登录和注册页样式 */
+.auth-container {
+    max-width: 400px;
+    margin: 100px auto;
+    padding: 30px;
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.auth-container .logo {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.auth-container .form-group {
+    margin-bottom: 20px;
+}
+
+.auth-container .form-control {
+    height: 50px;
+    font-size: 16px;
+    padding: 0.5rem 0.75rem;
+}
+
+.auth-container .btn {
+    height: 50px;
+    font-size: 16px;
+    padding: 0.5rem 0.75rem;
+}
+
+/* 图标样式 */
+.icon-green {
+    color: var(--primary-color);
+}
+
+.icon-large {
+    font-size: 3rem;
+}
+
+/* 自定义徽章 */
+.badge-eco {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.badge-tech {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+/* 背景渐变 */
+.bg-eco-gradient {
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    color: white;
+}
+
+/* 页脚样式 */
+.footer {
+    background-color: var(--light-color);
+    padding: 15px 0;
+    color: var(--text-light);
+    border-top: 1px solid rgba(0, 161, 112, 0.2);
+    margin-top: 30px;
+    font-size: 0.85rem;
+}
+
+.footer .company-name {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* 公司信息样式 */
+.company-info {
+    opacity: 0.9;
+    transition: opacity 0.3s;
+}
+
+.company-info:hover {
+    opacity: 1;
+}
+
+.company-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.company-name {
+    font-weight: 600;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .sidebar {
+        min-height: auto;
+        padding-bottom: 10px;
+    }
+    
+    .content-container {
+        padding-top: 10px;
+    }
+    
+    .card-deck {
+        display: block;
+    }
+}
+
+/* 碳权徽章样式 */
+.carbon-credit-badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.carbon-credit-yes {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.carbon-credit-no {
+    background-color: #F44336;
+    color: white;
+}
+
+/* 加载动画 */
+.loader {
+    border: 5px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 5px solid var(--primary-color);
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 页面切换动画 */
+.fade-enter {
+    opacity: 0;
+}
+
+.fade-enter-active {
+    opacity: 1;
+    transition: opacity 0.5s;
+}
+
+.fade-exit {
+    opacity: 1;
+}
+
+.fade-exit-active {
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+/* 全局输入控件样式 */
+.form-control {
+    height: 50px;
+    font-size: 16px;
+    padding: 0.5rem 0.75rem;
+}
+
+.form-control-sm {
+    height: 50px;
+    font-size: 16px;
+    padding: 0.5rem 0.75rem;
+}
+
+.custom-select {
+    height: 50px;
+    font-size: 16px;
+    padding: 0.5rem 0.75rem;
+}
+
+.custom-select-sm {
+    height: 50px;
+    font-size: 16px;
+    padding: 0.5rem 0.75rem;
+}
+
+/* 登录和注册页样式 */
+.auth-container .form-control {
+    height: 50px;
+    font-size: 16px;
+    padding: 0.5rem 0.75rem;
+}
+
+.auth-container .btn {
+    height: 50px;
+    font-size: 16px;
+    padding: 0.5rem 0.75rem;
+}
+
+/* 按钮样式 */
+.btn {
+    font-size: 16px;
+    padding: 0.5rem 0.75rem;
+}
+
+.btn-sm {
+    font-size: 16px;
+    padding: 0.5rem 0.75rem;
+}
+
+/* 输入组样式 */
+.input-group-text {
+    height: 50px;
+    font-size: 16px;
+    padding: 0.5rem 0.75rem;
+}
+
+.input-group-sm .input-group-text {
+    height: 50px;
+    font-size: 16px;
+    padding: 0.5rem 0.75rem;
+} 

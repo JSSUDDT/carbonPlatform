@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="#{power.title}">充電站電力 - 碳權平台</title>
+    <!-- Bootstrap 4 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
+    <!-- 自定義CSS -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <!-- DateRangePicker CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
+    <style>
+        /* 彩色國旗圖標 */
+        .flag-icon {
+            width: 20px;
+            height: 15px;
+            margin-right: 8px;
+            vertical-align: middle;
+            border-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+        <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="#">
+            <i class="fas fa-leaf mr-2"></i><span th:text="#{app.name}">碳權平台</span>
+        </a>
+        <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-toggle="collapse" data-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <ul class="navbar-nav px-3 ml-auto d-flex flex-row">
+            <!-- 語言選擇器 -->
+            <li class="nav-item dropdown mr-3">
+                <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-globe-asia mr-2"></i><span th:text="#{language.select}">語言</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="languageDropdown">
+                    <button class="dropdown-item language-switch-btn" data-lang="en">
+                        <img src="https://cdn.jsdelivr.net/npm/flag-icon-css@3.5.0/flags/4x3/us.svg" class="flag-icon" alt="USA flag">
+                        <span th:text="#{language.en}">English</span>
+                    </button>
+                    <button class="dropdown-item language-switch-btn" data-lang="zh_TW">
+                        <img src="https://cdn.jsdelivr.net/npm/flag-icon-css@3.5.0/flags/4x3/tw.svg" class="flag-icon" alt="Taiwan flag">
+                        <span th:text="#{language.zh}">繁體中文</span>
+                    </button>
+                </div>
+            </li>
+            <li class="nav-item text-nowrap">
+                <a class="nav-link" href="#" onclick="logout()">
+                    <i class="fas fa-sign-out-alt mr-2"></i><span th:text="#{nav.logout}">退出</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 引入側邊欄組件 -->
+            <div th:replace="sidebar :: sidebar"></div>
+            
+            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        <i class="fas fa-bolt text-warning mr-2"></i>
+                        <span th:text="#{power.title}">充電站電力</span>
+                    </h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="input-group mr-2">
+                            <input type="text" class="form-control" id="searchInput" th:placeholder="#{power.search}" placeholder="搜索充電站...">
+                        </div>
+                        <button class="btn btn-outline-secondary" id="refreshBtn">
+                            <i class="fas fa-sync-alt mr-1"></i><span th:text="#{power.refresh}">刷新</span>
+                        </button>
+                        <select class="custom-select mr-2" id="stationFilter" style="width: auto;">
+                            <option value="" th:text="#{power.allStations}">全部充電站</option>
+                        </select>
+                        <div class="input-group date-range-picker" style="width: 300px;">
+                            <input type="text" class="form-control" id="dateRangePicker" th:placeholder="#{power.dateRange}" placeholder="選擇日期範圍">
+                            <div class="input-group-append">
+                                <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning eco-info-box p-3 mb-4">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <i class="fas fa-info-circle fa-2x text-warning"></i>
+                        </div>
+                        <div class="col">
+                            <h5 class="m-0" th:text="#{sidebar.stationpower}">充電站電力</h5>
+                            <p class="small m-0" th:text="#{power.info}">查看和管理充電站電力信息，包括各類電力來源和能源消耗數據。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+                <div id="successAlert" class="alert alert-success d-none" role="alert"></div>
+                
+                <!-- 能源統計卡片 -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-title" th:text="#{power.stationCount}">充電站數量</h6>
+                                        <h2 class="mb-0" id="totalStations">0</h2>
+                                    </div>
+                                    <i class="fas fa-charging-station fa-3x text-white-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-title" th:text="#{power.totalGeneration}">總發電量(kWh)</h6>
+                                        <h2 class="mb-0" id="totalGeneration">0</h2>
+                                    </div>
+                                    <i class="fas fa-solar-panel fa-3x text-white-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-title" th:text="#{power.totalConsumption}">總用電量(kWh)</h6>
+                                        <h2 class="mb-0" id="totalConsumption">0</h2>
+                                    </div>
+                                    <i class="fas fa-plug fa-3x text-white-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-eco-gradient text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-title" th:text="#{power.greenEnergyRate}">綠色能源佔比</h6>
+                                        <h2 class="mb-0" id="greenEnergyRate">0%</h2>
+                                    </div>
+                                    <i class="fas fa-leaf fa-3x text-white-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="stationPowerTable">
+                        <thead>
+                            <tr>
+                                <th th:text="#{power.vendorId}">廠商ID</th>
+                                <th th:text="#{power.stationId}">充電站ID</th>
+                                <th th:text="#{stations.name}">充電站名稱</th>
+                                <th th:text="#{power.stationKwh}">充電站功率(kWh)</th>
+                                <th th:text="#{power.dateInfo}">日期信息</th>
+                                <th th:text="#{power.dateKwh}">日期功率(kWh)</th>
+                                <th th:text="#{power.createTime}">創建時間</th>
+                                <th th:text="#{power.updateTime}">更新時間</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stationPowerTableBody">
+                            <!-- 數據將通過JavaScript加載 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="loadingSpinner" class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only" th:text="#{message.loading}">加載中...</span>
+                    </div>
+                    <p class="mt-2" th:text="#{power.loading}">正在加載充電站電力數據，請稍候...</p>
+                </div>
+                
+                <div class="card mt-4 bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-lightbulb text-warning mr-2"></i><span th:text="#{power.eco}">能源管理與碳減排</span>
+                        </h5>
+                        <p class="card-text" th:text="#{power.ecoDesc}">
+                            優化充電站能源管理，提高可再生能源使用比例，是減少碳排放、實現可持續發展的重要途徑。通過智能電網和儲能技術，可以更好地平衡供需，降低傳統能源消耗。
+                        </p>
+                    </div>
+                </div>
+            </main>
+        </div>
+        
+        <!-- 页脚 -->
+        <footer class="footer mt-auto py-3 bg-light">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-6">
+                        <span class="text-muted" th:text="#{footer.copyright}">© 2023 碳權平台. 保留所有權利.</span>
+                    </div>
+                    <div class="col-md-6 text-md-right">
+                        <span class="text-muted">
+                            <span th:text="#{footer.developed}">開發商</span>: 
+                            <span th:text="#{footer.company.en}">gochabar</span> / 
+                            <span th:text="#{footer.company.zh}">充壩</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- jQuery, Bootstrap, DataTables -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+    <!-- 多語言支持 -->
+    <script th:src="@{/js/locale.js}"></script>
+    <!-- 自定義JavaScript -->
+    <script th:src="@{/js/common.js}"></script>
+    <!-- Moment.js and DateRangePicker -->
+    <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <script>
+        let dataTable;
+        let stationPowerData = [];
+        let stations = [];
+        let startTimeFrom = '';
+        let startTimeTo = '';
+        
+        // 初始化DataTable
+        function initDataTable() {
+            if (dataTable) {
+                dataTable.destroy();
+            }
+            
+            // 獲取當前語言
+            const currentLang = getCurrentLanguage();
+            
+            // 設置語言檔案路徑
+            let languageUrl = '/js/datatables/i18n/Chinese-traditional.json';
+            if (currentLang === 'en') {
+                languageUrl = '/js/datatables/i18n/English.json';
+            }
+            
+            dataTable = $('#stationPowerTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                responsive: true,
+                language: {
+                    url: languageUrl
+                },
+                columnDefs: [
+                    { "width": "100px", "targets": 0 }, // 廠商ID列
+                    { "width": "100px", "targets": 1 }  // 充電站ID列
+                ]
+            });
+        }
+        
+        // 初始化日期範圍選擇器
+        function initDateRangePicker() {
+            // 獲取當前語言
+            const currentLang = getCurrentLanguage();
+            
+            // 設置日期選擇器語言
+            let locale = {
+                format: 'YYYY-MM-DD',
+                applyLabel: '確定',
+                cancelLabel: '取消',
+                fromLabel: '從',
+                toLabel: '至',
+                customRangeLabel: '自定義',
+                daysOfWeek: ['日', '一', '二', '三', '四', '五', '六'],
+                monthNames: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
+                firstDay: 1
+            };
+            
+            if (currentLang === 'en') {
+                locale = {
+                    format: 'YYYY-MM-DD',
+                    applyLabel: 'Apply',
+                    cancelLabel: 'Cancel',
+                    fromLabel: 'From',
+                    toLabel: 'To',
+                    customRangeLabel: 'Custom Range',
+                    daysOfWeek: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+                    monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                    firstDay: 0
+                };
+            }
+            
+            $('#dateRangePicker').daterangepicker({
+                opens: 'left',
+                autoUpdateInput: false,
+                locale: locale
+            });
+            
+            $('#dateRangePicker').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+                // 設置開始時間為當天 00:00:00
+                startTimeFrom = picker.startDate.format('YYYY-MM-DD') + ' 00:00:00';
+                // 設置結束時間為當天 23:59:59
+                startTimeTo = picker.endDate.format('YYYY-MM-DD') + ' 23:59:59';
+                
+                // 應用日期篩選
+                const searchInput = document.getElementById('searchInput').value;
+                const stationFilter = document.getElementById('stationFilter').value;
+                loadStationPower(searchInput, stationFilter, startTimeFrom, startTimeTo);
+            });
+            
+            $('#dateRangePicker').on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+                startTimeFrom = '';
+                startTimeTo = '';
+                
+                // 清空日期篩選
+                const searchInput = document.getElementById('searchInput').value;
+                const stationFilter = document.getElementById('stationFilter').value;
+                loadStationPower(searchInput, stationFilter, '', '');
+            });
+        }
+        
+        // 加載充電站數據用於篩選
+        async function loadStations() {
+            const response = await apiRequest('/StationInfo');
+            
+            if (response) {
+                stations = Array.isArray(response) ? response : [];
+                populateStationFilter();
+            }
+        }
+        
+        // 填充充電站篩選下拉框
+        function populateStationFilter() {
+            const stationFilter = document.getElementById('stationFilter');
+            const currentLang = getCurrentLanguage();
+            const allStationsText = currentLang === 'en' ? 'All Charging Stations' : '全部充電站';
+            stationFilter.innerHTML = `<option value="">${allStationsText}</option>`;
+            
+            if (stations.length === 0) {
+                return;
+            }
+            
+            stations.forEach(station => {
+                const option = document.createElement('option');
+                option.value = station.stationId;
+                option.textContent = `${station.stationName} (${station.stationId})`;
+                stationFilter.appendChild(option);
+            });
+        }
+        
+        // 加載充電站電力數據
+        async function loadStationPower(search = '', stationId = '', startTimeFrom = '', startTimeTo = '') {
+            showLoading();
+            
+            let endpoint = '/StationPower';
+            let queryParams = [];
+            
+            if (stationId) {
+                queryParams.push(`stationId=${encodeURIComponent(stationId)}`);
+            }
+            
+            if (queryParams.length > 0) {
+                endpoint += `?${queryParams.join('&')}`;
+            }
+            
+            const response = await apiRequest(endpoint);
+            
+            hideLoading();
+            
+            if (response) {
+                stationPowerData = Array.isArray(response) ? response : [];
+                
+                // 如果有搜索條件，篩選結果
+                if (search) {
+                    stationPowerData = stationPowerData.filter(data => {
+                        const stationInfo = stations.find(s => s.stationId === data.stationId);
+                        const stationName = stationInfo ? stationInfo.stationName : '';
+                        
+                        return data.stationId.includes(search) || 
+                               (stationName && stationName.includes(search));
+                    });
+                }
+                
+                // 如果有日期區間篩選，篩選結果
+                if (startTimeFrom && startTimeTo) {
+                    stationPowerData = stationPowerData.filter(data => {
+                        const dateInfo = data.dateInfo;
+                        if (!dateInfo) return false;
+                        
+                        const date = new Date(dateInfo);
+                        const startDate = new Date(startTimeFrom);
+                        const endDate = new Date(startTimeTo);
+                        
+                        return date >= startDate && date <= endDate;
+                    });
+                }
+                
+                renderStationPowerTable();
+                updateStatistics();
+            } else {
+                showError('加載充電站電力數據失敗');
+            }
+        }
+        
+        // 渲染充電站電力表格
+        function renderStationPowerTable() {
+            if (dataTable) {
+                dataTable.clear();
+            }
+            
+            const tableBody = document.getElementById('stationPowerTableBody');
+            tableBody.innerHTML = '';
+            
+            if (stationPowerData.length === 0) {
+                if (dataTable) {
+                    dataTable.draw();
+                }
+                return;
+            }
+            
+            stationPowerData.forEach(data => {
+                const row = document.createElement('tr');
+                
+                // 查找站點名稱
+                const stationInfo = stations.find(s => s.stationId === data.stationId);
+                const stationName = stationInfo ? stationInfo.stationName : '';
+                
+                // 設置單元格內容
+                row.innerHTML = `
+                    <td>${data.vendorId || ''}</td>
+                    <td>${data.stationId || ''}</td>
+                    <td>${stationName || ''}</td>
+                    <td>${data.stationKwh || ''}</td>
+                    <td>${data.dateInfo || ''}</td>
+                    <td>${data.dateKwh || ''}</td>
+                    <td>${data.createTime || ''}</td>
+                    <td>${data.updateTime || ''}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            if (dataTable) {
+                dataTable.rows.add($(tableBody).find('tr')).draw();
+            }
+        }
+        
+        // 更新統計數據
+        function updateStatistics() {
+            const currentLang = getCurrentLanguage();
+            document.getElementById('totalStations').textContent = stationPowerData.length;
+            
+            let totalPower = 0;
+            
+            stationPowerData.forEach(data => {
+                if (data.dateKwh) {
+                    totalPower += parseFloat(data.dateKwh);
+                }
+            });
+            
+            document.getElementById('totalGeneration').textContent = totalPower.toFixed(2);
+            document.getElementById('totalConsumption').textContent = totalPower.toFixed(2);
+            
+            // 設置綠色能源佔比
+            document.getElementById('greenEnergyRate').textContent = '0%';
+        }
+        
+        // 顯示加載提示
+        function showLoading() {
+            document.getElementById('loadingSpinner').classList.remove('d-none');
+        }
+        
+        // 隱藏加載提示
+        function hideLoading() {
+            document.getElementById('loadingSpinner').classList.add('d-none');
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化DataTable
+            initDataTable();
+            
+            // 初始化日期範圍選擇器
+            initDateRangePicker();
+            
+            // 加載充電站數據用於篩選
+            loadStations();
+            
+            // 加載充電站電力數據
+            loadStationPower();
+            
+            // 搜索輸入框實時過濾
+            document.getElementById('searchInput').addEventListener('keyup', function() {
+                if (dataTable) {
+                    dataTable.search(this.value).draw();
+                }
+            });
+            
+            // 刷新按鈕點擊事件
+            document.getElementById('refreshBtn').addEventListener('click', function() {
+                document.getElementById('searchInput').value = '';
+                document.getElementById('stationFilter').value = '';
+                $('#dateRangePicker').val('');
+                startTimeFrom = '';
+                startTimeTo = '';
+                if (dataTable) {
+                    dataTable.search('').draw();
+                }
+                loadStationPower();
+            });
+            
+            // 充電站篩選變更事件
+            document.getElementById('stationFilter').addEventListener('change', function() {
+                const stationFilter = document.getElementById('stationFilter').value;
+                loadStationPower('', stationFilter, startTimeFrom, startTimeTo);
+            });
+        });
+    </script>
+</body>
+</html> 

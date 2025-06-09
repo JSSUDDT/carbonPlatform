@@ -1,0 +1,13 @@
+{
+  "stationId": "STATION001",
+  "vendorId": "VENDOR001",
+  "chargerId": "CHARGER001",
+  "connectId": "1",
+  "recordType": "START",
+  "meterStart": 1000.5,
+  "timestamp": "2023-09-01T08:30:00",
+  "userId": "USER123",
+  "userType": "MEMBER",
+  "cardId": "CARD456",
+  "transactionId": "TRANS789"
+} 

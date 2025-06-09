@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="#{sidebar.platform}">側邊欄組件</title>
+</head>
+<body>
+    <!-- 側邊欄組件 -->
+    <div th:fragment="sidebar" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse" id="sidebarMenu">
+        <div class="sidebar-sticky pt-3">
+            <div class="text-center mb-4">
+                <h4 class="text-white" th:text="#{app.name}">碳權平台</h4>
+                <p class="text-light small" th:text="#{app.slogan}">綠色能源，智慧出行</p>
+            </div>
+            
+            <div class="user-info text-center mb-4">
+                <div class="user-avatar mb-2">
+                    <i class="fas fa-user-circle fa-3x text-light"></i>
+                </div>
+                <div class="user-details">
+                    <p class="text-light mb-0" id="currentUser"></p>
+                    <span class="badge badge-success" th:if="${#request.userPrincipal != null && #request.isUserInRole('ROLE_ADMIN')}" th:text="#{nav.admin}">管理員</span>
+                    <span class="badge badge-info" th:if="${#request.userPrincipal != null && !#request.isUserInRole('ROLE_ADMIN')}" th:text="#{nav.user}">用戶</span>
+                </div>
+            </div>
+            
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/transactions.html}">
+                        <i class="fas fa-exchange-alt mr-2"></i>
+                        <span th:text="#{sidebar.transactions}">充電記錄</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/stations.html}">
+                        <i class="fas fa-charging-station mr-2"></i>
+                        <span th:text="#{sidebar.stations}">充電站管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/stationmap.html}">
+                        <i class="fas fa-map-marked-alt mr-2"></i>
+                        <span th:text="#{sidebar.stationmap}">充電站地圖</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/chargers.html}">
+                        <i class="fas fa-plug mr-2"></i>
+                        <span th:text="#{sidebar.chargers}">充電樁管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/stationpower.html}">
+                        <i class="fas fa-bolt mr-2"></i>
+                        <span th:text="#{sidebar.stationpower}">充電站電力</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <hr class="border-secondary my-4">
+            
+            <div class="sidebar-footer">
+                <button class="btn btn-outline-light btn-sm btn-block" onclick="logout()">
+                    <i class="fas fa-sign-out-alt mr-2"></i>
+                    <span th:text="#{sidebar.logout}">退出登錄</span>
+                </button>
+            </div>
+            
+            <div class="sidebar-info mt-5">
+                <div class="carbon-info text-center">
+                    <i class="fas fa-leaf text-success mb-2 fa-2x"></i>
+                    <div class="small text-light">
+                        <p class="mb-1" th:text="#{sidebar.platform}">碳權平台</p>
+                        <p class="mb-0 small text-muted" th:text="#{sidebar.future}">共建綠色未來</p>
+                    </div>
+                </div>
+                
+                <!-- 添加开发公司信息 -->
+                <div class="company-info text-center mt-3">
+                    <hr class="border-secondary my-2">
+                    <div class="small text-light">
+                        <p class="mb-1 company-label" th:text="#{sidebar.developed}">開發商</p>
+                        <p class="mb-0 company-name">
+                            <span class="d-block" th:text="#{sidebar.company.en}">GoChaBar</span>
+                            <span class="d-block small text-muted" th:text="#{sidebar.company.zh}">充壩</span>
+                        </p>
+                        <p class="mb-0 copyright small text-muted" th:text="#{sidebar.copyright}">© 2023</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

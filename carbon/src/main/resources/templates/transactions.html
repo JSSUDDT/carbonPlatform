@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="#{transactions.title}">充電記錄 - 碳權平台</title>
+    <!-- Bootstrap 4 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
+    <!-- DateRangePicker CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
+    <!-- 自定義CSS -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        /* 彩色國旗圖標 */
+        .flag-icon {
+            width: 20px;
+            height: 15px;
+            margin-right: 8px;
+            vertical-align: middle;
+            border-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+        <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="#">
+            <i class="fas fa-leaf mr-2"></i><span th:text="#{app.name}">碳權平台</span>
+        </a>
+        <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-toggle="collapse" data-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <ul class="navbar-nav px-3 ml-auto d-flex flex-row">
+            <!-- 語言選擇器 -->
+            <li class="nav-item dropdown mr-3">
+                <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-globe-asia mr-2"></i><span th:text="#{language.select}">語言</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="languageDropdown">
+                    <button class="dropdown-item language-switch-btn" data-lang="en">
+                        <img src="https://cdn.jsdelivr.net/npm/flag-icon-css@3.5.0/flags/4x3/us.svg" class="flag-icon" alt="USA flag">
+                        <span th:text="#{language.en}">English</span>
+                    </button>
+                    <button class="dropdown-item language-switch-btn" data-lang="zh_TW">
+                        <img src="https://cdn.jsdelivr.net/npm/flag-icon-css@3.5.0/flags/4x3/tw.svg" class="flag-icon" alt="Taiwan flag">
+                        <span th:text="#{language.zh}">繁體中文</span>
+                    </button>
+                </div>
+            </li>
+            <li class="nav-item text-nowrap">
+                <a class="nav-link" href="#" onclick="logout()">
+                    <i class="fas fa-sign-out-alt mr-2"></i><span th:text="#{nav.logout}">退出</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 引入側邊欄組件 -->
+            <div th:replace="sidebar :: sidebar"></div>
+            
+            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        <i class="fas fa-exchange-alt text-primary mr-2"></i>
+                        <span th:text="#{transactions.title}">充電記錄</span>
+                    </h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="input-group mr-2" style="width: 300px;">
+                            <input type="text" class="form-control form-control-sm" id="searchInput" th:placeholder="#{transactions.search}" placeholder="搜索交易...">
+                            <div class="input-group-append">
+                                <button class="btn btn-sm btn-outline-secondary" id="searchBtn">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="btn-group mr-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="refreshBtn">
+                                <i class="fas fa-sync-alt mr-1"></i><span th:text="#{transactions.refresh}">刷新</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="toggleVehicleInfoBtn" style="display: none;">
+                                <i class="fas fa-car mr-1"></i><span>車輛信息</span>
+                            </button>
+                        </div>
+                        <select class="custom-select custom-select-sm mr-2" id="stationFilter" style="width: auto;">
+                            <option value="" th:text="#{chargers.allStatus}">全部充電站</option>
+                            <!-- 充電站選項將通過JavaScript加載 -->
+                        </select>
+                        <div class="input-group date-range-picker" style="width: 300px;">
+                            <input type="text" class="form-control form-control-sm" id="dateRangePicker" th:placeholder="#{transactions.dateRange}" placeholder="選擇日期範圍">
+                            <div class="input-group-append">
+                                <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-success eco-info-box p-3 mb-4">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <i class="fas fa-info-circle fa-2x text-success"></i>
+                        </div>
+                        <div class="col">
+                            <h5 class="m-0" th:text="#{sidebar.transactions}">充電記錄</h5>
+                            <p class="small m-0" th:text="#{transactions.info}">查看所有充電交易記錄，支持按交易號搜索、充電站篩選和日期範圍篩選。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+                <div id="successAlert" class="alert alert-success d-none" role="alert"></div>
+                
+                <!-- 碳減排統計卡片 -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-eco-gradient text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-title" th:text="#{transactions.totalCount}">總交易數</h6>
+                                        <h2 class="mb-0" id="totalTransactions">0</h2>
+                                    </div>
+                                    <i class="fas fa-receipt fa-3x text-white-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-title" th:text="#{transactions.totalKwh}">總充電量(kWh)</h6>
+                                        <h2 class="mb-0" id="totalKwh">0</h2>
+                                    </div>
+                                    <i class="fas fa-bolt fa-3x text-white-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-title" th:text="#{transactions.carbonRate}">碳權同意率</h6>
+                                        <h2 class="mb-0" id="carbonCreditRate">0%</h2>
+                                    </div>
+                                    <i class="fas fa-leaf fa-3x text-white-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="transactionsTable">
+                        <thead>
+                            <tr>
+                                <th th:text="#{transactions.transNo}">交易號</th>
+                                <th th:text="#{transactions.vendorId}">廠商ID</th>
+                                <th th:text="#{stations.name}">充電站名稱</th>
+                                <th th:text="#{transactions.chargerId}">充電樁ID</th>
+                                <th th:text="#{transactions.connectId}">連接ID</th>
+                                <th th:text="#{transactions.invoiceNo}">發票號</th>
+                                <th th:text="#{transactions.customerId}">客戶ID</th>
+                                <th th:text="#{transactions.invoiceDate}">發票日期</th>
+                                <th th:text="#{transactions.carbonCredit}">碳權同意</th>
+                                <th th:text="#{transactions.startTime}">開始時間</th>
+                                <th th:text="#{transactions.endTime}">結束時間</th>
+                                <th th:text="#{transactions.kwh}">充電量(kWh)</th>
+                                <th th:text="#{transactions.carType}">車輛類型</th>
+                                <th th:text="#{transactions.carTonnage}">車輛噸位</th>
+                                <th th:text="#{transactions.carNo}">車輛號碼</th>
+                                <th th:text="#{transactions.createTime}">創建時間</th>
+                                <th th:text="#{transactions.updateTime}">更新時間</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsTableBody">
+                            <!-- 數據將通過JavaScript加載 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="loadingSpinner" class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only" th:text="#{message.loading}">加載中...</span>
+                    </div>
+                    <p class="mt-2" th:text="#{transactions.loading}">正在加載充電記錄數據，請稍候...</p>
+                </div>
+                
+                <div class="card mt-4 bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-leaf text-success mr-2"></i><span th:text="#{transactions.eco}">碳減排與環保</span>
+                        </h5>
+                        <p class="card-text" th:text="#{transactions.ecoDesc}">
+                            通過使用電動車充電系統，我們為減少碳排放做出了貢獻。根據統計，相比傳統燃油車輛，每充電1kWh可減少約0.5kg的碳排放。
+                        </p>
+                    </div>
+                </div>
+            </main>
+        </div>
+        
+        <!-- 页脚 -->
+        <footer class="footer mt-auto py-3 bg-light">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-6">
+                        <span class="text-muted" th:text="#{footer.copyright}">© 2023 碳權平台. 保留所有權利.</span>
+                    </div>
+                    <div class="col-md-6 text-md-right">
+                        <span class="text-muted">
+                            <span th:text="#{footer.developed}">開發商</span>: 
+                            <span th:text="#{footer.company.en}">gochabar</span> / 
+                            <span th:text="#{footer.company.zh}">充壩</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- jQuery, Bootstrap, DataTables -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+    <!-- Moment.js and DateRangePicker -->
+    <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <!-- 多語言支持 -->
+    <script th:src="@{/js/locale.js}"></script>
+    <!-- 自定義JavaScript -->
+    <script th:src="@{/js/common.js}"></script>
+    <script>
+        let dataTable;
+        let transactions = [];
+        let stations = [];
+        let startTimeFrom = '';
+        let startTimeTo = '';
+        
+        // 初始化DataTable
+        function initDataTable() {
+            if (dataTable) {
+                dataTable.destroy();
+            }
+            
+            // 獲取當前語言
+            const currentLang = getCurrentLanguage();
+            
+            // 設置語言檔案路徑
+            let languageUrl = '/js/datatables/i18n/Chinese-traditional.json';
+            if (currentLang === 'en') {
+                languageUrl = '/js/datatables/i18n/English.json';
+            }
+            
+            dataTable = $('#transactionsTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                responsive: true,
+                language: {
+                    url: languageUrl
+                },
+                columnDefs: [
+                    { "width": "120px", "targets": 0 },
+                    { "width": "80px", "targets": 1 },
+                    { "targets": [12, 13, 14], "visible": false, "className": "vehicle-info-column" } // 修正車輛信息列的索引
+                ]
+            });
+        }
+        
+        // 初始化日期範圍選擇器
+        function initDateRangePicker() {
+            // 獲取當前語言
+            const currentLang = getCurrentLanguage();
+            
+            // 設置日期選擇器語言
+            let locale = {
+                format: 'YYYY-MM-DD',
+                applyLabel: '確定',
+                cancelLabel: '取消',
+                fromLabel: '從',
+                toLabel: '至',
+                customRangeLabel: '自定義',
+                daysOfWeek: ['日', '一', '二', '三', '四', '五', '六'],
+                monthNames: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
+                firstDay: 1
+            };
+            
+            if (currentLang === 'en') {
+                locale = {
+                    format: 'YYYY-MM-DD',
+                    applyLabel: 'Apply',
+                    cancelLabel: 'Cancel',
+                    fromLabel: 'From',
+                    toLabel: 'To',
+                    customRangeLabel: 'Custom Range',
+                    daysOfWeek: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+                    monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                    firstDay: 0
+                };
+            }
+            
+            $('#dateRangePicker').daterangepicker({
+                opens: 'left',
+                autoUpdateInput: false,
+                locale: locale
+            });
+            
+            $('#dateRangePicker').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+                // 設置開始時間為當天 00:00:00
+                startTimeFrom = picker.startDate.format('YYYY-MM-DD') + ' 00:00:00';
+                // 設置結束時間為當天 23:59:59
+                startTimeTo = picker.endDate.format('YYYY-MM-DD') + ' 23:59:59';
+                
+                // 應用日期篩選
+                const searchInput = document.getElementById('searchInput').value;
+                const stationFilter = document.getElementById('stationFilter').value;
+                loadTransactions(searchInput, stationFilter, startTimeFrom, startTimeTo);
+            });
+            
+            $('#dateRangePicker').on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+                startTimeFrom = '';
+                startTimeTo = '';
+                
+                // 清空日期篩選
+                const searchInput = document.getElementById('searchInput').value;
+                const stationFilter = document.getElementById('stationFilter').value;
+                loadTransactions(searchInput, stationFilter, '', '');
+            });
+        }
+        
+        // 加載充電站數據用於篩選
+        async function loadStations() {
+            const response = await apiRequest('/StationInfo');
+            
+            if (response) {
+                stations = Array.isArray(response) ? response : [];
+                populateStationFilter();
+            }
+        }
+        
+        // 填充充電站篩選下拉框
+        function populateStationFilter() {
+            const stationFilter = document.getElementById('stationFilter');
+            const currentLang = getCurrentLanguage();
+            const allStationsText = currentLang === 'en' ? 'All Charging Stations' : '全部充電站';
+            stationFilter.innerHTML = `<option value="">${allStationsText}</option>`;
+            
+            if (stations.length === 0) {
+                return;
+            }
+            
+            stations.forEach(station => {
+                const option = document.createElement('option');
+                option.value = station.stationId;
+                option.textContent = `${station.stationName} (${station.stationId})`;
+                stationFilter.appendChild(option);
+            });
+        }
+        
+        // 顯示提示信息
+        function showAlert(type, message) {
+            const alertDiv = document.getElementById(type === 'error' ? 'errorAlert' : 'successAlert');
+            const otherAlertDiv = document.getElementById(type === 'error' ? 'successAlert' : 'errorAlert');
+            
+            alertDiv.textContent = message;
+            alertDiv.classList.remove('d-none');
+            otherAlertDiv.classList.add('d-none');
+        }
+        
+        // 隱藏提示信息
+        function hideAlert() {
+            document.getElementById('errorAlert').classList.add('d-none');
+            document.getElementById('successAlert').classList.add('d-none');
+        }
+        
+        // 加載充電記錄數據
+        async function loadTransactions(search = '', stationId = '', startTimeFrom = '', startTimeTo = '') {
+            showLoading();
+            
+            let endpoint = '/ChargeInfo';
+            let queryParams = [];
+            
+            // 添加充電站篩選參數
+            if (stationId) {
+                queryParams.push(`stationId=${encodeURIComponent(stationId)}`);
+            }
+            
+            // 添加日期範圍參數
+            if (startTimeFrom) {
+                queryParams.push(`startTimeFrom=${encodeURIComponent(startTimeFrom)}`);
+            }
+            
+            if (startTimeTo) {
+                queryParams.push(`startTimeTo=${encodeURIComponent(startTimeTo)}`);
+            }
+            
+            if (queryParams.length > 0) {
+                endpoint += `?${queryParams.join('&')}`;
+            }
+            
+            try {
+                const response = await apiRequest(endpoint);
+                
+                if (response) {
+                    let filteredTransactions = Array.isArray(response) ? response : [];
+                    
+                    // 前端搜索過濾
+                    if (search) {
+                        const searchLower = search.toLowerCase();
+                        filteredTransactions = filteredTransactions.filter(transaction => {
+                            // 獲取充電站名稱
+                            let stationName = '';
+                            const stationInfo = stations.find(station => station.stationId === transaction.stationId);
+                            if (stationInfo && stationInfo.stationName) {
+                                stationName = stationInfo.stationName;
+                            }
+                            
+                            // 遍歷對象的所有屬性進行搜索
+                            return Object.entries(transaction).some(([key, value]) => {
+                                // 確保值存在且轉換為字符串
+                                if (value == null) return false;
+                                
+                                // 如果是stationId，則同時搜索充電站名稱
+                                if (key === 'stationId') {
+                                    return String(value).toLowerCase().includes(searchLower) || 
+                                           stationName.toLowerCase().includes(searchLower);
+                                }
+                                
+                                return String(value).toLowerCase().includes(searchLower);
+                            });
+                        });
+                    }
+                    
+                    transactions = filteredTransactions;
+                    renderTransactionsTable();
+                    updateStatistics();
+                    hideAlert();
+                } else {
+                    showAlert('error', '加載充電記錄數據失敗');
+                }
+            } catch (error) {
+                console.error('加載充電記錄數據失敗:', error);
+                showAlert('error', '加載充電記錄數據失敗: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // 渲染充電記錄表格
+        function renderTransactionsTable() {
+            if (dataTable) {
+                dataTable.clear();
+            }
+            
+            const tableBody = document.getElementById('transactionsTableBody');
+            tableBody.innerHTML = '';
+            
+            if (transactions.length === 0) {
+                if (dataTable) {
+                    dataTable.draw();
+                }
+                return;
+            }
+            
+            transactions.forEach(transaction => {
+                const row = document.createElement('tr');
+                
+                // 根據充電站ID查找充電站名稱
+                let stationName = transaction.stationId || '';
+                const stationInfo = stations.find(station => station.stationId === transaction.stationId);
+                if (stationInfo && stationInfo.stationName) {
+                    stationName = stationInfo.stationName;
+                }
+                
+                // 設置單元格內容
+                row.innerHTML = `
+                    <td>${transaction.transNo || ''}</td>
+                    <td>${transaction.vendorId || ''}</td>
+                    <td>${stationName}</td>
+                    <td>${transaction.chargerId || ''}</td>
+                    <td>${transaction.connectId || ''}</td>
+                    <td>${transaction.invoiceNo || ''}</td>
+                    <td>${transaction.customerId || ''}</td>
+                    <td>${transaction.invoiceDate || ''}</td>
+                    <td>${getCarbonCreditBadge(transaction.carbonCredit)}</td>
+                    <td>${transaction.startTime || ''}</td>
+                    <td>${transaction.endTime || ''}</td>
+                    <td>${transaction.kwh || ''}</td>
+                    <td>${getCarTypeText(transaction.carType) || ''}</td>
+                    <td>${transaction.carTonnage || ''}</td>
+                    <td>${transaction.carNo || ''}</td>
+                    <td>${transaction.createTime || ''}</td>
+                    <td>${transaction.updateTime || ''}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            if (dataTable) {
+                dataTable.rows.add($(tableBody).find('tr')).draw();
+            }
+        }
+        
+        // 更新統計數據
+        function updateStatistics() {
+            document.getElementById('totalTransactions').textContent = transactions.length;
+            
+            let totalKwh = 0;
+            let carbonCreditCount = 0;
+            
+            transactions.forEach(transaction => {
+                if (transaction.kwh) {
+                    totalKwh += parseFloat(transaction.kwh);
+                }
+                
+                if (transaction.carbonCredit === '1') {
+                    carbonCreditCount++;
+                }
+            });
+            
+            document.getElementById('totalKwh').textContent = totalKwh.toFixed(2);
+            
+            const carbonCreditRate = transactions.length > 0 ? 
+                ((carbonCreditCount / transactions.length) * 100).toFixed(2) : '0';
+            document.getElementById('carbonCreditRate').textContent = `${carbonCreditRate}%`;
+        }
+        
+        // 獲取車輛類型文本
+        function getCarTypeText(type) {
+            const currentLang = getCurrentLanguage();
+            
+            if (currentLang === 'en') {
+                switch(type) {
+                    case '1': return 'Private Car';
+                    case '2': return 'Bus';
+                    case '3': return 'Truck';
+                    case '4': return 'Other';
+                    default: return type;
+                }
+            } else {
+                switch(type) {
+                    case '1': return '私家車';
+                    case '2': return '客車';
+                    case '3': return '貨車';
+                    case '4': return '其他';
+                    default: return type;
+                }
+            }
+        }
+        
+        // 獲取碳權同意徽章HTML
+        function getCarbonCreditBadge(carbonCredit) {
+            const currentLang = getCurrentLanguage();
+            const agreedText = currentLang === 'en' ? 'Agreed' : '已同意';
+            const notAgreedText = currentLang === 'en' ? 'Not Agreed' : '未同意';
+            
+            if (carbonCredit === '1') {
+                return `<span class="badge carbon-credit-badge carbon-credit-yes">${agreedText}</span>`;
+            } else {
+                return `<span class="badge carbon-credit-badge carbon-credit-no">${notAgreedText}</span>`;
+            }
+        }
+        
+        // 顯示加載提示
+        function showLoading() {
+            document.getElementById('loadingSpinner').classList.remove('d-none');
+        }
+        
+        // 隱藏加載提示
+        function hideLoading() {
+            document.getElementById('loadingSpinner').classList.add('d-none');
+        }
+        
+        // 切換車輛信息顯示
+        function toggleVehicleInfo() {
+            const columns = dataTable.columns([12, 13, 14]); // 修正車輛信息列的索引
+            const isVisible = columns.visible()[0];
+            columns.visible(!isVisible);
+            
+            // 更新按鈕狀態
+            const btn = document.getElementById('toggleVehicleInfoBtn');
+            if (!isVisible) {
+                btn.classList.remove('btn-outline-secondary');
+                btn.classList.add('btn-secondary');
+            } else {
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-outline-secondary');
+            }
+        }
+        
+        // 檢查用戶權限
+        async function checkUserRole() {
+            try {
+                const response = await apiRequest('/UserRole');
+                console.log('UserRole response:', response);
+                
+                if (response && response.resultMsg) {
+                    const userRole = response.resultMsg;
+                    console.log('當前用戶角色:', userRole);
+                    
+                    const toggleVehicleInfoBtn = document.getElementById('toggleVehicleInfoBtn');
+                    
+                    // 檢查是否為管理員
+                    if (userRole === 'ROLE_ADMIN') {
+                        console.log('顯示車輛信息按鈕');
+                        toggleVehicleInfoBtn.style.display = 'inline-block';
+                    } else {
+                        console.log('隱藏車輛信息按鈕');
+                        toggleVehicleInfoBtn.style.display = 'none';
+                    }
+                } else {
+                    console.log('無效的角色響應:', response);
+                }
+            } catch (error) {
+                console.error('檢查用戶角色失敗:', error);
+            }
+        }
+        
+        // 初始化事件監聽器
+        function initEventListeners() {
+            // 搜索按鈕點擊事件
+            $('#searchBtn').on('click', function() {
+                applyFilters();
+            });
+            
+            // 搜索框回車事件
+            $('#searchInput').on('keypress', function(e) {
+                if (e.which === 13) {
+                    applyFilters();
+                }
+            });
+            
+            // 搜索框輸入事件（實時搜索）
+            $('#searchInput').on('input', function() {
+                applyFilters();
+            });
+            
+            // 充電站篩選變更事件
+            $('#stationFilter').on('change', function() {
+                applyFilters();
+            });
+            
+            // 刷新按鈕點擊事件
+            $('#refreshBtn').on('click', function() {
+                resetFilters();
+                loadTransactions();
+            });
+        }
+        
+        // 應用所有篩選條件
+        function applyFilters() {
+            const search = $('#searchInput').val().trim();
+            const stationId = $('#stationFilter').val();
+            loadTransactions(search, stationId, startTimeFrom, startTimeTo);
+        }
+        
+        // 重置所有篩選條件
+        function resetFilters() {
+            $('#searchInput').val('');
+            $('#stationFilter').val('');
+            $('#dateRangePicker').val('');
+            startTimeFrom = '';
+            startTimeTo = '';
+        }
+        
+        // 在頁面加載時初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('頁面加載完成，開始檢查權限');
+            
+            // 檢查用戶權限
+            checkUserRole();
+            
+            // 初始化DataTable
+            initDataTable();
+            
+            // 初始化日期範圍選擇器
+            initDateRangePicker();
+            
+            // 加載充電站數據用於篩選
+            loadStations();
+            
+            // 初始化事件監聽器
+            initEventListeners();
+            
+            // 加載充電記錄數據
+            loadTransactions();
+            
+            // 車輛信息切換按鈕點擊事件
+            document.getElementById('toggleVehicleInfoBtn').addEventListener('click', toggleVehicleInfo);
+        });
+    </script>
+</body>
+</html> 
