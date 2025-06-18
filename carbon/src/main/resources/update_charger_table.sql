@@ -8,4 +8,7 @@ ALTER TABLE carbon_charger DROP PRIMARY KEY;
 ALTER TABLE carbon_charger ADD PRIMARY KEY (charger_id, connect_id);
 
 -- 3. 确保connect_id列不为空
-ALTER TABLE carbon_charger MODIFY connect_id VARCHAR(50) NOT NULL; 
+ALTER TABLE carbon_charger MODIFY connect_id VARCHAR(50) NOT NULL;
+
+-- 4. 新增首次啟用日期欄位
+ALTER TABLE carbon_charger ADD COLUMN first_enable_date VARCHAR(10) DEFAULT NULL COMMENT '首次啟用日期(YYYY-MM-DD)'; 

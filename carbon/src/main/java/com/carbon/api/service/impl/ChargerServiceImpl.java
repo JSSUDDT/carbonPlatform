@@ -140,6 +140,7 @@ public class ChargerServiceImpl implements ChargerService {
                     charger.setChargerKw(chargerInfo.getChargerKw());
                     charger.setChargerA(chargerInfo.getChargerA());
                     charger.setChargerV(chargerInfo.getChargerV());
+                    charger.setFirstEnableDate(chargerInfo.getFirstEnableDate());
                     charger.setUpdateTime(LocalDateTime.now().format(formatter));
                     
                     // 保存充電樁和充電槍頭

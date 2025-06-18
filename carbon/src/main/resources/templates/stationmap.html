@@ -338,6 +338,7 @@
         let markers = [];
         let bounds;
         let currentUserRole = null;
+        let userLocated = false;
         
         // 獲取當前用戶角色
         function getCurrentUserRole() {
@@ -569,7 +570,9 @@
                 }
             });
             if (markers.length > 0) {
-                map.fitBounds(bounds, { padding: [40, 40] });
+                if (!userLocated) {
+                    map.fitBounds(bounds, { padding: [40, 40] });
+                }
             }
         }
         
@@ -644,7 +647,7 @@
                 if (viewDetailsBtn) {
                     viewDetailsBtn.addEventListener('click', function() {
                         const stationId = this.getAttribute('data-station-id');
-                        window.location.href = `/stations.html?stationId=${stationId}`;
+                        window.location.href = `/carbon/stations.html?stationId=${stationId}`;
                     });
                 }
             }, 100);
@@ -673,33 +676,46 @@
         // 初始化页面
         $(document).ready(function() {
             console.log("Page initialization started");
-            
-            // 检查用户是否已登录
+            // 檢查用戶是否已登入
             if (!isAuthenticated()) {
                 console.log("User not authenticated, redirecting to login");
                 window.location.href = '/login';
                 return;
             }
-            
             console.log("User authenticated, initializing map");
-            
-            // 初始化地图
+            // 初始化地圖
             initMap();
-            
-            // 检查用户角色
+            // 嘗試取得使用者地理位置
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+                    userLocated = true;
+                    map.setView([userLat, userLng], 14);
+                    L.marker([userLat, userLng], {
+                        icon: L.divIcon({
+                            className: '',
+                            html: '<i class="fas fa-location-arrow" style="color:#007bff;font-size:2rem;"></i>',
+                            iconSize: [40, 40],
+                            iconAnchor: [20, 20]
+                        })
+                    }).addTo(map).bindPopup('您目前的位置').openPopup();
+                }, function(error) {
+                    // 使用者拒絕或失敗則維持預設中心
+                    console.log('Geolocation not allowed or failed:', error);
+                });
+            }
+            // 檢查用戶角色
             getCurrentUserRole();
-            
-            // 加载充电站数据
+            // 加載充電站數據
             console.log("Loading station data...");
             loadStations();
-
-            // 搜索输入框实时过滤
+            // 搜索輸入框即時過濾
             document.getElementById('searchInput').addEventListener('keyup', function() {
                 const searchInput = this.value.trim();
                 loadStations(searchInput);
             });
-
-            // 刷新按钮点击事件
+            // 刷新按鈕點擊事件
             document.getElementById('refreshBtn').addEventListener('click', function() {
                 document.getElementById('searchInput').value = '';
                 this.classList.add('btn-refresh-spin');

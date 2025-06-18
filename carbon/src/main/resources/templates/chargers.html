@@ -126,6 +126,7 @@
                                 <th th:text="#{chargers.status}">狀態</th>
                                 <th th:text="#{chargers.createTime}">創建時間</th>
                                 <th th:text="#{chargers.updateTime}">更新時間</th>
+                                <th th:text="#{chargers.firstEnableDate}">首次啟用日期</th>
                                 <th id="actionsHeader" style="display: none;" th:text="#{chargers.actions}">操作</th>
                             </tr>
                         </thead>
@@ -197,6 +198,14 @@
                                 <div class="form-group">
                                     <label for="connectId">連接ID <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="connectId" name="connectId" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="firstEnableDate">首次啟用日期</label>
+                                    <input type="date" class="form-control" id="firstEnableDate" name="firstEnableDate" placeholder="YYYY-MM-DD">
                                 </div>
                             </div>
                         </div>
@@ -361,7 +370,8 @@
                     }
                 },
                 { data: 'createTime' },
-                { data: 'updateTime' }
+                { data: 'updateTime' },
+                { data: 'firstEnableDate' }
             ];
             
             // 如果是管理員，添加操作列
@@ -579,6 +589,7 @@
             $('#chargerA').val(charger.chargerA || '');
             $('#chargerV').val(charger.chargerV || '');
             $('#chargerStatus').val(charger.chargerStatus || '');
+            $('#firstEnableDate').val(charger.firstEnableDate || '');
             $('#chargerModal').modal('show');
         }
         
@@ -603,6 +614,7 @@
                     chargerA: formData.get('chargerA'),
                     chargerV: formData.get('chargerV'),
                     chargerStatus: formData.get('chargerStatus'),
+                    firstEnableDate: formData.get('firstEnableDate'),
                     updateStatus: 'U' // U = 新增或更新
                 }]
             };

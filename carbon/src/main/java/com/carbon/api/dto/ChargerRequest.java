@@ -33,5 +33,7 @@ public class ChargerRequest {
         
         @NotBlank(message = "連接頭ID(connectId)不能為空")
         private String connectId;
+
+        private String firstEnableDate; // 首次啟用日期(YYYY-MM-DD)
     }
 } 

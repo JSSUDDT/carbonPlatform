@@ -53,6 +53,9 @@ public class CarbonCharger implements Serializable {
     @Column(name = "update_time")
     private String updateTime;
     
+    @Column(name = "first_enable_date", length = 10)
+    private String firstEnableDate; // 首次啟用日期 (YYYY-MM-DD)
+    
     @Transient
     private String stationName;
     
