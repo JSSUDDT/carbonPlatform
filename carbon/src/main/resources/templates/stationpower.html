@@ -124,10 +124,10 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h6 class="card-title" th:text="#{power.totalGeneration}">總發電量(kWh)</h6>
-                                        <h2 class="mb-0" id="totalGeneration">0</h2>
+                                        <h6 class="card-title" th:text="#{power.totalCharging}">總充電度數(kWh)</h6>
+                                        <h2 class="mb-0" id="totalCharging">0</h2>
                                     </div>
-                                    <i class="fas fa-solar-panel fa-3x text-white-50"></i>
+                                    <i class="fas fa-bolt fa-3x text-white-50"></i>
                                 </div>
                             </div>
                         </div>
@@ -137,10 +137,10 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h6 class="card-title" th:text="#{power.totalConsumption}">總用電量(kWh)</h6>
-                                        <h2 class="mb-0" id="totalConsumption">0</h2>
+                                        <h6 class="card-title" th:text="#{power.avgChargingPerStation}">平均充電度數(kWh)</h6>
+                                        <h2 class="mb-0" id="avgChargingPerStation">0</h2>
                                     </div>
-                                    <i class="fas fa-plug fa-3x text-white-50"></i>
+                                    <i class="fas fa-chart-line fa-3x text-white-50"></i>
                                 </div>
                             </div>
                         </div>
@@ -169,7 +169,9 @@
                                 <th th:text="#{stations.name}">充電站名稱</th>
                                 <th th:text="#{power.stationKwh}">充電站功率(kWh)</th>
                                 <th th:text="#{power.dateInfo}">日期信息</th>
-                                <th th:text="#{power.dateKwh}">日期功率(kWh)</th>
+                                <th th:text="#{power.dateKwh}">日期充電度數(kWh)</th>
+                                <th th:text="#{power.transactionKwh}">交易累計度數(kWh)</th>
+                                <th id="errorRateHeader" th:text="#{power.errorRate}">誤差率(%)</th>
                                 <th th:text="#{power.createTime}">創建時間</th>
                                 <th th:text="#{power.updateTime}">更新時間</th>
                             </tr>
@@ -248,9 +250,9 @@
             const currentLang = getCurrentLanguage();
             
             // 設置語言檔案路徑
-            let languageUrl = '/js/datatables/i18n/Chinese-traditional.json';
+            let languageUrl = '/carbon/js/datatables/i18n/Chinese-traditional.json';
             if (currentLang === 'en') {
-                languageUrl = '/js/datatables/i18n/English.json';
+                languageUrl = '/carbon/js/datatables/i18n/English.json';
             }
             
             dataTable = $('#stationPowerTable').DataTable({
@@ -363,53 +365,107 @@
         async function loadStationPower(search = '', stationId = '', startTimeFrom = '', startTimeTo = '') {
             showLoading();
             
-            let endpoint = '/StationPower';
-            let queryParams = [];
-            
-            if (stationId) {
-                queryParams.push(`stationId=${encodeURIComponent(stationId)}`);
-            }
-            
-            if (queryParams.length > 0) {
-                endpoint += `?${queryParams.join('&')}`;
-            }
-            
-            const response = await apiRequest(endpoint);
-            
-            hideLoading();
-            
-            if (response) {
-                stationPowerData = Array.isArray(response) ? response : [];
+            try {
+                // 獲取場站電力數據
+                let endpoint = '/StationPower';
+                let queryParams = [];
                 
-                // 如果有搜索條件，篩選結果
-                if (search) {
-                    stationPowerData = stationPowerData.filter(data => {
-                        const stationInfo = stations.find(s => s.stationId === data.stationId);
-                        const stationName = stationInfo ? stationInfo.stationName : '';
-                        
-                        return data.stationId.includes(search) || 
-                               (stationName && stationName.includes(search));
-                    });
+                if (stationId) {
+                    queryParams.push(`stationId=${encodeURIComponent(stationId)}`);
                 }
                 
-                // 如果有日期區間篩選，篩選結果
-                if (startTimeFrom && startTimeTo) {
-                    stationPowerData = stationPowerData.filter(data => {
-                        const dateInfo = data.dateInfo;
-                        if (!dateInfo) return false;
-                        
-                        const date = new Date(dateInfo);
-                        const startDate = new Date(startTimeFrom);
-                        const endDate = new Date(startTimeTo);
-                        
-                        return date >= startDate && date <= endDate;
-                    });
+                if (queryParams.length > 0) {
+                    endpoint += `?${queryParams.join('&')}`;
                 }
                 
-                renderStationPowerTable();
-                updateStatistics();
-            } else {
-                showError('加載充電站電力數據失敗');
+                const stationPowerResponse = await apiRequest(endpoint);
+                
+                // 獲取交易數據
+                let chargeEndpoint = '/ChargeInfo';
+                let chargeQueryParams = [];
+                
+                if (stationId) {
+                    chargeQueryParams.push(`stationId=${encodeURIComponent(stationId)}`);
+                }
+                
+                if (chargeQueryParams.length > 0) {
+                    chargeEndpoint += `?${chargeQueryParams.join('&')}`;
+                }
+                
+                const chargeResponse = await apiRequest(chargeEndpoint);
+                
+                hideLoading();
+                
+                if (stationPowerResponse) {
+                    stationPowerData = Array.isArray(stationPowerResponse) ? stationPowerResponse : [];
+                    
+                    // 如果有搜索條件，篩選結果
+                    if (search) {
+                        stationPowerData = stationPowerData.filter(data => {
+                            const stationInfo = stations.find(s => s.stationId === data.stationId);
+                            const stationName = stationInfo ? stationInfo.stationName : '';
+                            
+                            return data.stationId.includes(search) || 
+                                   (stationName && stationName.includes(search));
+                        });
+                    }
+                    
+                    // 如果有日期區間篩選，篩選結果
+                    if (startTimeFrom && startTimeTo) {
+                        stationPowerData = stationPowerData.filter(data => {
+                            const dateInfo = data.dateInfo;
+                            if (!dateInfo) return false;
+                            
+                            const date = new Date(dateInfo);
+                            const startDate = new Date(startTimeFrom);
+                            const endDate = new Date(startTimeTo);
+                            
+                            return date >= startDate && date <= endDate;
+                        });
+                    }
+                    
+                    // 合併交易統計數據
+                    if (chargeResponse && Array.isArray(chargeResponse)) {
+                        stationPowerData = stationPowerData.map(powerData => {
+                            // 計算同一天的交易累計度數
+                            const sameDateCharges = chargeResponse.filter(charge => {
+                                return charge.stationId === powerData.stationId && 
+                                       charge.startTime && 
+                                       charge.startTime.startsWith(powerData.dateInfo);
+                            });
+                            
+                            let totalTransactionKwh = 0;
+                            sameDateCharges.forEach(charge => {
+                                if (charge.kwh) {
+                                    totalTransactionKwh += parseFloat(charge.kwh);
+                                }
+                            });
+                            
+                            // 計算誤差率
+                            let errorRate = '';
+                            if (totalTransactionKwh > 0 && powerData.dateKwh) {
+                                const dateKwh = parseFloat(powerData.dateKwh);
+                                const errorRateValue = ((totalTransactionKwh - dateKwh) / totalTransactionKwh) * 100;
+                                errorRate = errorRateValue.toFixed(2);
+                            }
+                            
+                            return {
+                                ...powerData,
+                                transactionKwh: totalTransactionKwh.toFixed(2),
+                                errorRate: errorRate
+                            };
+                        });
+                    }
+                    
+                    renderStationPowerTable();
+                    updateStatistics();
+                } else {
+                    showError('加載充電站電力數據失敗');
+                }
+            } catch (error) {
+                hideLoading();
+                console.error('加載數據時發生錯誤:', error);
+                showError('加載數據時發生錯誤');
             }
         }
         
@@ -444,6 +500,8 @@
                     <td>${data.stationKwh || ''}</td>
                     <td>${data.dateInfo || ''}</td>
                     <td>${data.dateKwh || ''}</td>
+                    <td>${data.transactionKwh || ''}</td>
+                    <td>${data.errorRate || ''}</td>
                     <td>${data.createTime || ''}</td>
                     <td>${data.updateTime || ''}</td>
                 `;
@@ -459,21 +517,53 @@
         // 更新統計數據
         function updateStatistics() {
             const currentLang = getCurrentLanguage();
-            document.getElementById('totalStations').textContent = stationPowerData.length;
             
-            let totalPower = 0;
+            // 1. 充電站數量 - 統計不重複的充電站
+            const uniqueStations = new Set(stationPowerData.map(data => data.stationId));
+            document.getElementById('totalStations').textContent = uniqueStations.size;
             
+            // 2. 總充電度數 - 統計所有transactionKwh的總和
+            let totalCharging = 0;
             stationPowerData.forEach(data => {
-                if (data.dateKwh) {
-                    totalPower += parseFloat(data.dateKwh);
+                if (data.transactionKwh) {
+                    totalCharging += parseFloat(data.transactionKwh);
                 }
             });
+            document.getElementById('totalCharging').textContent = totalCharging.toFixed(2);
             
-            document.getElementById('totalGeneration').textContent = totalPower.toFixed(2);
-            document.getElementById('totalConsumption').textContent = totalPower.toFixed(2);
+            // 3. 平均充電度數 - 計算所有transactionKwh的平均值
+            let avgChargingPerStation = 0;
+            if (stationPowerData.length > 0) {
+                avgChargingPerStation = totalCharging / stationPowerData.length;
+            }
+            document.getElementById('avgChargingPerStation').textContent = avgChargingPerStation.toFixed(2);
             
-            // 設置綠色能源佔比
-            document.getElementById('greenEnergyRate').textContent = '0%';
+            // 4. 綠色能源佔比 - 計算有交易記錄的充電站佔比
+            let greenEnergyRate = 0;
+            if (uniqueStations.size > 0) {
+                const stationsWithTransactions = new Set();
+                stationPowerData.forEach(data => {
+                    if (data.transactionKwh && parseFloat(data.transactionKwh) > 0) {
+                        stationsWithTransactions.add(data.stationId);
+                    }
+                });
+                greenEnergyRate = (stationsWithTransactions.size / uniqueStations.size * 100);
+            }
+            document.getElementById('greenEnergyRate').textContent = greenEnergyRate.toFixed(1) + '%';
+        }
+        
+        // 設置誤差率欄位的tooltip
+        function setErrorRateTooltip() {
+            const currentLang = getCurrentLanguage();
+            const errorRateHeader = document.getElementById('errorRateHeader');
+            
+            if (errorRateHeader) {
+                if (currentLang === 'zh_TW') {
+                    errorRateHeader.title = '誤差率計算方法：(當日交易累計度數 - 當日日期充電度數) ÷ 當日交易累計度數 × 100';
+                } else {
+                    errorRateHeader.title = 'Error Rate Calculation: (Daily Transaction Total - Daily Date Charging) ÷ Daily Transaction Total × 100';
+                }
+            }
         }
         
         // 顯示加載提示
@@ -492,6 +582,9 @@
             
             // 初始化日期範圍選擇器
             initDateRangePicker();
+            
+            // 設置誤差率tooltip
+            setErrorRateTooltip();
             
             // 加載充電站數據用於篩選
             loadStations();
