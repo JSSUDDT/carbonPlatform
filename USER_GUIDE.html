@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>碳權平台 - 用戶使用說明</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background-color: #ffffff;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #2c3e50;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-size: 28px;
+            margin: 0;
+            font-weight: bold;
+        }
+        
+        .header .subtitle {
+            color: #7f8c8d;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        
+        .toc {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .toc h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            font-size: 20px;
+        }
+        
+        .toc ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .toc li:before {
+            content: "•";
+            color: #3498db;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            page-break-inside: avoid;
+        }
+        
+        .section h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+        
+        .section h3 {
+            color: #34495e;
+            font-size: 18px;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        
+        .feature-box {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .feature-box h4 {
+            color: #2c3e50;
+            margin-top: 0;
+            font-size: 16px;
+        }
+        
+        .step-list {
+            background-color: #e8f5e8;
+            border: 1px solid #c3e6c3;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .step-list ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .step-list li {
+            margin: 8px 0;
+        }
+        
+        .warning-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .info-box {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .screenshot {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .screenshot img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        
+        .code {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #6c757d;
+            font-size: 12px;
+        }
+        
+        @media print {
+            body {
+                font-size: 11px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>碳權平台</h1>
+        <div class="subtitle">用戶使用說明</div>
+        <div class="subtitle">版本: 1.0 | 更新日期: 2024年6月19日</div>
+    </div>
+
+    <div class="toc">
+        <h2>目錄</h2>
+        <ul>
+            <li><a href="#overview">1. 系統概述</a></li>
+            <li><a href="#login">2. 登入系統</a></li>
+            <li><a href="#dashboard">3. 儀表板</a></li>
+            <li><a href="#stations">4. 充電站管理</a></li>
+            <li><a href="#chargers">5. 充電樁管理</a></li>
+            <li><a href="#transactions">6. 交易記錄</a></li>
+            <li><a href="#power-monitoring">7. 電力監控</a></li>
+            <li><a href="#station-map">8. 充電站地圖</a></li>
+            <li><a href="#tips">9. 使用技巧</a></li>
+        </ul>
+    </div>
+
+    <div class="section" id="overview">
+        <h2>1. 系統概述</h2>
+        <p>碳權平台是一個專為電動車充電站管理而設計的Web應用系統。作為ROLE_USER角色，您可以：</p>
+        <ul>
+            <li><strong>查看充電站資訊</strong>: 瀏覽所有充電站的基本資訊和地理位置</li>
+            <li><strong>管理充電樁</strong>: 查看和維護充電樁設備資訊</li>
+            <li><strong>監控交易記錄</strong>: 查看充電交易歷史和統計資料</li>
+            <li><strong>電力監控</strong>: 監控充電站的發電量和用電量</li>
+            <li><strong>地圖導航</strong>: 使用互動式地圖查看充電站位置</li>
+        </ul>
+        
+        <div class="info-box">
+            <strong>注意:</strong> 您擁有ROLE_USER權限，可以查看大部分功能，但無法進行系統管理操作。
+        </div>
+    </div>
+
+    <div class="section" id="login">
+        <h2>2. 登入系統</h2>
+        <div class="feature-box">
+            <h4>登入步驟</h4>
+            <div class="step-list">
+                <ol>
+                    <li>開啟瀏覽器，前往系統登入頁面</li>
+                    <li>輸入您的供應商ID（vendor_id）</li>
+                    <li>輸入您的密碼</li>
+                    <li>點擊「登入」按鈕</li>
+                    <li>系統會驗證您的身份並導向主頁面</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="warning-box">
+            <strong>安全提醒:</strong>
+            <ul>
+                <li>請妥善保管您的登入憑證</li>
+                <li>不要在公共電腦上勾選「記住我」</li>
+                <li>登出時請點擊「登出」按鈕</li>
+                <li>如發現異常登入，請立即聯繫管理員</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section" id="dashboard">
+        <h2>3. 儀表板</h2>
+        <p>登入後，您會看到系統的主儀表板，包含以下功能區域：</p>
+        
+        <div class="feature-box">
+            <h4>左側導航欄</h4>
+            <ul>
+                <li><strong>充電站管理</strong>: 查看和管理充電站資訊</li>
+                <li><strong>充電樁管理</strong>: 查看和管理充電樁設備</li>
+                <li><strong>交易記錄</strong>: 查看充電交易歷史</li>
+                <li><strong>電力監控</strong>: 監控發電和用電量</li>
+                <li><strong>充電站地圖</strong>: 互動式地圖查看</li>
+            </ul>
+        </div>
+        
+        <div class="feature-box">
+            <h4>統計卡片</h4>
+            <p>儀表板頂部顯示重要統計資訊：</p>
+            <ul>
+                <li><strong>充電站數量</strong>: 顯示您管理的充電站總數</li>
+                <li><strong>總充電度數</strong>: 顯示累計充電量</li>
+                <li><strong>平均充電度數</strong>: 顯示平均每次充電量</li>
+                <li><strong>綠色能源佔比</strong>: 顯示綠色能源使用比例</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section" id="stations">
+        <h2>4. 充電站管理</h2>
+        <p>充電站管理頁面讓您查看和管理所有充電站的基本資訊。</p>
+        
+        <div class="feature-box">
+            <h4>功能特色</h4>
+            <ul>
+                <li><strong>充電站列表</strong>: 以表格形式顯示所有充電站</li>
+                <li><strong>搜尋功能</strong>: 可依站名、地址等條件搜尋</li>
+                <li><strong>排序功能</strong>: 可依各欄位排序</li>
+                <li><strong>分頁顯示</strong>: 大量資料時自動分頁</li>
+            </ul>
+        </div>
+        
+        <div class="feature-box">
+            <h4>欄位說明</h4>
+            <ul>
+                <li><strong>站名</strong>: 充電站的名稱</li>
+                <li><strong>地址</strong>: 充電站的詳細地址</li>
+                <li><strong>經度/緯度</strong>: GPS座標位置</li>
+                <li><strong>容量</strong>: 充電站的總容量</li>
+                <li><strong>狀態</strong>: 充電站的營運狀態</li>
+            </ul>
+        </div>
+        
+        <div class="step-list">
+            <h4>操作步驟</h4>
+            <ol>
+                <li>點擊左側導航欄的「充電站管理」</li>
+                <li>在搜尋框輸入關鍵字進行搜尋</li>
+                <li>點擊欄位標題進行排序</li>
+                <li>使用分頁按鈕瀏覽更多資料</li>
+                <li>點擊「查看詳情」查看特定充電站資訊</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="section" id="chargers">
+        <h2>5. 充電樁管理</h2>
+        <p>充電樁管理頁面讓您查看和管理所有充電樁設備的詳細資訊。</p>
+        
+        <div class="feature-box">
+            <h4>功能特色</h4>
+            <ul>
+                <li><strong>充電樁列表</strong>: 顯示所有充電樁設備</li>
+                <li><strong>設備狀態</strong>: 即時顯示充電樁狀態</li>
+                <li><strong>技術規格</strong>: 顯示功率、電壓、電流等技術參數</li>
+                <li><strong>啟用日期</strong>: 顯示首次啟用日期</li>
+            </ul>
+        </div>
+        
+        <div class="feature-box">
+            <h4>欄位說明</h4>
+            <ul>
+                <li><strong>充電樁ID</strong>: 設備的唯一識別碼</li>
+                <li><strong>連接器ID</strong>: 連接器的識別碼</li>
+                <li><strong>充電站</strong>: 所屬充電站</li>
+                <li><strong>類型</strong>: 充電樁類型（快充/慢充）</li>
+                <li><strong>品牌</strong>: 設備品牌</li>
+                <li><strong>功率</strong>: 充電功率（kW）</li>
+                <li><strong>狀態</strong>: 設備狀態（啟用/停用）</li>
+            </ul>
+        </div>
+        
+        <div class="info-box">
+            <strong>注意:</strong> 充電樁使用複合主鍵（充電樁ID + 連接器ID），因為一個充電樁可能有多個連接器。
+        </div>
+    </div>
+
+    <div class="section" id="transactions">
+        <h2>6. 交易記錄</h2>
+        <p>交易記錄頁面讓您查看所有充電交易的歷史記錄和統計資料。</p>
+        
+        <div class="feature-box">
+            <h4>功能特色</h4>
+            <ul>
+                <li><strong>交易歷史</strong>: 完整的充電交易記錄</li>
+                <li><strong>詳細資訊</strong>: 包含客戶、車輛、充電量等資訊</li>
+                <li><strong>碳權交易</strong>: 顯示是否同意碳權交易</li>
+                <li><strong>時間範圍</strong>: 可依時間範圍篩選</li>
+            </ul>
+        </div>
+        
+        <div class="feature-box">
+            <h4>欄位說明</h4>
+            <ul>
+                <li><strong>交易編號</strong>: 唯一的交易識別碼</li>
+                <li><strong>充電站</strong>: 交易發生的充電站</li>
+                <li><strong>充電樁</strong>: 使用的充電樁設備</li>
+                <li><strong>客戶ID</strong>: 充電客戶識別碼</li>
+                <li><strong>開始/結束時間</strong>: 充電時間範圍</li>
+                <li><strong>充電量</strong>: 實際充電度數（kWh）</li>
+                <li><strong>車輛資訊</strong>: 車型、噸位、車牌號碼</li>
+                <li><strong>碳權交易</strong>: 是否同意參與碳權交易</li>
+            </ul>
+        </div>
+        
+        <div class="step-list">
+            <h4>操作步驟</h4>
+            <ol>
+                <li>點擊左側導航欄的「交易記錄」</li>
+                <li>使用搜尋功能找到特定交易</li>
+                <li>點擊欄位標題進行排序</li>
+                <li>查看交易詳細資訊</li>
+                <li>匯出交易資料（如需要）</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="section" id="power-monitoring">
+        <h2>7. 電力監控</h2>
+        <p>電力監控頁面讓您即時監控充電站的發電量和用電量，以及相關統計資料。</p>
+        
+        <div class="feature-box">
+            <h4>統計卡片</h4>
+            <ul>
+                <li><strong>充電站數量</strong>: 顯示監控的充電站總數</li>
+                <li><strong>總充電度數</strong>: 顯示累計充電量</li>
+                <li><strong>平均充電度數</strong>: 顯示平均每次充電量</li>
+                <li><strong>綠色能源佔比</strong>: 顯示綠色能源使用比例</li>
+            </ul>
+        </div>
+        
+        <div class="feature-box">
+            <h4>監控表格</h4>
+            <ul>
+                <li><strong>發電量</strong>: 各充電站的發電量資料</li>
+                <li><strong>用電量</strong>: 各充電站的用電量資料</li>
+                <li><strong>交易累計度數</strong>: 從交易記錄統計的同一天累計度數</li>
+                <li><strong>誤差率</strong>: 發電量與用電量的差異比例</li>
+            </ul>
+        </div>
+        
+        <div class="feature-box">
+            <h4>誤差率計算</h4>
+            <p>誤差率 = |發電量 - 用電量| / 發電量 × 100%</p>
+            <p>滑鼠懸停在誤差率欄位可查看計算方法說明。</p>
+        </div>
+        
+        <div class="info-box">
+            <strong>提示:</strong> 電力監控資料會即時更新，幫助您了解充電站的能源使用效率。
+        </div>
+    </div>
+
+    <div class="section" id="station-map">
+        <h2>8. 充電站地圖</h2>
+        <p>充電站地圖提供互動式地圖功能，讓您直觀地查看所有充電站的地理位置。</p>
+        
+        <div class="feature-box">
+            <h4>地圖功能</h4>
+            <ul>
+                <li><strong>互動式地圖</strong>: 基於Google Maps的互動地圖</li>
+                <li><strong>充電站標記</strong>: 所有充電站以標記形式顯示</li>
+                <li><strong>位置搜尋</strong>: 可搜尋特定地址或地點</li>
+                <li><strong>路線規劃</strong>: 提供導航路線規劃</li>
+                <li><strong>地理位置</strong>: 自動獲取您的位置並顯示藍色箭頭</li>
+            </ul>
+        </div>
+        
+        <div class="step-list">
+            <h4>使用步驟</h4>
+            <ol>
+                <li>點擊左側導航欄的「充電站地圖」</li>
+                <li>允許瀏覽器獲取您的地理位置</li>
+                <li>地圖會自動定位到您的位置（藍色箭頭）</li>
+                <li>點擊充電站標記查看詳細資訊</li>
+                <li>使用搜尋框搜尋特定地點</li>
+                <li>點擊「查看詳情」連結查看充電站完整資訊</li>
+            </ol>
+        </div>
+        
+        <div class="warning-box">
+            <strong>注意:</strong>
+            <ul>
+                <li>首次使用時需要允許瀏覽器獲取地理位置</li>
+                <li>地圖載入可能需要一些時間，請耐心等待</li>
+                <li>建議使用Chrome或Firefox瀏覽器以獲得最佳體驗</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section" id="tips">
+        <h2>9. 使用技巧</h2>
+        
+        <div class="feature-box">
+            <h4>搜尋技巧</h4>
+            <ul>
+                <li><strong>關鍵字搜尋</strong>: 使用部分關鍵字即可找到相關資料</li>
+                <li><strong>組合搜尋</strong>: 可同時使用多個條件進行篩選</li>
+                <li><strong>清除搜尋</strong>: 點擊搜尋框旁的清除按鈕重置搜尋條件</li>
+            </ul>
+        </div>
+        
+        <div class="feature-box">
+            <h4>表格操作</h4>
+            <ul>
+                <li><strong>排序</strong>: 點擊欄位標題可進行升序/降序排序</li>
+                <li><strong>分頁</strong>: 大量資料時使用分頁按鈕瀏覽</li>
+                <li><strong>每頁顯示</strong>: 可調整每頁顯示的記錄數量</li>
+                <li><strong>匯出</strong>: 部分頁面支援資料匯出功能</li>
+            </ul>
+        </div>
+        
+        <div class="feature-box">
+            <h4>瀏覽器建議</h4>
+            <ul>
+                <li><strong>推薦瀏覽器</strong>: Chrome、Firefox、Edge最新版本</li>
+                <li><strong>螢幕解析度</strong>: 建議使用1920x1080或更高解析度</li>
+                <li><strong>網路連線</strong>: 建議使用穩定的網路連線</li>
+                <li><strong>JavaScript</strong>: 請確保瀏覽器已啟用JavaScript</li>
+            </ul>
+        </div>
+        
+        <div class="info-box">
+            <strong>技術支援:</strong> 如遇到技術問題，請聯繫系統管理員或查看系統日誌。
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><strong>碳權平台用戶使用說明</strong></p>
+        <p>版本: 1.0 | 最後更新: 2024年6月19日 | 適用對象: ROLE_USER</p>
+        <p>本文件僅供內部使用，請勿外流</p>
+    </div>
+</body>
+</html> 

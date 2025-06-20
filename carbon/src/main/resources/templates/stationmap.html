@@ -146,6 +146,13 @@
     </style>
 </head>
 <body>
+    <!-- 隱藏的翻譯元素 -->
+    <div style="display: none;">
+        <span id="traditionalGridText" th:text="#{message.traditionalGrid}">傳統電網</span>
+        <span id="greenEnergyText" th:text="#{message.greenEnergy}">綠能</span>
+        <span id="undefinedText" th:text="#{message.undefined}">未定義</span>
+    </div>
+    
     <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
         <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="#">
             <i class="fas fa-leaf mr-2"></i><span th:text="#{app.name}">碳權平台</span>
@@ -216,17 +223,18 @@
                 <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
                 <div id="successAlert" class="alert alert-success d-none" role="alert"></div>
                 
-                <!-- 充電站数量統計 -->
+                <!-- 最近充電站信息 -->
                 <div class="row mb-4">
                     <div class="col-md-4">
                         <div class="card bg-primary text-white">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h6 class="card-title" th:text="#{power.stationCount}">充電站數量</h6>
-                                        <h2 class="mb-0" id="totalStations">0</h2>
+                                        <h6 class="card-title" th:text="#{stationmap.nearestStation}">最近的充電站</h6>
+                                        <h5 class="mb-1" id="nearestStationName">-</h5>
+                                        <p class="mb-0 small" id="nearestStationDistance">距離: -</p>
                                     </div>
-                                    <i class="fas fa-charging-station fa-3x text-white-50"></i>
+                                    <i class="fas fa-map-marker-alt fa-3x text-white-50"></i>
                                 </div>
                             </div>
                         </div>
@@ -265,22 +273,22 @@
                 
                 <!-- 地圖控制器 -->
                 <div class="map-controls">
-                    <div class="map-control-btn" id="zoomIn" title="放大">
+                    <div class="map-control-btn" id="zoomIn" th:title="#{stationmap.zoomIn}" title="放大">
                         <i class="fas fa-plus"></i>
                     </div>
-                    <div class="map-control-btn" id="zoomOut" title="縮小">
+                    <div class="map-control-btn" id="zoomOut" th:title="#{stationmap.zoomOut}" title="縮小">
                         <i class="fas fa-minus"></i>
                     </div>
-                    <div class="map-control-btn" id="viewAll" title="查看所有站點">
+                    <div class="map-control-btn" id="viewAll" th:title="#{stationmap.viewAll}" title="查看所有站點">
                         <i class="fas fa-expand"></i>
                     </div>
                 </div>
                 
                 <div id="loadingSpinner" class="text-center">
                     <div class="spinner-border text-primary" role="status">
-                        <span class="sr-only" th:text="#{message.loading}">加載中...</span>
+                        <span class="sr-only" th:text="#{message.loading}">載入中...</span>
                     </div>
-                    <p class="mt-2" th:text="#{stationmap.loading}">正在加載充電站地圖數據，請稍候...</p>
+                    <p class="mt-2" th:text="#{stationmap.loading}">正在載入充電站地圖資料，請稍候...</p>
                 </div>
                 
                 <!-- 地圖圖例 -->
@@ -292,11 +300,11 @@
                         <div class="row">
                             <div class="col-md-3 col-6 mb-2">
                                 <span class="energy-source-badge energy-grid"><i class="fas fa-plug"></i></span>
-                                <span class="ml-1" th:text="#{stationmap.grid}">市電</span>
+                                <span class="ml-1" th:text="#{message.traditionalGrid}">傳統電網</span>
                             </div>
                             <div class="col-md-3 col-6 mb-2">
                                 <span class="energy-source-badge energy-solar"><i class="fas fa-sun"></i></span>
-                                <span class="ml-1" th:text="#{stationmap.solar}">太陽能</span>
+                                <span class="ml-1" th:text="#{message.greenEnergy}">綠能</span>
                             </div>
                         </div>
                     </div>
@@ -339,6 +347,7 @@
         let bounds;
         let currentUserRole = null;
         let userLocated = false;
+        let showAllStations = false; // 新增：控制是否顯示所有站點
         
         // 獲取當前用戶角色
         function getCurrentUserRole() {
@@ -376,39 +385,113 @@
                 if (currentUserRole === 'ROLE_ADMIN') {
                     userRoleAlert.classList.remove('alert-warning');
                     userRoleAlert.classList.add('alert-info');
-                    // 使用i18n翻譯
-                    fetch(`/api/i18n/messages?locale=${currentLang}`)
-                        .then(response => response.json())
-                        .then(translations => {
-                            userRoleMessage.textContent = translations['stationmap.admin.view'] || 'Administrator view: You can see all charging stations.';
-                        }).catch(error => {
-                            userRoleMessage.textContent = currentLang === 'en' 
-                                ? 'Administrator view: You can see all charging stations.' 
-                                : '管理員視圖：您可以查看所有充電站。';
-                        });
+                    userRoleMessage.textContent = currentLang === 'en' 
+                        ? 'Administrator view: You can see all charging stations.' 
+                        : '管理員視圖：您可以查看所有充電站。';
                 } else if (currentUserRole === 'ROLE_USER') {
                     userRoleAlert.classList.remove('alert-info');
                     userRoleAlert.classList.add('alert-warning');
-                    // 使用i18n翻譯
-                    fetch(`/api/i18n/messages?locale=${currentLang}`)
-                        .then(response => response.json())
-                        .then(translations => {
-                            userRoleMessage.textContent = translations['stationmap.user.view'] || 'User view: You can only see your charging stations.';
-                        }).catch(error => {
-                            userRoleMessage.textContent = currentLang === 'en' 
-                                ? 'User view: You can only see your charging stations.' 
-                                : '用戶視圖：您只能查看您自己的充電站。';
-                        });
+                    userRoleMessage.textContent = currentLang === 'en' 
+                        ? 'User view: You can only see your charging stations.' 
+                        : '用戶視圖：您只能查看您自己的充電站。';
                 }
             } else {
                 userRoleAlert.classList.add('d-none');
             }
         }
         
-        // 初始化地圖
-        function initMap() {
-            // 創建地圖
-            map = L.map('map-container').setView([23.6978, 120.9605], 7); // 台灣的中心點和縮放級別
+        // 初始化页面
+        $(document).ready(function() {
+            console.log("Page initialization started");
+            // 檢查用戶是否已登入
+            if (!isAuthenticated()) {
+                console.log("User not authenticated, redirecting to login");
+                window.location.href = '/login';
+                return;
+            }
+            console.log("User authenticated, initializing map");
+            
+            // 檢查用戶角色
+            getCurrentUserRole();
+            
+            // 先嘗試獲取使用者地理位置，然後初始化地圖
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+                    userLocated = true;
+                    
+                    console.log("User location obtained:", userLat, userLng);
+                    
+                    // 保存使用者位置到全局變數
+                    window.userLocation = {
+                        lat: userLat,
+                        lng: userLng
+                    };
+                    
+                    // 以使用者位置為中心初始化地圖
+                    initMapWithUserLocation(userLat, userLng);
+                    
+                    // 加載充電站數據
+                    console.log("Loading station data...");
+                    loadStations().then(() => {
+                        // 添加使用者位置標記
+                        const currentLang = getCurrentLanguage();
+                        const locationText = currentLang === 'en' ? 'Your current location' : '您目前的位置';
+                        L.marker([userLat, userLng], {
+                            icon: L.divIcon({
+                                className: '',
+                                html: '<i class="fas fa-location-arrow" style="color:#007bff;font-size:2rem;"></i>',
+                                iconSize: [40, 40],
+                                iconAnchor: [20, 20]
+                            })
+                        }).addTo(map).bindPopup(locationText).openPopup();
+                        
+                        // 渲染地圖
+                        renderStationsOnMap();
+                    });
+                }, function(error) {
+                    // 使用者拒絕或失敗則使用預設中心初始化
+                    console.log('Geolocation not allowed or failed:', error);
+                    initMap();
+                    loadStations().then(() => {
+                        renderStationsOnMap();
+                    });
+                });
+            } else {
+                // 不支援地理位置，使用預設中心初始化
+                console.log('Geolocation not supported');
+                initMap();
+                loadStations().then(() => {
+                    renderStationsOnMap();
+                });
+            }
+            
+            // 搜索輸入框即時過濾
+            document.getElementById('searchInput').addEventListener('keyup', function() {
+                const searchInput = this.value.trim();
+                // 搜索時強制重新渲染地圖
+                loadStations(searchInput).then(() => {
+                    renderStationsOnMap();
+                });
+            });
+            // 刷新按鈕點擊事件
+            document.getElementById('refreshBtn').addEventListener('click', function() {
+                document.getElementById('searchInput').value = '';
+                this.classList.add('btn-refresh-spin');
+                loadStations().then(() => {
+                    renderStationsOnMap();
+                });
+                setTimeout(() => {
+                    this.classList.remove('btn-refresh-spin');
+                }, 1000);
+            });
+        });
+        
+        // 以使用者位置為中心初始化地圖
+        function initMapWithUserLocation(userLat, userLng) {
+            // 創建地圖 - 直接以使用者位置為中心，10公里視野
+            map = L.map('map-container').setView([userLat, userLng], 13);
             
             // 添加地圖圖層
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -429,7 +512,64 @@
             
             document.getElementById('viewAll').addEventListener('click', function() {
                 if (markers.length > 0) {
-                    map.fitBounds(bounds);
+                    // 切換顯示模式
+                    showAllStations = !showAllStations;
+                    
+                    // 更新按鈕文字和圖標
+                    const currentLang = getCurrentLanguage();
+                    if (showAllStations) {
+                        this.innerHTML = '<i class="fas fa-crosshairs"></i>';
+                        this.title = currentLang === 'en' ? 'Show nearby stations' : '顯示附近站點';
+                    } else {
+                        this.innerHTML = '<i class="fas fa-expand"></i>';
+                        this.title = currentLang === 'en' ? 'View all stations' : '查看所有站點';
+                    }
+                    
+                    // 重新渲染地圖
+                    renderStationsOnMap();
+                }
+            });
+        }
+        
+        // 初始化地圖（備用方案）
+        function initMap() {
+            // 創建地圖 - 使用台灣的中心點作為預設位置
+            map = L.map('map-container').setView([23.6978, 120.9605], 7);
+            
+            // 添加地圖圖層
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            // 創建邊界
+            bounds = L.latLngBounds();
+            
+            // 添加地圖控制事件
+            document.getElementById('zoomIn').addEventListener('click', function() {
+                map.zoomIn();
+            });
+            
+            document.getElementById('zoomOut').addEventListener('click', function() {
+                map.zoomOut();
+            });
+            
+            document.getElementById('viewAll').addEventListener('click', function() {
+                if (markers.length > 0) {
+                    // 切換顯示模式
+                    showAllStations = !showAllStations;
+                    
+                    // 更新按鈕文字和圖標
+                    const currentLang = getCurrentLanguage();
+                    if (showAllStations) {
+                        this.innerHTML = '<i class="fas fa-crosshairs"></i>';
+                        this.title = currentLang === 'en' ? 'Show nearby stations' : '顯示附近站點';
+                    } else {
+                        this.innerHTML = '<i class="fas fa-expand"></i>';
+                        this.title = currentLang === 'en' ? 'View all stations' : '查看所有站點';
+                    }
+                    
+                    // 重新渲染地圖
+                    renderStationsOnMap();
                 }
             });
         }
@@ -475,8 +615,11 @@
                 if (response) {
                     console.log("Received stations data:", response);
                     stations = Array.isArray(response) ? response : [];
-                    renderStationsOnMap();
-                    document.getElementById('totalStations').textContent = stations.length;
+                    // 只有在沒有使用者位置時才立即渲染地圖
+                    if (!userLocated) {
+                        renderStationsOnMap();
+                    }
+                    return Promise.resolve(); // 返回Promise
                 } else {
                     showError('加載充電站數據失敗');
                     document.getElementById('refreshBtn').classList.add('btn-danger');
@@ -485,6 +628,7 @@
                         document.getElementById('refreshBtn').classList.remove('btn-danger');
                         document.getElementById('refreshBtn').removeAttribute('title');
                     }, 3000);
+                    return Promise.reject('Failed to load stations');
                 }
             } catch (error) {
                 console.error("Error loading stations:", error);
@@ -496,6 +640,7 @@
                     document.getElementById('refreshBtn').classList.remove('btn-danger');
                     document.getElementById('refreshBtn').removeAttribute('title');
                 }, 3000);
+                return Promise.reject(error);
             }
         }
         
@@ -536,6 +681,27 @@
                 showNoStationsMessage();
                 return;
             }
+            
+            // 過濾充電站：只顯示使用者位置10公里內的充電站
+            let filteredStations = stations;
+            if (userLocated && window.userLocation && !showAllStations) {
+                filteredStations = stations.filter(station => {
+                    if (station.gpsLatitude && station.gpsLongitude) {
+                        const stationLat = parseFloat(station.gpsLatitude);
+                        const stationLng = parseFloat(station.gpsLongitude);
+                        const distance = calculateDistance(
+                            window.userLocation.lat, 
+                            window.userLocation.lng, 
+                            stationLat, 
+                            stationLng
+                        );
+                        return distance <= 10; // 10公里內
+                    }
+                    return false;
+                });
+            }
+            
+            // 顯示所有充電站（不管距離），但只計算過濾後的數量
             stations.forEach(station => {
                 if (station.gpsLatitude && station.gpsLongitude) {
                     try {
@@ -545,13 +711,8 @@
                             console.warn('Invalid GPS coordinates for station:', station.stationId);
                             return;
                         }
-                        // 狀態顏色：1=綠色，0=灰色，其餘黃色
-                        let markerColor = '#28a745';
-                        if (station.stationStatus === '0') {
-                            markerColor = '#6c757d';
-                        } else if (station.stationStatus !== '1') {
-                            markerColor = '#ffc107';
-                        }
+                        // 所有充電站都顯示為綠色
+                        const markerColor = '#28a745';
                         const stationIcon = L.divIcon({
                             className: 'station-marker',
                             html: `<i class="fas fa-charging-station" style="color:${markerColor}"></i>`,
@@ -569,11 +730,31 @@
                     }
                 }
             });
-            if (markers.length > 0) {
-                if (!userLocated) {
-                    map.fitBounds(bounds, { padding: [40, 40] });
-                }
+            
+            // 更新最近充電站信息
+            updateNearestStation();
+            
+            // 調整地圖視圖
+            if (userLocated && window.userLocation) {
+                // 以使用者位置為中心，設置10公里視野
+                map.setView([window.userLocation.lat, window.userLocation.lng], 13);
+            } else if (markers.length > 0) {
+                // 如果沒有使用者位置，則顯示所有充電站
+                map.fitBounds(bounds, { padding: [40, 40] });
             }
+        }
+        
+        // 計算兩點之間的距離（公里）
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // 地球半徑（公里）
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                     Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const distance = R * c;
+            return distance;
         }
         
         // 顯示充電站詳情
@@ -616,8 +797,12 @@
                         <div class="mb-2">
                             <span class="energy-source-badge ${energySourceClass}"><i class="fas ${energySourceIcon}"></i></span>
                             <span class="ml-1">${currentLang === 'en' ? 
-                                (station.powerSource === '1' ? 'Grid' : 'Solar') : 
-                                (station.powerSource === '1' ? '市電' : '太陽能')}</span>
+                                (station.powerSource === '1' ? document.getElementById('traditionalGridText').textContent : 
+                                 station.powerSource === '2' ? document.getElementById('greenEnergyText').textContent : 
+                                 document.getElementById('undefinedText').textContent) : 
+                                (station.powerSource === '1' ? document.getElementById('traditionalGridText').textContent : 
+                                 station.powerSource === '2' ? document.getElementById('greenEnergyText').textContent : 
+                                 document.getElementById('undefinedText').textContent)}</span>
                             <span class="${statusClass} ml-2"><i class="fas fa-circle mr-1"></i>${statusText}</span>
                         </div>
                         <div class="mb-1"><strong>ID:</strong> ${station.stationId || '-'}</div>
@@ -659,72 +844,57 @@
             const noStationsText = document.getElementById('noStationsText');
             const currentLang = getCurrentLanguage();
             
-            // 使用i18n翻译
-            fetch(`/api/i18n/messages?locale=${currentLang}`)
-                .then(response => response.json())
-                .then(translations => {
-                    noStationsText.textContent = translations['stationmap.noStations'] || 'No charging stations found.';
-                }).catch(error => {
-                    noStationsText.textContent = currentLang === 'en' 
-                        ? 'No charging stations found.' 
-                        : '未找到充電站。';
-                });
+            noStationsText.textContent = currentLang === 'en' 
+                ? 'No charging stations found.' 
+                : '未找到充電站。';
             
             noStationsMessage.classList.remove('d-none');
         }
         
-        // 初始化页面
-        $(document).ready(function() {
-            console.log("Page initialization started");
-            // 檢查用戶是否已登入
-            if (!isAuthenticated()) {
-                console.log("User not authenticated, redirecting to login");
-                window.location.href = '/login';
+        // 更新最近充電站信息
+        function updateNearestStation() {
+            const nearestStationName = document.getElementById('nearestStationName');
+            const nearestStationDistance = document.getElementById('nearestStationDistance');
+            const currentLang = getCurrentLanguage();
+            
+            if (!userLocated || !window.userLocation || stations.length === 0) {
+                nearestStationName.textContent = '-';
+                nearestStationDistance.textContent = currentLang === 'en' ? 'Distance: -' : '距離: -';
                 return;
             }
-            console.log("User authenticated, initializing map");
-            // 初始化地圖
-            initMap();
-            // 嘗試取得使用者地理位置
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    const userLat = position.coords.latitude;
-                    const userLng = position.coords.longitude;
-                    userLocated = true;
-                    map.setView([userLat, userLng], 14);
-                    L.marker([userLat, userLng], {
-                        icon: L.divIcon({
-                            className: '',
-                            html: '<i class="fas fa-location-arrow" style="color:#007bff;font-size:2rem;"></i>',
-                            iconSize: [40, 40],
-                            iconAnchor: [20, 20]
-                        })
-                    }).addTo(map).bindPopup('您目前的位置').openPopup();
-                }, function(error) {
-                    // 使用者拒絕或失敗則維持預設中心
-                    console.log('Geolocation not allowed or failed:', error);
-                });
+            
+            let nearestStation = null;
+            let minDistance = Infinity;
+            
+            // 找到最近的充電站
+            stations.forEach(station => {
+                if (station.gpsLatitude && station.gpsLongitude) {
+                    const stationLat = parseFloat(station.gpsLatitude);
+                    const stationLng = parseFloat(station.gpsLongitude);
+                    const distance = calculateDistance(
+                        window.userLocation.lat,
+                        window.userLocation.lng,
+                        stationLat,
+                        stationLng
+                    );
+                    
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearestStation = station;
+                    }
+                }
+            });
+            
+            if (nearestStation) {
+                nearestStationName.textContent = nearestStation.stationName || nearestStation.stationId || (currentLang === 'en' ? 'Unnamed Station' : '未命名充電站');
+                const distanceText = currentLang === 'en' ? 'Distance' : '距離';
+                const kmText = currentLang === 'en' ? 'km' : '公里';
+                nearestStationDistance.textContent = `${distanceText}: ${minDistance.toFixed(1)} ${kmText}`;
+            } else {
+                nearestStationName.textContent = '-';
+                nearestStationDistance.textContent = currentLang === 'en' ? 'Distance: -' : '距離: -';
             }
-            // 檢查用戶角色
-            getCurrentUserRole();
-            // 加載充電站數據
-            console.log("Loading station data...");
-            loadStations();
-            // 搜索輸入框即時過濾
-            document.getElementById('searchInput').addEventListener('keyup', function() {
-                const searchInput = this.value.trim();
-                loadStations(searchInput);
-            });
-            // 刷新按鈕點擊事件
-            document.getElementById('refreshBtn').addEventListener('click', function() {
-                document.getElementById('searchInput').value = '';
-                this.classList.add('btn-refresh-spin');
-                loadStations();
-                setTimeout(() => {
-                    this.classList.remove('btn-refresh-spin');
-                }, 1000);
-            });
-        });
+        }
     </script>
 </body>
 </html>

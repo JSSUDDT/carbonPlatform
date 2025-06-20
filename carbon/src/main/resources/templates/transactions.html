@@ -84,7 +84,7 @@
                                 <i class="fas fa-sync-alt mr-1"></i><span th:text="#{transactions.refresh}">刷新</span>
                             </button>
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="toggleVehicleInfoBtn" style="display: none;">
-                                <i class="fas fa-car mr-1"></i><span>車輛信息</span>
+                                <i class="fas fa-car mr-1"></i><span th:text="#{transactions.vehicleInfo}">車輛信息</span>
                             </button>
                         </div>
                         <select class="custom-select custom-select-sm mr-2" id="stationFilter" style="width: auto;">
@@ -189,7 +189,7 @@
                 
                 <div id="loadingSpinner" class="text-center">
                     <div class="spinner-border text-primary" role="status">
-                        <span class="sr-only" th:text="#{message.loading}">加載中...</span>
+                        <span class="sr-only" th:text="#{message.loading}">載入中...</span>
                     </div>
                     <p class="mt-2" th:text="#{transactions.loading}">正在加載充電記錄數據，請稍候...</p>
                 </div>

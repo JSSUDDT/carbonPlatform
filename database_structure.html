@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>碳權平台 - 資料庫結構說明文件</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background-color: #ffffff;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #2c3e50;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-size: 28px;
+            margin: 0;
+            font-weight: bold;
+        }
+        
+        .header .subtitle {
+            color: #7f8c8d;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        
+        .toc {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .toc h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            font-size: 20px;
+        }
+        
+        .toc ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .toc li:before {
+            content: "•";
+            color: #3498db;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            page-break-inside: avoid;
+        }
+        
+        .section h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+        
+        .section h3 {
+            color: #34495e;
+            font-size: 18px;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 12px;
+        }
+        
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #2980b9;
+        }
+        
+        td {
+            padding: 10px 8px;
+            border: 1px solid #ddd;
+            vertical-align: top;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .pk {
+            background-color: #e8f5e8 !important;
+            font-weight: bold;
+        }
+        
+        .fk {
+            /* 移除外鍵底色 */
+        }
+        
+        .required {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .optional {
+            color: #6c757d;
+        }
+        
+        .info-box {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .warning-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .code {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+        }
+        
+        .relationship-diagram {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #6c757d;
+            font-size: 12px;
+        }
+        
+        @media print {
+            body {
+                font-size: 11px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            table {
+                font-size: 10px;
+            }
+            
+            th, td {
+                padding: 6px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>碳權平台</h1>
+        <div class="subtitle">資料庫結構說明文件</div>
+        <div class="subtitle">版本: 1.0 | 更新日期: 2024年6月19日</div>
+    </div>
+
+    <div class="toc">
+        <h2>目錄</h2>
+        <ul>
+            <li><a href="#overview">1. 系統概述</a></li>
+            <li><a href="#database-info">2. 資料庫連接資訊</a></li>
+            <li><a href="#tables">3. 資料表結構</a></li>
+        </ul>
+    </div>
+
+    <div class="section" id="overview">
+        <h2>1. 系統概述</h2>
+        <p>碳權平台是一個基於Spring Boot的Web應用系統，主要功能包括：</p>
+        <ul>
+            <li><strong>充電站管理</strong>: 管理充電站基本資訊、地理位置和容量</li>
+            <li><strong>充電樁管理</strong>: 管理充電樁設備資訊和狀態</li>
+            <li><strong>充電交易</strong>: 記錄和管理充電交易資料</li>
+            <li><strong>電力監控</strong>: 監控充電站發電量和用電量</li>
+            <li><strong>用戶管理</strong>: 支援多角色權限管理</li>
+        </ul>
+        
+        <div class="info-box">
+            <strong>技術架構:</strong> Spring Boot + MySQL + JPA + JWT + Thymeleaf
+        </div>
+    </div>
+
+    <div class="section" id="database-info">
+        <h2>2. 資料庫連接資訊</h2>
+        <table>
+            <tr>
+                <th>項目</th>
+                <th>值</th>
+                <th>說明</th>
+            </tr>
+            <tr>
+                <td>資料庫類型</td>
+                <td>MySQL</td>
+                <td>關聯式資料庫</td>
+            </tr>
+            <tr>
+                <td>主機位址</td>
+                <td>etreego.mysql.database.azure.com:3306</td>
+                <td>Azure MySQL服務</td>
+            </tr>
+            <tr>
+                <td>資料庫名稱</td>
+                <td>ccms_sit</td>
+                <td>測試環境資料庫</td>
+            </tr>
+            <tr>
+                <td>字符集</td>
+                <td>utf8mb4</td>
+                <td>支援完整Unicode字符</td>
+            </tr>
+            <tr>
+                <td>排序規則</td>
+                <td>utf8mb4_unicode_ci</td>
+                <td>不區分大小寫</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section" id="tables">
+        <h2>3. 資料表結構</h2>
+        
+        <h3>3.1 carbon_vendor (供應商表)</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>欄位名稱</th>
+                        <th>資料類型</th>
+                        <th>長度</th>
+                        <th>是否必填</th>
+                        <th>預設值</th>
+                        <th>說明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="pk">
+                        <td>vendor_id</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="required">是</td>
+                        <td>-</td>
+                        <td>供應商ID (主鍵)</td>
+                    </tr>
+                    <tr>
+                        <td>password</td>
+                        <td>String</td>
+                        <td>100</td>
+                        <td class="required">是</td>
+                        <td>-</td>
+                        <td>密碼 (BCrypt加密)</td>
+                    </tr>
+                    <tr>
+                        <td>status</td>
+                        <td>String</td>
+                        <td>1</td>
+                        <td class="optional">否</td>
+                        <td>1</td>
+                        <td>狀態 (1:啟用, 0:停用)</td>
+                    </tr>
+                    <tr>
+                        <td>role</td>
+                        <td>String</td>
+                        <td>20</td>
+                        <td class="optional">否</td>
+                        <td>ROLE_USER</td>
+                        <td>角色 (ROLE_ADMIN, ROLE_USER)</td>
+                    </tr>
+                    <tr>
+                        <td>create_time</td>
+                        <td>String</td>
+                        <td>-</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>建立時間</td>
+                    </tr>
+                    <tr>
+                        <td>update_time</td>
+                        <td>String</td>
+                        <td>-</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>更新時間</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="info-box">
+            <strong>說明:</strong> 儲存系統用戶資訊，支援角色權限管理。每個供應商可以管理多個充電站。
+        </div>
+
+        <h3>3.2 carbon_station (充電站表)</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>欄位名稱</th>
+                        <th>資料類型</th>
+                        <th>長度</th>
+                        <th>是否必填</th>
+                        <th>預設值</th>
+                        <th>說明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="pk">
+                        <td>station_id</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="required">是</td>
+                        <td>-</td>
+                        <td>充電站ID (主鍵)</td>
+                    </tr>
+                    <tr class="fk">
+                        <td>vendor_id</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="required">是</td>
+                        <td>-</td>
+                        <td>供應商ID (外鍵)</td>
+                    </tr>
+                    <tr>
+                        <td>station_name</td>
+                        <td>String</td>
+                        <td>100</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>充電站名稱</td>
+                    </tr>
+                    <tr>
+                        <td>station_kwh</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>充電站容量(kWh)</td>
+                    </tr>
+                    <tr>
+                        <td>city</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>城市</td>
+                    </tr>
+                    <tr>
+                        <td>address</td>
+                        <td>String</td>
+                        <td>200</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>地址</td>
+                    </tr>
+                    <tr>
+                        <td>storage_enable</td>
+                        <td>String</td>
+                        <td>1</td>
+                        <td class="optional">否</td>
+                        <td>0</td>
+                        <td>是否有儲能設備 (1:是, 0:否)</td>
+                    </tr>
+                    <tr>
+                        <td>power_source</td>
+                        <td>String</td>
+                        <td>1</td>
+                        <td class="optional">否</td>
+                        <td>1</td>
+                        <td>電力來源 (1:併網/離網 2:太陽光電/離網)</td>
+                    </tr>
+                    <tr>
+                        <td>gps_latitude</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>GPS緯度</td>
+                    </tr>
+                    <tr>
+                        <td>gps_longitude</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>GPS經度</td>
+                    </tr>
+                    <tr>
+                        <td>station_status</td>
+                        <td>String</td>
+                        <td>1</td>
+                        <td class="optional">否</td>
+                        <td>1</td>
+                        <td>充電站狀態 (1:啟用, 0:停用)</td>
+                    </tr>
+                    <tr>
+                        <td>create_time</td>
+                        <td>String</td>
+                        <td>-</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>建立時間</td>
+                    </tr>
+                    <tr>
+                        <td>update_time</td>
+                        <td>String</td>
+                        <td>-</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>更新時間</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="info-box">
+            <strong>說明:</strong> 儲存充電站基本資訊，包含地理位置、容量和狀態等。支援地圖顯示功能。
+        </div>
+
+        <h3>3.3 carbon_charger (充電樁表)</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>欄位名稱</th>
+                        <th>資料類型</th>
+                        <th>長度</th>
+                        <th>是否必填</th>
+                        <th>預設值</th>
+                        <th>說明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="pk">
+                        <td>charger_id</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="required">是</td>
+                        <td>-</td>
+                        <td>充電樁ID (複合主鍵)</td>
+                    </tr>
+                    <tr class="pk">
+                        <td>connect_id</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="required">是</td>
+                        <td>-</td>
+                        <td>連接器ID (複合主鍵)</td>
+                    </tr>
+                    <tr class="fk">
+                        <td>station_id</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="required">是</td>
+                        <td>-</td>
+                        <td>充電站ID (外鍵)</td>
+                    </tr>
+                    <tr class="fk">
+                        <td>vendor_id</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="required">是</td>
+                        <td>-</td>
+                        <td>供應商ID (外鍵)</td>
+                    </tr>
+                    <tr>
+                        <td>charger_type</td>
+                        <td>String</td>
+                        <td>10</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>充電樁類型</td>
+                    </tr>
+                    <tr>
+                        <td>charger_brand</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>充電樁品牌</td>
+                    </tr>
+                    <tr>
+                        <td>charger_kw</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>充電功率(kW)</td>
+                    </tr>
+                    <tr>
+                        <td>charger_a</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>電流(A)</td>
+                    </tr>
+                    <tr>
+                        <td>charger_v</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>電壓(V)</td>
+                    </tr>
+                    <tr>
+                        <td>charger_status</td>
+                        <td>String</td>
+                        <td>1</td>
+                        <td class="optional">否</td>
+                        <td>1</td>
+                        <td>充電樁狀態 (1:啟用, 0:停用)</td>
+                    </tr>
+                    <tr>
+                        <td>first_enable_date</td>
+                        <td>String</td>
+                        <td>10</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>首次啟用日期 (YYYY-MM-DD)</td>
+                    </tr>
+                    <tr>
+                        <td>create_time</td>
+                        <td>String</td>
+                        <td>-</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>建立時間</td>
+                    </tr>
+                    <tr>
+                        <td>update_time</td>
+                        <td>String</td>
+                        <td>-</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>更新時間</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="warning-box">
+            <strong>注意:</strong> 此表使用複合主鍵 (charger_id + connect_id)，因為一個充電樁可能有多個連接器。
+        </div>
+
+        <h3>3.4 carbon_charge (充電交易表)</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>欄位名稱</th>
+                        <th>資料類型</th>
+                        <th>長度</th>
+                        <th>是否必填</th>
+                        <th>預設值</th>
+                        <th>說明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="pk">
+                        <td>trans_no</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="required">是</td>
+                        <td>-</td>
+                        <td>交易編號 (主鍵)</td>
+                    </tr>
+                    <tr class="fk">
+                        <td>vendor_id</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="required">是</td>
+                        <td>-</td>
+                        <td>供應商ID (外鍵)</td>
+                    </tr>
+                    <tr class="fk">
+                        <td>station_id</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="required">是</td>
+                        <td>-</td>
+                        <td>充電站ID (外鍵)</td>
+                    </tr>
+                    <tr class="fk">
+                        <td>charger_id</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="required">是</td>
+                        <td>-</td>
+                        <td>充電樁ID (外鍵)</td>
+                    </tr>
+                    <tr>
+                        <td>connect_id</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>連接器ID</td>
+                    </tr>
+                    <tr>
+                        <td>invoice_no</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>發票號碼</td>
+                    </tr>
+                    <tr>
+                        <td>customer_id</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>客戶ID</td>
+                    </tr>
+                    <tr>
+                        <td>invoice_date</td>
+                        <td>String</td>
+                        <td>20</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>發票日期</td>
+                    </tr>
+                    <tr>
+                        <td>carbon_credit</td>
+                        <td>String</td>
+                        <td>1</td>
+                        <td class="optional">否</td>
+                        <td>0</td>
+                        <td>是否同意碳權交易 (1:是, 0:否)</td>
+                    </tr>
+                    <tr>
+                        <td>start_time</td>
+                        <td>String</td>
+                        <td>20</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>開始時間</td>
+                    </tr>
+                    <tr>
+                        <td>end_time</td>
+                        <td>String</td>
+                        <td>20</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>結束時間</td>
+                    </tr>
+                    <tr>
+                        <td>kwh</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>充電度數(kWh)</td>
+                    </tr>
+                    <tr>
+                        <td>car_type</td>
+                        <td>String</td>
+                        <td>10</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>車輛類型</td>
+                    </tr>
+                    <tr>
+                        <td>car_tonnage</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>車輛噸位</td>
+                    </tr>
+                    <tr>
+                        <td>car_no</td>
+                        <td>String</td>
+                        <td>20</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>車牌號碼</td>
+                    </tr>
+                    <tr>
+                        <td>create_time</td>
+                        <td>String</td>
+                        <td>-</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>建立時間</td>
+                    </tr>
+                    <tr>
+                        <td>update_time</td>
+                        <td>String</td>
+                        <td>-</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>更新時間</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="info-box">
+            <strong>說明:</strong> 儲存充電交易記錄，包含充電時間、度數和車輛資訊。用於統計分析和報表生成。
+        </div>
+
+        <h3>3.5 carbon_station_power (充電站電力監控表)</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>欄位名稱</th>
+                        <th>資料類型</th>
+                        <th>長度</th>
+                        <th>是否必填</th>
+                        <th>預設值</th>
+                        <th>說明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="pk">
+                        <td>id</td>
+                        <td>Long</td>
+                        <td>-</td>
+                        <td class="required">是</td>
+                        <td>AUTO_INCREMENT</td>
+                        <td>自動遞增ID (主鍵)</td>
+                    </tr>
+                    <tr class="fk">
+                        <td>vendor_id</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="required">是</td>
+                        <td>-</td>
+                        <td>供應商ID (外鍵)</td>
+                    </tr>
+                    <tr class="fk">
+                        <td>station_id</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="required">是</td>
+                        <td>-</td>
+                        <td>充電站ID (外鍵)</td>
+                    </tr>
+                    <tr>
+                        <td>station_kwh</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>總累積充電度數(kWh)</td>
+                    </tr>
+                    <tr>
+                        <td>date_info</td>
+                        <td>String</td>
+                        <td>10</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>日期 (YYYY-MM-DD)</td>
+                    </tr>
+                    <tr>
+                        <td>date_kwh</td>
+                        <td>String</td>
+                        <td>50</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>當日充電度數(kWh)</td>
+                    </tr>
+                    <tr>
+                        <td>create_time</td>
+                        <td>String</td>
+                        <td>-</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>建立時間</td>
+                    </tr>
+                    <tr>
+                        <td>update_time</td>
+                        <td>String</td>
+                        <td>-</td>
+                        <td class="optional">否</td>
+                        <td>-</td>
+                        <td>更新時間</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="info-box">
+            <strong>說明:</strong> 儲存充電站每日電力監控資料，用於統計分析。
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><strong>碳權平台資料庫結構說明文件</strong></p>
+        <p>版本: 1.0 | 最後更新: 2024年6月19日 | 維護者: 系統管理員</p>
+        <p>本文件僅供內部使用，請勿外流</p>
+    </div>
+</body>
+</html> 

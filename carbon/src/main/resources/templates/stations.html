@@ -41,6 +41,13 @@
     </style>
 </head>
 <body>
+    <!-- 隱藏的翻譯元素 -->
+    <div style="display: none;">
+        <span id="traditionalGridText" th:text="#{message.traditionalGrid}">傳統電網</span>
+        <span id="greenEnergyText" th:text="#{message.greenEnergy}">綠能</span>
+        <span id="undefinedText" th:text="#{message.undefined}">未定義</span>
+    </div>
+    
     <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
         <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="#">
             <i class="fas fa-leaf mr-2"></i><span th:text="#{app.name}">碳權平台</span>
@@ -147,7 +154,7 @@
                 
                 <div id="loadingSpinner" class="text-center">
                     <div class="spinner-border text-primary" role="status">
-                        <span class="sr-only" th:text="#{message.loading}">加載中...</span>
+                        <span class="sr-only" th:text="#{message.loading}">載入中...</span>
                     </div>
                     <p class="mt-2" th:text="#{stations.loading}">正在加載充電站數據，請稍候...</p>
                 </div>
@@ -199,15 +206,15 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="stationId">充電站ID <span class="text-danger">*</span></label>
+                                    <label for="stationId" th:text="#{stations.id}">充電站ID <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="stationId" name="stationId" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="vendorId">廠商ID <span class="text-danger">*</span></label>
+                                    <label for="vendorId" th:text="#{stations.vendorId}">廠商ID <span class="text-danger">*</span></label>
                                     <select class="form-control" id="vendorId" name="vendorId" required>
-                                        <option value="">請選擇廠商</option>
+                                        <option value="" th:text="#{message.pleaseSelect}">請選擇廠商</option>
                                     </select>
                                 </div>
                             </div>
@@ -215,13 +222,13 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="stationName">充電站名稱</label>
+                                    <label for="stationName" th:text="#{stations.name}">充電站名稱</label>
                                     <input type="text" class="form-control" id="stationName" name="stationName">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="stationKwh">充電站功率</label>
+                                    <label for="stationKwh" th:text="#{stations.power}">充電站功率</label>
                                     <input type="text" class="form-control" id="stationKwh" name="stationKwh">
                                 </div>
                             </div>
@@ -229,13 +236,13 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="city">城市</label>
+                                    <label for="city" th:text="#{stations.city}">城市</label>
                                     <input type="text" class="form-control" id="city" name="city">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="address">地址</label>
+                                    <label for="address" th:text="#{stations.address}">地址</label>
                                     <input type="text" class="form-control" id="address" name="address">
                                 </div>
                             </div>
@@ -243,31 +250,31 @@
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="storageEnable">儲能啟用</label>
+                                    <label for="storageEnable" th:text="#{stations.storageEnabled}">儲能啟用</label>
                                     <select class="form-control" id="storageEnable" name="storageEnable">
-                                        <option value="">請選擇</option>
-                                        <option value="1">是</option>
-                                        <option value="0">否</option>
+                                        <option value="" th:text="#{message.pleaseSelect}">請選擇</option>
+                                        <option value="1" th:text="#{message.yes}">是</option>
+                                        <option value="0" th:text="#{message.no}">否</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="powerSource">電源來源</label>
+                                    <label for="powerSource" th:text="#{stations.powerSource}">電源來源</label>
                                     <select class="form-control" id="powerSource" name="powerSource">
-                                        <option value="">請選擇</option>
-                                        <option value="1">綠能</option>
-                                        <option value="0">傳統電網</option>
+                                        <option value="" th:text="#{message.pleaseSelect}">請選擇</option>
+                                        <option value="1" th:text="#{message.traditionalGrid}">傳統電網</option>
+                                        <option value="2" th:text="#{message.greenEnergy}">綠能</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="stationStatus">狀態</label>
+                                    <label for="stationStatus" th:text="#{stations.status}">狀態</label>
                                     <select class="form-control" id="stationStatus" name="stationStatus">
-                                        <option value="">請選擇</option>
-                                        <option value="1">啟用</option>
-                                        <option value="0">禁用</option>
+                                        <option value="" th:text="#{message.pleaseSelect}">請選擇</option>
+                                        <option value="1" th:text="#{stations.enabled}">啟用</option>
+                                        <option value="0" th:text="#{stations.disabled}">禁用</option>
                                     </select>
                                 </div>
                             </div>
@@ -275,22 +282,22 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="gpsLatitude">GPS緯度</label>
-                                    <input type="text" class="form-control" id="gpsLatitude" name="gpsLatitude" placeholder="例如: 25.0330">
+                                    <label for="gpsLatitude" th:text="#{stations.latitude}">GPS緯度</label>
+                                    <input type="text" class="form-control" id="gpsLatitude" name="gpsLatitude" th:placeholder="#{message.latitudeExample}">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="gpsLongitude">GPS經度</label>
-                                    <input type="text" class="form-control" id="gpsLongitude" name="gpsLongitude" placeholder="例如: 121.5654">
+                                    <label for="gpsLongitude" th:text="#{stations.longitude}">GPS經度</label>
+                                    <input type="text" class="form-control" id="gpsLongitude" name="gpsLongitude" th:placeholder="#{message.longitudeExample}">
                                 </div>
                             </div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" id="saveStationBtn">保存</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" th:text="#{action.cancel}">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveStationBtn" th:text="#{action.save}">保存</button>
                 </div>
             </div>
         </div>
@@ -307,8 +314,8 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <p>您確定要刪除充電站 <strong id="deleteStationName"></strong> 嗎？</p>
-                    <p class="text-danger">此操作無法撤銷！</p>
+                    <p th:text="#{admin.confirmDeleteStation}">您確定要刪除充電站 <strong id="deleteStationName"></strong> 嗎？</p>
+                    <p class="text-danger" th:text="#{admin.deleteWarning}">此操作無法撤銷！</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal" th:text="#{button.cancel}">取消</button>
@@ -364,16 +371,20 @@
                     data: 'storageEnable',
                     render: function(data) {
                         return data === '1' ? 
-                            (currentLang === 'en' ? 'Yes' : '是') : 
-                            (data === '0' ? (currentLang === 'en' ? 'No' : '否') : '');
+                            translate('Yes') : 
+                            (data === '0' ? translate('No') : '');
                     }
                 },
                 { 
                     data: 'powerSource',
                     render: function(data) {
-                        return data === '1' ? 
-                            (currentLang === 'en' ? 'Green Energy' : '綠能') : 
-                            (data === '0' ? (currentLang === 'en' ? 'Traditional Grid' : '傳統電網') : '');
+                        if (data === '1') {
+                            return document.getElementById('traditionalGridText').textContent;
+                        } else if (data === '2') {
+                            return document.getElementById('greenEnergyText').textContent;
+                        } else {
+                            return document.getElementById('undefinedText').textContent;
+                        }
                     }
                 },
                 { data: 'gpsLatitude' },
@@ -382,9 +393,9 @@
                     data: 'stationStatus',
                     render: function(data) {
                         if (data === '1') {
-                            return `<span class="badge badge-success">${currentLang === 'en' ? 'Enabled' : '啟用'}</span>`;
+                            return `<span class="badge badge-success">${translate('Enabled')}</span>`;
                         } else if (data === '0') {
-                            return `<span class="badge badge-secondary">${currentLang === 'en' ? 'Disabled' : '禁用'}</span>`;
+                            return `<span class="badge badge-secondary">${translate('Disabled')}</span>`;
                         }
                         return '';
                     }
@@ -402,10 +413,10 @@
                     render: function(data, type, row) {
                         return `
                             <div class="action-buttons">
-                                <button class="btn btn-sm btn-outline-primary edit-btn" data-station-id="${row.stationId}" title="${currentLang === 'en' ? 'Edit' : '編輯'}">
+                                <button class="btn btn-sm btn-outline-primary edit-btn" data-station-id="${row.stationId}" title="${translate('Edit')}">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-danger delete-btn" data-station-id="${row.stationId}" data-station-name="${row.stationName || row.stationId}" title="${currentLang === 'en' ? 'Delete' : '刪除'}">
+                                <button class="btn btn-sm btn-outline-danger delete-btn" data-station-id="${row.stationId}" data-station-name="${row.stationName || row.stationId}" title="${translate('Delete')}">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -467,7 +478,7 @@
                 }
             } catch (error) {
                 console.error('檢查用戶角色失敗:', error);
-                showAlert('error', '檢查用戶角色失敗: ' + error.message);
+                showAlert('error', translate('Failed to check user role') + ': ' + error.message);
             }
         }
         
@@ -481,7 +492,7 @@
                     
                     // 填充廠商下拉選單
                     const vendorSelect = $('#vendorId');
-                    vendorSelect.empty().append('<option value="">請選擇廠商</option>');
+                    vendorSelect.empty().append(`<option value="">${translate('Please select vendor')}</option>`);
                     vendors.forEach(vendor => {
                         vendorSelect.append(`<option value="${vendor.vendorId}">${vendor.vendorId}</option>`);
                     });
@@ -522,11 +533,11 @@
                     initDataTable();
                     hideAlert();
                 } else {
-                    showAlert('error', '加載充電站數據失敗');
+                    showAlert('error', translate('Failed to load station data'));
                 }
             } catch (error) {
                 console.error('加載充電站數據失敗:', error);
-                showAlert('error', '加載充電站數據失敗: ' + error.message);
+                showAlert('error', translate('Failed to load station data') + ': ' + error.message);
             } finally {
                 hideLoading();
             }
@@ -536,7 +547,7 @@
         function addStation() {
             isEditMode = false;
             editingStationId = null;
-            $('#stationModalLabel').text(getCurrentLanguage() === 'en' ? 'Add Station' : '新增充電站');
+            $('#stationModalLabel').text(translate('Add Station'));
             $('#stationForm')[0].reset();
             $('#stationId').prop('readonly', false);
             $('#stationModal').modal('show');
@@ -546,13 +557,13 @@
         function editStation(stationId) {
             const station = stations.find(s => s.stationId === stationId);
             if (!station) {
-                showAlert('error', getCurrentLanguage() === 'en' ? 'Station not found' : '找不到指定的充電站');
+                showAlert('error', translate('Station not found'));
                 return;
             }
             
             isEditMode = true;
             editingStationId = stationId;
-            $('#stationModalLabel').text(getCurrentLanguage() === 'en' ? 'Edit Station' : '編輯充電站');
+            $('#stationModalLabel').text(translate('Edit Station'));
             
             // 填充表單數據
             $('#stationId').val(station.stationId).prop('readonly', true);
@@ -602,8 +613,8 @@
                 if (response && (response.code === '0000' || response.resultCode === '0000')) {
                     $('#stationModal').modal('hide');
                     const successMsg = isEditMode ? 
-                        (getCurrentLanguage() === 'en' ? 'Station updated successfully' : '充電站更新成功') :
-                        (getCurrentLanguage() === 'en' ? 'Station added successfully' : '充電站新增成功');
+                        translate('Station updated successfully') :
+                        translate('Station added successfully');
                     showAlert('success', successMsg);
                     await loadStations(); // 重新加載數據
                 } else {
@@ -611,48 +622,36 @@
                     if (response) {
                         switch(response.code) {
                             case '0002':
-                                errorMessage = getCurrentLanguage() === 'en' ? 
-                                    'Unsupported operation type' : '不支持的操作類型';
+                                errorMessage = translate('Unsupported operation type');
                                 break;
                             case '0003':
-                                errorMessage = getCurrentLanguage() === 'en' ? 
-                                    'No permission to operate on another vendor\'s station' : '無權限操作其他廠商的充電站';
+                                errorMessage = translate('No permission to operate on another vendor\'s station');
                                 break;
                             case '0004':
-                                errorMessage = getCurrentLanguage() === 'en' ? 
-                                    'Station does not exist' : '充電站不存在';
+                                errorMessage = translate('Station does not exist');
                                 break;
                             default:
                                 errorMessage = response.resultMsg || response.message || 
-                                    (getCurrentLanguage() === 'en' ? 'Unknown error' : '未知錯誤');
+                                    translate('Unknown error');
                         }
                     } else {
-                        errorMessage = getCurrentLanguage() === 'en' ? 'Unknown error' : '未知錯誤';
+                        errorMessage = translate('Unknown error');
                     }
                     
-                    const errorMsg = getCurrentLanguage() === 'en' ? 
-                        'Save failed: ' + errorMessage :
-                        '保存失敗: ' + errorMessage;
+                    const errorMsg = translate('Save failed') + ': ' + errorMessage;
                     showAlert('error', errorMsg);
                 }
             } catch (error) {
                 console.error('保存充電站失敗:', error);
-                const errorMsg = getCurrentLanguage() === 'en' ? 
-                    'Save failed: ' + error.message :
-                    '保存失敗: ' + error.message;
+                const errorMsg = translate('Save failed') + ': ' + error.message;
                 showAlert('error', errorMsg);
             }
         }
         
         // 顯示刪除確認對話框
         function showDeleteConfirm(stationId, stationName) {
-            const currentLang = getCurrentLanguage();
-            const confirmMsg = currentLang === 'en' ?
-                `Are you sure you want to delete station ${stationName}?` :
-                `您確定要刪除充電站 ${stationName} 嗎？`;
-            const warningMsg = currentLang === 'en' ?
-                'This action cannot be undone!' :
-                '此操作無法撤銷！';
+            const confirmMsg = translate('Are you sure you want to delete station') + ` ${stationName}?`;
+            const warningMsg = translate('This action cannot be undone');
             $('#deleteStationName').text(stationName);
             $('#deleteConfirmModal .modal-body p:first').text(confirmMsg);
             $('#deleteConfirmModal .modal-body p:last').text(warningMsg);
@@ -664,9 +663,7 @@
         async function deleteStation(stationId) {
             const station = stations.find(s => s.stationId === stationId);
             if (!station) {
-                const errorMsg = getCurrentLanguage() === 'en' ?
-                    'Station not found' :
-                    '找不到指定的充電站';
+                const errorMsg = translate('Station not found');
                 showAlert('error', errorMsg);
                 return;
             }
@@ -681,35 +678,31 @@
                 const response = await apiRequest('/StationInfo', 'POST', deleteData);
                 if (response && (response.code === '0000' || response.resultCode === '0000')) {
                     $('#deleteConfirmModal').modal('hide');
-                    const successMsg = getCurrentLanguage() === 'en' ?
-                        'Station deleted successfully' :
-                        '充電站刪除成功';
+                    const successMsg = translate('Station deleted successfully');
                     showAlert('success', successMsg);
                     await loadStations(); // 重新加載數據
                 } else {
                     // 只顯示後端回傳訊息
-                    const errorMsg = (response?.resultMsg || response?.message || (getCurrentLanguage() === 'en' ? 'Unknown error' : '未知錯誤'));
+                    const errorMsg = (response?.resultMsg || response?.message || translate('Unknown error'));
                     showAlert('error', errorMsg);
                 }
             } catch (error) {
                 console.error('刪除充電站失敗:', error);
-                const errorMsg = getCurrentLanguage() === 'en' ?
-                    'Delete failed: ' + error.message :
-                    '刪除失敗: ' + error.message;
+                const errorMsg = translate('Delete failed') + ': ' + error.message;
                 showAlert('error', errorMsg);
             }
         }
         
-        // 顯示加載中
+        // 顯示載入中
         function showLoading() {
-            $('#loadingSpinner').show();
-            $('#stationsTable').hide();
+            $('#loadingSpinner').removeClass('d-none');
+            $('#stationsTable').addClass('d-none');
         }
         
-        // 隱藏加載中
+        // 隱藏載入中
         function hideLoading() {
-            $('#loadingSpinner').hide();
-            $('#stationsTable').show();
+            $('#loadingSpinner').addClass('d-none');
+            $('#stationsTable').removeClass('d-none');
         }
         
         // 顯示警告信息
