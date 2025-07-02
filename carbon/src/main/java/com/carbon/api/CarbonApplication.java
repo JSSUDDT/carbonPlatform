@@ -11,7 +11,7 @@ public class CarbonApplication {
 
     public static void main(String[] args) {
         // 设置默认时区
-        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Shanghai"));
+        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Taipei"));
         
         SpringApplication.run(CarbonApplication.class, args);
     }
