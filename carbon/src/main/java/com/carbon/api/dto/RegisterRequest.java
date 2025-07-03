@@ -18,5 +18,5 @@ public class RegisterRequest {
     
     private String status = "1"; // 默認啟用狀態
     
-    private String role = "ROLE_USER"; // 默認為普通用戶角色，可以指定為"ROLE_ADMIN"或"ROLE_USER"
+    private String role = "ROLE_USER"; // 固定為普通用戶角色
 } 

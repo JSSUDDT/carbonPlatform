@@ -11,56 +11,304 @@
     <!-- 自定義CSS -->
     <link rel="stylesheet" th:href="@{/css/styles.css}">
     <style>
+        /* 頁面背景漸變 */
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="60" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            pointer-events: none;
+            z-index: 0;
+        }
+        
         /* 語言選擇器右上角樣式 */
         .language-dropdown {
             position: absolute;
-            top: 15px;
-            right: 15px;
+            top: 20px;
+            right: 20px;
             z-index: 1000;
         }
         
         .language-dropdown .dropdown-toggle {
-            color: var(--primary-color);
-            background-color: rgba(255, 255, 255, 0.9);
-            border-radius: 20px;
-            padding: 6px 15px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 8px 18px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            font-weight: 500;
         }
         
         .language-dropdown .dropdown-toggle:hover {
-            background-color: white;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
         
         .language-dropdown .dropdown-menu {
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
             border: none;
-            margin-top: 5px;
+            margin-top: 10px;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
         }
         
         .language-dropdown .dropdown-item {
-            padding: 8px 15px;
+            padding: 10px 20px;
             transition: all 0.2s;
+            border-radius: 10px;
+            margin: 2px 5px;
         }
         
         .language-dropdown .dropdown-item:hover {
-            background-color: var(--light-color);
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateX(5px);
         }
         
         /* 彩色國旗圖標 */
         .flag-icon {
-            width: 20px;
-            height: 15px;
-            margin-right: 8px;
+            width: 22px;
+            height: 16px;
+            margin-right: 10px;
             vertical-align: middle;
-            border-radius: 2px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            border-radius: 3px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* 主容器樣式 */
+        .auth-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 40px;
+            margin: 40px auto;
+            max-width: 500px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Logo 區域樣式 */
+        .logo {
+            margin-bottom: 30px;
+        }
+        
+        .logo .icon-green {
+            color: #00A170;
+            font-size: 3rem;
+            margin-bottom: 15px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .logo h2 {
+            background: linear-gradient(135deg, #00A170, #88B04B);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .logo p {
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+        
+        /* 表單樣式 */
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            color: #495057;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        
+        .input-group {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .input-group:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        .input-group-text {
+            background: linear-gradient(135deg, #00A170, #88B04B);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 12px 15px;
+        }
+        
+        .form-control {
+            border: none;
+            padding: 12px 15px;
+            font-size: 1rem;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 161, 112, 0.1);
+            outline: none;
+        }
+        
+        /* 按鈕樣式 */
+        .btn-primary {
+            background: linear-gradient(135deg, #00A170, #88B04B);
+            border: none;
+            border-radius: 15px;
+            padding: 12px 30px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            box-shadow: 0 6px 20px rgba(0, 161, 112, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.6s;
+        }
+        
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 161, 112, 0.4);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(-1px);
+        }
+        
+        /* 註冊連結樣式 */
+        .text-center a {
+            color: #00A170;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .text-center a:hover {
+            color: #88B04B;
+            text-decoration: underline;
+        }
+        
+        /* 載入動畫樣式 */
+        .spinner-border {
+            color: #00A170;
+        }
+        
+        /* 環保提示區塊樣式 */
+        .bg-eco-gradient {
+            background: linear-gradient(135deg, #00A170, #88B04B);
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 161, 112, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .bg-eco-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="eco-pattern" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23eco-pattern)"/></svg>');
+            pointer-events: none;
+        }
+        
+        .bg-eco-gradient .fas {
+            color: white;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+        
+        .bg-eco-gradient h5 {
+            color: white;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .bg-eco-gradient p {
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        /* 警告和成功訊息樣式 */
+        .alert {
+            border: none;
+            border-radius: 15px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .alert-danger {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #51cf66, #40c057);
+            color: white;
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .auth-container {
+                margin: 20px;
+                padding: 30px 20px;
+            }
+            
+            .language-dropdown {
+                top: 15px;
+                right: 15px;
+            }
+            
+            .logo .icon-green {
+                font-size: 2.5rem;
+            }
         }
     </style>
 </head>
-<body class="bg-light">
+<body>
     <!-- 右上角語言選擇器 -->
     <div class="language-dropdown dropdown">
         <button class="btn dropdown-toggle" type="button" id="languageDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -116,6 +364,10 @@
                         <span th:text="#{login.button}">登錄</span>
                     </button>
                 </div>
+                
+                <div class="text-center mt-3">
+                    <p><span th:text="#{login.noAccount}">還沒有賬號？</span> <a th:href="@{/register}" th:text="#{login.register}">註冊</a></p>
+                </div>
             </form>
             
             <div id="loadingSpinner" class="text-center d-none">
@@ -141,7 +393,7 @@
         <div class="footer mt-4">
             <div class="container text-center">
                 <div class="mb-2">
-                    <span class="text-muted" th:text="#{footer.copyright}">© 2023 碳權平台. 保留所有權利.</span>
+                    <span class="text-muted" th:text="#{footer.copyright}">© 2025 碳權平台. 保留所有權利.</span>
                 </div>
                 <div>
                     <span class="text-muted">
@@ -164,6 +416,9 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             console.log('登錄頁面載入，強制清除認證信息...');
+            
+            // 初始化語言選擇器
+            initializeLanguageSelector();
             
             // 強制清除所有認證相關數據，確保用戶可以輸入新的帳號密碼
             // 傳遞false參數以防止logout函數重定向

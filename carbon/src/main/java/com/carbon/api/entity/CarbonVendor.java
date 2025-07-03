@@ -23,7 +23,7 @@ public class CarbonVendor implements Serializable {
     private String status;
     
     @Column(name = "role", length = 20)
-    private String role = "ROLE_USER"; // 默认为普通用户角色
+    private String role = "ROLE_USER"; // 固定為普通用戶角色
     
     @Column(name = "create_time")
     private String createTime;

@@ -202,16 +202,15 @@ async function login(vendorId, password) {
  * 註冊處理
  * @param {string} vendorId 廠商ID
  * @param {string} password 密碼
- * @param {string} role 角色
  * @returns {Promise<Object>} 註冊結果
  */
-async function register(vendorId, password, role) {
+async function register(vendorId, password) {
     showLoading();
     
     const response = await apiRequest('/Register', 'POST', {
         vendorId,
         password,
-        role,
+        role: 'ROLE_USER', // 固定為普通用戶角色
         status: '1' // 默認狀態為啟用
     });
     

@@ -10,91 +10,497 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <!-- 自定義CSS -->
     <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        /* 頁面背景漸變 */
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="60" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* 語言選擇器右上角樣式 */
+        .language-dropdown {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .language-dropdown .dropdown-toggle {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 8px 18px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .language-dropdown .dropdown-toggle:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .language-dropdown .dropdown-menu {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            border: none;
+            margin-top: 10px;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        .language-dropdown .dropdown-item {
+            padding: 10px 20px;
+            transition: all 0.2s;
+            border-radius: 10px;
+            margin: 2px 5px;
+        }
+        
+        .language-dropdown .dropdown-item:hover {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        /* 彩色國旗圖標 */
+        .flag-icon {
+            width: 22px;
+            height: 16px;
+            margin-right: 10px;
+            vertical-align: middle;
+            border-radius: 3px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* 主容器樣式 */
+        .auth-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 40px;
+            margin: 40px auto;
+            max-width: 500px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Logo 區域樣式 */
+        .logo {
+            margin-bottom: 30px;
+        }
+        
+        .logo .icon-green {
+            color: #00A170;
+            font-size: 3rem;
+            margin-bottom: 15px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .logo h2 {
+            background: linear-gradient(135deg, #00A170, #88B04B);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .logo p {
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+        
+        /* 表單樣式 */
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            color: #495057;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        
+        .input-group {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .input-group:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        .input-group-text {
+            background: linear-gradient(135deg, #00A170, #88B04B);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 12px 15px;
+        }
+        
+        .form-control {
+            border: none;
+            padding: 12px 15px;
+            font-size: 1rem;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 161, 112, 0.1);
+            outline: none;
+        }
+        
+        .form-text {
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+        
+        /* 條款區塊樣式 */
+        .terms-card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        }
+        
+        .terms-card .card-header {
+            background: linear-gradient(135deg, #00A170, #88B04B);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 15px 20px;
+        }
+        
+        .terms-card .card-body {
+            padding: 20px;
+        }
+        
+        .form-check {
+            margin-bottom: 15px;
+        }
+        
+        .form-check:last-child {
+            margin-bottom: 0;
+        }
+        
+        .form-check-input {
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-check-input:checked {
+            background: linear-gradient(135deg, #00A170, #88B04B);
+            border-color: #00A170;
+            box-shadow: 0 0 0 3px rgba(0, 161, 112, 0.2);
+        }
+        
+        .form-check-label {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #495057;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+        
+        /* 按鈕樣式 */
+        .btn-primary {
+            background: linear-gradient(135deg, #00A170, #88B04B);
+            border: none;
+            border-radius: 15px;
+            padding: 12px 30px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            box-shadow: 0 6px 20px rgba(0, 161, 112, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.6s;
+        }
+        
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 161, 112, 0.4);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d, #495057);
+            border: none;
+            border-radius: 15px;
+            padding: 12px 30px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(108, 117, 125, 0.4);
+        }
+        
+        /* 登錄連結樣式 */
+        .text-center a {
+            color: #00A170;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .text-center a:hover {
+            color: #88B04B;
+            text-decoration: underline;
+        }
+        
+        /* 載入動畫樣式 */
+        .spinner-border {
+            color: #00A170;
+        }
+        
+        /* 環保提示區塊樣式 */
+        .bg-eco-gradient {
+            background: linear-gradient(135deg, #00A170, #88B04B);
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 161, 112, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .bg-eco-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="eco-pattern" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23eco-pattern)"/></svg>');
+            pointer-events: none;
+        }
+        
+        .bg-eco-gradient .fas {
+            color: white;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+        
+        .bg-eco-gradient h5 {
+            color: white;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .bg-eco-gradient p {
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        /* 警告和成功訊息樣式 */
+        .alert {
+            border: none;
+            border-radius: 15px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .alert-danger {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #51cf66, #40c057);
+            color: white;
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .auth-container {
+                margin: 20px;
+                padding: 30px 20px;
+            }
+            
+            .language-dropdown {
+                top: 15px;
+                right: 15px;
+            }
+            
+            .logo .icon-green {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
+    <!-- 右上角語言選擇器 -->
+    <div class="language-dropdown dropdown">
+        <button class="btn dropdown-toggle" type="button" id="languageDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="fas fa-globe-asia mr-2"></i><span th:text="#{language.select}">語言</span>
+        </button>
+        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="languageDropdown">
+            <button class="dropdown-item language-switch-btn" data-lang="en">
+                <img src="https://cdn.jsdelivr.net/npm/flag-icon-css@3.5.0/flags/4x3/us.svg" class="flag-icon" alt="USA flag">
+                <span th:text="#{language.en}">English</span>
+            </button>
+            <button class="dropdown-item language-switch-btn" data-lang="zh_TW">
+                <img src="https://cdn.jsdelivr.net/npm/flag-icon-css@3.5.0/flags/4x3/tw.svg" class="flag-icon" alt="Taiwan flag">
+                <span th:text="#{language.zh}">繁體中文</span>
+            </button>
+        </div>
+    </div>
     <div class="container">
         <div class="auth-container">
             <div class="logo text-center">
                 <i class="fas fa-leaf icon-green icon-large mb-3"></i>
-                <h2 class="mb-1">碳權平台</h2>
-                <p class="text-muted">註冊新賬號</p>
+                <h2 class="mb-1" th:text="#{app.name}">碳權平台</h2>
+                <p class="text-muted" th:text="#{register.subtitle}">註冊新賬號</p>
             </div>
             
             <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
             <div id="successAlert" class="alert alert-success d-none" role="alert"></div>
             
-            <form id="registerForm">
+            <form id="registerForm" novalidate>
                 <div class="form-group">
-                    <label for="vendorId">廠商ID</label>
+                    <label for="vendorId" th:text="#{register.vendorId}">廠商ID</label>
                     <div class="input-group">
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-user"></i></span>
                         </div>
-                        <input type="text" class="form-control" id="vendorId" name="vendorId" placeholder="請輸入廠商ID" required>
+                        <input type="text" class="form-control" id="vendorId" name="vendorId" th:placeholder="#{register.vendorIdPlaceholder}" th:title="#{register.vendorIdRequired}">
                     </div>
-                    <small class="form-text text-muted">廠商ID將用作登錄名，請使用唯一標識。</small>
+                    <small class="form-text text-muted" th:text="#{register.vendorIdHelp}">廠商ID將用作登錄名，請使用唯一標識。</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="password">密碼</label>
+                    <label for="password" th:text="#{register.password}">密碼</label>
                     <div class="input-group">
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-lock"></i></span>
                         </div>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="請輸入密碼" required>
+                        <input type="password" class="form-control" id="password" name="password" th:placeholder="#{register.passwordPlaceholder}" th:title="#{register.passwordRequired}">
                     </div>
-                    <small class="form-text text-muted">請設置您的登錄密碼。</small>
+                    <small class="form-text text-muted" th:text="#{register.passwordHelp}">請設置您的登錄密碼。</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="confirmPassword">確認密碼</label>
+                    <label for="confirmPassword" th:text="#{register.confirmPassword}">確認密碼</label>
                     <div class="input-group">
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-lock"></i></span>
                         </div>
-                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="請再次輸入密碼" required>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" th:placeholder="#{register.confirmPasswordPlaceholder}" th:title="#{register.confirmPasswordRequired}">
+                    </div>
+                </div>
+                
+                <!-- 條款同意區塊 -->
+                <div class="form-group">
+                    <div class="card terms-card">
+                        <div class="card-header">
+                            <h6 class="mb-0" th:text="#{register.terms.title}">服務條款</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="terms1" required>
+                                <label class="form-check-label" for="terms1">
+                                    <span th:text="#{register.terms.clause1}">廠商確認上傳至本平台的所有充電記錄均已獲得使用者明確同意進行碳權轉移，並承諾遵守相關碳權交易法規。</span>
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="terms2" required>
+                                <label class="form-check-label" for="terms2">
+                                    <span th:text="#{register.terms.clause2}">廠商保證所上傳的所有資料均為真實、準確且完整，如有虛假資料將承擔相應法律責任。</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
                 <div class="form-group">
-                    <label th:text="#{register.role}">用戶角色</label>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="role" id="roleUser" value="ROLE_USER" checked>
-                        <label class="form-check-label" for="roleUser">
-                            <span class="badge badge-info" th:text="#{register.roleUser}">普通用戶</span> - <span th:text="#{register.roleUserDesc}">充電設施管理</span>
-                        </label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="role" id="roleAdmin" value="ROLE_ADMIN">
-                        <label class="form-check-label" for="roleAdmin">
-                            <span class="badge badge-success" th:text="#{register.roleAdmin}">管理員</span> - <span th:text="#{register.roleAdminDesc}">系統全部功能</span>
-                        </label>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary btn-block">
-                        <i class="fas fa-user-plus mr-2"></i>註冊
+                    <button type="submit" class="btn btn-primary btn-block" id="registerButton" disabled>
+                        <i class="fas fa-user-plus mr-2"></i><span th:text="#{register.button}">註冊</span>
                     </button>
                 </div>
                 
                 <div class="text-center mt-3">
-                    <p>已有賬號？ <a th:href="@{/login}">登錄</a></p>
+                    <p><span th:text="#{register.haveAccount}">已有賬號？</span> <a th:href="@{/login}" th:text="#{register.login}">登錄</a></p>
                 </div>
             </form>
             
             <div id="loadingSpinner" class="text-center d-none">
                 <div class="spinner-border text-primary" role="status">
-                    <span class="sr-only">加載中...</span>
+                    <span class="sr-only" th:text="#{message.loading}">加載中...</span>
                 </div>
-                <p class="mt-2">正在處理，請稍候...</p>
+                <p class="mt-2" th:text="#{register.processing}">正在處理，請稍候...</p>
+            </div>
+            
+            <div class="bg-eco-gradient p-3 rounded mt-4">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <i class="fas fa-leaf fa-2x text-white"></i>
+                    </div>
+                    <div class="col">
+                        <h5 class="m-0" th:text="#{sidebar.future}">共建綠色未來</h5>
+                        <p class="small m-0" th:text="#{stations.ecoDesc}">優化能源消耗，減少碳足跡</p>
+                    </div>
+                </div>
             </div>
         </div>
         
         <div class="footer mt-4">
             <div class="container text-center">
                 <div class="mb-2">
-                    <span class="text-muted" th:text="#{footer.copyright}">© 2023 碳權平台. 保留所有權利.</span>
+                    <span class="text-muted" th:text="#{footer.copyright}">© 2025 碳權平台. 保留所有權利.</span>
                 </div>
                 <div>
                     <span class="text-muted">
@@ -115,20 +521,41 @@
     <!-- 自定義JavaScript -->
     <script th:src="@{/js/common.js}"></script>
 
-    <!-- 語言選擇器 -->
-    <div class="language-selector mb-4 text-center">
-        <div class="btn-group btn-group-sm">
-            <button type="button" class="btn btn-outline-secondary language-switch-btn" data-lang="en" th:text="#{language.en}">English</button>
-            <button type="button" class="btn btn-outline-secondary language-switch-btn" data-lang="zh_TW" th:text="#{language.zh}">繁體中文</button>
-        </div>
-    </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // 初始化語言選擇器
+            initializeLanguageSelector();
+            
+            // 設置表單語言
+            setFormLanguage();
+            
             // 如果已經登錄，跳轉到充電交易頁面
             if (isAuthenticated()) {
                 window.location.href = '/carbon/transactions.html';
                 return;
+            }
+            
+            // 條款勾選事件處理
+            document.getElementById('terms1').addEventListener('change', checkTerms);
+            document.getElementById('terms2').addEventListener('change', checkTerms);
+            
+            // 檢查條款是否都已勾選
+            function checkTerms() {
+                const terms1 = document.getElementById('terms1').checked;
+                const terms2 = document.getElementById('terms2').checked;
+                const registerButton = document.getElementById('registerButton');
+                
+                if (terms1 && terms2) {
+                    registerButton.disabled = false;
+                    registerButton.classList.remove('btn-secondary');
+                    registerButton.classList.add('btn-primary');
+                } else {
+                    registerButton.disabled = true;
+                    registerButton.classList.remove('btn-primary');
+                    registerButton.classList.add('btn-secondary');
+                }
             }
             
             // 註冊表單提交
@@ -138,22 +565,29 @@
                 const vendorId = document.getElementById('vendorId').value;
                 const password = document.getElementById('password').value;
                 const confirmPassword = document.getElementById('confirmPassword').value;
-                const role = document.querySelector('input[name="role"]:checked').value;
+                const terms1 = document.getElementById('terms1').checked;
+                const terms2 = document.getElementById('terms2').checked;
+                const role = 'ROLE_USER'; // 固定為普通用戶角色
                 
                 if (!vendorId || !password || !confirmPassword) {
-                    showError('請填寫所有必填欄位');
+                    showError(getI18nMessage('register.error.empty'));
                     return;
                 }
                 
                 if (password !== confirmPassword) {
-                    showError('兩次密碼輸入不一致');
+                    showError(getI18nMessage('register.error.password'));
                     return;
                 }
                 
-                const result = await register(vendorId, password, role);
+                if (!terms1 || !terms2) {
+                    showError(getI18nMessage('register.error.terms'));
+                    return;
+                }
+                
+                const result = await register(vendorId, password);
                 
                 if (result.success) {
-                    showSuccess('註冊成功，請前往登錄！');
+                    showSuccess(getI18nMessage('register.success'));
                     document.getElementById('registerForm').reset();
                     
                     // 3秒後跳轉到登錄頁
@@ -161,10 +595,72 @@
                         window.location.href = '/carbon/login.html';
                     }, 3000);
                 } else {
-                    showError(result.message);
+                    // 處理後端返回的錯誤訊息
+                    const errorMessage = getErrorMessage(result.message);
+                    showError(errorMessage);
                 }
             });
         });
+        
+        // 設置表單語言
+        function setFormLanguage() {
+            const currentLang = getCurrentLanguage();
+            const form = document.getElementById('registerForm');
+            
+            // 設置表單的 lang 屬性
+            form.setAttribute('lang', currentLang === 'en' ? 'en-US' : 'zh-TW');
+            
+            // 設置所有輸入欄位的語言
+            const inputs = form.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.setAttribute('lang', currentLang === 'en' ? 'en-US' : 'zh-TW');
+            });
+        }
+        
+        // 獲取i18n消息
+        function getI18nMessage(key) {
+            // 從頁面中獲取對應的國際化文字
+            const currentLang = getCurrentLanguage();
+            
+            // 根據當前語言獲取對應的文字
+            const messages = {
+                'zh_TW': {
+                    'register.error.empty': '請填寫所有必填欄位',
+                    'register.error.password': '兩次密碼輸入不一致',
+                    'register.error.terms': '請同意所有服務條款',
+                    'register.success': '註冊成功，請前往登錄！'
+                },
+                'en': {
+                    'register.error.empty': 'Please fill in all required fields',
+                    'register.error.password': 'Passwords do not match',
+                    'register.error.terms': 'Please agree to all terms and conditions',
+                    'register.success': 'Registration successful, please proceed to login!'
+                }
+            };
+            
+            return messages[currentLang]?.[key] || key;
+        }
+        
+        // 處理後端錯誤訊息
+        function getErrorMessage(errorCode) {
+            const currentLang = getCurrentLanguage();
+            
+            // 根據當前語言獲取對應的錯誤訊息
+            const errorMessages = {
+                'zh_TW': {
+                    'VENDOR_ID_EXISTS': '廠商ID已存在',
+                    'INVALID_CREDENTIALS': '用戶名或密碼錯誤',
+                    'SYSTEM_ERROR': '系統錯誤，請稍後再試'
+                },
+                'en': {
+                    'VENDOR_ID_EXISTS': 'Vendor ID already exists',
+                    'INVALID_CREDENTIALS': 'Invalid username or password',
+                    'SYSTEM_ERROR': 'System error, please try again later'
+                }
+            };
+            
+            return errorMessages[currentLang]?.[errorCode] || errorCode;
+        }
     </script>
 </body>
 </html> 

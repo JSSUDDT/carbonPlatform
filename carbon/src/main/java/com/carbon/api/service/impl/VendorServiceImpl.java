@@ -49,17 +49,17 @@ public class VendorServiceImpl implements VendorService {
         try {
             // 檢查廠商ID是否已存在
             if (vendorRepository.findByVendorId(request.getVendorId()) != null) {
-                return new ResultResponse("0002", "廠商ID已存在");
+                return new ResultResponse("0002", "VENDOR_ID_EXISTS");
             }
             
             // 創建新廠商
             CarbonVendor vendor = new CarbonVendor();
             vendor.setVendorId(request.getVendorId());
-            // 對密碼進行BCrypt加密
+            // 對密碼進行BCCrypt加密
             vendor.setPassword(passwordEncoder.encode(request.getPassword()));
             vendor.setStatus(request.getStatus());
-            // 設置角色
-            vendor.setRole(request.getRole());
+            // 固定設置為普通用戶角色
+            vendor.setRole("ROLE_USER");
             vendor.setCreateTime(LocalDateTime.now().format(formatter));
             vendor.setUpdateTime(LocalDateTime.now().format(formatter));
             
