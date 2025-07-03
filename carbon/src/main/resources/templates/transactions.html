@@ -164,21 +164,20 @@
                             <tr>
                                 <th th:text="#{transactions.transNo}">交易號</th>
                                 <th th:text="#{transactions.vendorId}">廠商ID</th>
+                                <th th:text="#{transactions.stationId}">充電站ID</th>
                                 <th th:text="#{stations.name}">充電站名稱</th>
                                 <th th:text="#{transactions.chargerId}">充電樁ID</th>
                                 <th th:text="#{transactions.connectId}">連接ID</th>
                                 <th th:text="#{transactions.invoiceNo}">發票號</th>
                                 <th th:text="#{transactions.customerId}">客戶ID</th>
                                 <th th:text="#{transactions.invoiceDate}">發票日期</th>
-                                <th th:text="#{transactions.carbonCredit}">碳權同意</th>
                                 <th th:text="#{transactions.startTime}">開始時間</th>
                                 <th th:text="#{transactions.endTime}">結束時間</th>
                                 <th th:text="#{transactions.kwh}">充電量(kWh)</th>
                                 <th th:text="#{transactions.carType}">車輛類型</th>
                                 <th th:text="#{transactions.carTonnage}">車輛噸位</th>
                                 <th th:text="#{transactions.carNo}">車輛號碼</th>
-                                <th th:text="#{transactions.createTime}">創建時間</th>
-                                <th th:text="#{transactions.updateTime}">更新時間</th>
+                                <th th:text="#{transactions.uploadTime}">上傳時間</th>
                             </tr>
                         </thead>
                         <tbody id="transactionsTableBody">
@@ -212,7 +211,7 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-md-6">
-                        <span class="text-muted" th:text="#{footer.copyright}">© 2023 碳權平台. 保留所有權利.</span>
+                        <span class="text-muted" th:text="#{footer.copyright}">© 2025 碳權平台. 保留所有權利.</span>
                     </div>
                     <div class="col-md-6 text-md-right">
                         <span class="text-muted">
@@ -244,6 +243,7 @@
         let stations = [];
         let startTimeFrom = '';
         let startTimeTo = '';
+        let userRole = ''; // 存儲用戶角色
         
         // 初始化DataTable
         function initDataTable() {
@@ -260,6 +260,18 @@
                 languageUrl = '/carbon/js/datatables/i18n/English.json';
             }
             
+            // 根據用戶角色設置車輛信息欄位的可見性
+            let columnDefs = [
+                { "width": "120px", "targets": 0 },
+                { "width": "80px", "targets": 1 },
+                { "width": "100px", "targets": 2 }
+            ];
+            
+            // 如果不是管理員，隱藏所有車輛信息欄位
+            if (userRole !== 'ROLE_ADMIN') {
+                columnDefs.push({ "targets": [12, 13, 14], "visible": false, "className": "vehicle-info-column" }); // 車輛類型、車輛噸位、車輛號碼
+            }
+            
             dataTable = $('#transactionsTable').DataTable({
                 pageLength: 10,
                 ordering: true,
@@ -267,11 +279,7 @@
                 language: {
                     url: languageUrl
                 },
-                columnDefs: [
-                    { "width": "120px", "targets": 0 },
-                    { "width": "80px", "targets": 1 },
-                    { "targets": [12, 13, 14], "visible": false, "className": "vehicle-info-column" } // 修正車輛信息列的索引
-                ]
+                columnDefs: columnDefs
             });
         }
         
@@ -486,13 +494,13 @@
                 row.innerHTML = `
                     <td>${transaction.transNo || ''}</td>
                     <td>${transaction.vendorId || ''}</td>
+                    <td>${transaction.stationId || ''}</td>
                     <td>${stationName}</td>
                     <td>${transaction.chargerId || ''}</td>
                     <td>${transaction.connectId || ''}</td>
                     <td>${transaction.invoiceNo || ''}</td>
                     <td>${transaction.customerId || ''}</td>
                     <td>${transaction.invoiceDate || ''}</td>
-                    <td>${getCarbonCreditBadge(transaction.carbonCredit)}</td>
                     <td>${transaction.startTime || ''}</td>
                     <td>${transaction.endTime || ''}</td>
                     <td>${transaction.kwh || ''}</td>
@@ -500,7 +508,6 @@
                     <td>${transaction.carTonnage || ''}</td>
                     <td>${transaction.carNo || ''}</td>
                     <td>${transaction.createTime || ''}</td>
-                    <td>${transaction.updateTime || ''}</td>
                 `;
                 
                 tableBody.appendChild(row);
@@ -605,7 +612,7 @@
                 console.log('UserRole response:', response);
                 
                 if (response && response.resultMsg) {
-                    const userRole = response.resultMsg;
+                    userRole = response.resultMsg;
                     console.log('當前用戶角色:', userRole);
                     
                     const toggleVehicleInfoBtn = document.getElementById('toggleVehicleInfoBtn');
@@ -618,6 +625,9 @@
                         console.log('隱藏車輛信息按鈕');
                         toggleVehicleInfoBtn.style.display = 'none';
                     }
+                    
+                    // 重新初始化DataTable以應用角色權限
+                    initDataTable();
                 } else {
                     console.log('無效的角色響應:', response);
                 }
@@ -674,14 +684,11 @@
         }
         
         // 在頁面加載時初始化
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             console.log('頁面加載完成，開始檢查權限');
             
-            // 檢查用戶權限
-            checkUserRole();
-            
-            // 初始化DataTable
-            initDataTable();
+            // 先檢查用戶權限
+            await checkUserRole();
             
             // 初始化日期範圍選擇器
             initDateRangePicker();

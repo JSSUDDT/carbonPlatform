@@ -172,8 +172,7 @@
                                 <th th:text="#{power.dateKwh}">日期充電度數(kWh)</th>
                                 <th th:text="#{power.transactionKwh}">交易累計度數(kWh)</th>
                                 <th id="errorRateHeader" th:text="#{power.errorRate}">誤差率(%)</th>
-                                <th th:text="#{power.createTime}">創建時間</th>
-                                <th th:text="#{power.updateTime}">更新時間</th>
+                                <th th:text="#{power.uploadTime}">上傳時間</th>
                             </tr>
                         </thead>
                         <tbody id="stationPowerTableBody">
@@ -207,7 +206,7 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-md-6">
-                        <span class="text-muted" th:text="#{footer.copyright}">© 2023 碳權平台. 保留所有權利.</span>
+                        <span class="text-muted" th:text="#{footer.copyright}">© 2025 碳權平台. 保留所有權利.</span>
                     </div>
                     <div class="col-md-6 text-md-right">
                         <span class="text-muted">
@@ -503,7 +502,6 @@
                     <td>${data.transactionKwh || ''}</td>
                     <td>${data.errorRate || ''}</td>
                     <td>${data.createTime || ''}</td>
-                    <td>${data.updateTime || ''}</td>
                 `;
                 
                 tableBody.appendChild(row);

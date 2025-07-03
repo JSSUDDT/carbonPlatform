@@ -141,8 +141,7 @@
                                 <th th:text="#{stations.latitude}">GPS緯度</th>
                                 <th th:text="#{stations.longitude}">GPS經度</th>
                                 <th th:text="#{stations.status}">狀態</th>
-                                <th th:text="#{stations.createTime}">創建時間</th>
-                                <th th:text="#{stations.updateTime}">更新時間</th>
+                                <th th:text="#{stations.uploadTime}">上傳時間</th>
                                 <th id="actionsHeader" style="display: none;" th:text="#{stations.actions}">操作</th>
                             </tr>
                         </thead>
@@ -177,7 +176,7 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-md-6">
-                        <span class="text-muted" th:text="#{footer.copyright}">© 2023 碳權平台. 保留所有權利.</span>
+                        <span class="text-muted" th:text="#{footer.copyright}">© 2025 碳權平台. 保留所有權利.</span>
                     </div>
                     <div class="col-md-6 text-md-right">
                         <span class="text-muted">
@@ -400,8 +399,7 @@
                         return '';
                     }
                 },
-                { data: 'createTime' },
-                { data: 'updateTime' }
+                { data: 'createTime' }
             ];
             
             // 如果是管理員，添加操作列
