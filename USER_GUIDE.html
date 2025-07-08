@@ -10,45 +10,102 @@
             margin: 2cm;
         }
         
+        /* 語言切換器樣式 */
+        .language-switcher {
+            text-align: center;
+            margin: 20px 0 30px 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #00A170, #1B5E20);
+            border-radius: 15px;
+            border: 2px solid #88B04B;
+            box-shadow: 0 4px 15px rgba(0, 161, 112, 0.3);
+        }
+        
+        .language-switcher-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: white;
+            font-size: 16px;
+        }
+        
+        .language-switcher select {
+            border: 2px solid #34B3A9;
+            background: white;
+            font-size: 16px;
+            font-weight: 600;
+            color: #495057;
+            cursor: pointer;
+            outline: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            min-width: 150px;
+            transition: all 0.3s ease;
+        }
+        
+        .language-switcher select:hover {
+            border-color: #00A170;
+            box-shadow: 0 2px 8px rgba(52, 179, 169, 0.3);
+        }
+        
+        .language-switcher select:focus {
+            outline: none;
+        }
+        
+        /* 隱藏非當前語言的內容 */
+        .lang-zh { display: none; }
+        .lang-en { display: block; }
+        
+        body[data-lang="zh"] .lang-zh { display: block; }
+        body[data-lang="zh"] .lang-en { display: none; }
+        
         body {
             font-family: 'Microsoft JhengHei', Arial, sans-serif;
             line-height: 1.6;
             color: #333;
             margin: 0;
             padding: 20px;
-            background-color: #ffffff;
+            background: linear-gradient(135deg, #00A170 0%, #1B5E20 100%);
+            min-height: 100vh;
         }
         
         .header {
             text-align: center;
-            border-bottom: 3px solid #2c3e50;
+            border-bottom: 3px solid #34B3A9;
             padding-bottom: 20px;
             margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
         
         .header h1 {
-            color: #2c3e50;
+            color: #00A170;
             font-size: 28px;
             margin: 0;
             font-weight: bold;
         }
         
         .header .subtitle {
-            color: #7f8c8d;
+            color: #1B5E20;
             font-size: 16px;
             margin-top: 10px;
         }
         
         .toc {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 2px solid #34B3A9;
+            border-radius: 15px;
             padding: 20px;
             margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
         
         .toc h2 {
-            color: #2c3e50;
+            color: #00A170;
             margin-top: 0;
             font-size: 20px;
         }
@@ -66,7 +123,7 @@
         
         .toc li:before {
             content: "•";
-            color: #3498db;
+            color: #34B3A9;
             font-weight: bold;
             position: absolute;
             left: 0;
@@ -75,41 +132,47 @@
         .section {
             margin-bottom: 40px;
             page-break-inside: avoid;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 2px solid rgba(52, 179, 169, 0.3);
         }
         
         .section h2 {
-            color: #2c3e50;
-            border-bottom: 2px solid #3498db;
+            color: #00A170;
+            border-bottom: 2px solid #34B3A9;
             padding-bottom: 10px;
             font-size: 22px;
             margin-bottom: 20px;
         }
         
         .section h3 {
-            color: #34495e;
+            color: #1B5E20;
             font-size: 18px;
             margin-top: 25px;
             margin-bottom: 15px;
         }
         
         .feature-box {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
+            background: linear-gradient(135deg, rgba(0, 161, 112, 0.1), rgba(27, 94, 32, 0.1));
+            border: 2px solid rgba(52, 179, 169, 0.3);
+            border-radius: 10px;
             padding: 15px;
             margin: 15px 0;
         }
         
         .feature-box h4 {
-            color: #2c3e50;
+            color: #00A170;
             margin-top: 0;
             font-size: 16px;
         }
         
         .step-list {
-            background-color: #e8f5e8;
-            border: 1px solid #c3e6c3;
-            border-radius: 5px;
+            background: linear-gradient(135deg, rgba(52, 179, 169, 0.1), rgba(0, 161, 112, 0.1));
+            border: 2px solid rgba(52, 179, 169, 0.4);
+            border-radius: 10px;
             padding: 15px;
             margin: 15px 0;
         }
@@ -124,17 +187,17 @@
         }
         
         .warning-box {
-            background-color: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 5px;
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.1));
+            border: 2px solid rgba(255, 193, 7, 0.4);
+            border-radius: 10px;
             padding: 15px;
             margin: 15px 0;
         }
         
         .info-box {
-            background-color: #d1ecf1;
-            border: 1px solid #bee5eb;
-            border-radius: 5px;
+            background: linear-gradient(135deg, rgba(0, 161, 112, 0.1), rgba(27, 94, 32, 0.1));
+            border: 2px solid rgba(0, 161, 112, 0.4);
+            border-radius: 10px;
             padding: 15px;
             margin: 15px 0;
         }
@@ -143,9 +206,11 @@
             text-align: center;
             margin: 20px 0;
             padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-            border: 1px solid #dee2e6;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            border: 2px solid rgba(52, 179, 169, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
         
         .screenshot img {
@@ -168,9 +233,14 @@
             text-align: center;
             margin-top: 40px;
             padding-top: 20px;
-            border-top: 1px solid #ddd;
-            color: #6c757d;
+            border-top: 2px solid #34B3A9;
+            color: #333;
             font-size: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
         
         @media print {
@@ -184,259 +254,544 @@
         }
     </style>
 </head>
-<body>
+<body data-lang="en">
     <div class="header">
-        <h1>碳權平台</h1>
-        <div class="subtitle">用戶使用說明</div>
-        <div class="subtitle">版本: 1.0 | 更新日期: 2024年6月19日</div>
+        <h1 class="lang-zh">碳權平台</h1>
+        <h1 class="lang-en">Carbon Credit Platform</h1>
+        <div class="subtitle lang-zh">用戶使用說明</div>
+        <div class="subtitle lang-en">User Guide</div>
+        <div class="subtitle lang-zh">版本: 1.0 | 更新日期: 2025年1月</div>
+        <div class="subtitle lang-en">Version: 1.0 | Updated: January 2025</div>
+    </div>
+
+    <!-- 語言切換器 -->
+    <div class="language-switcher">
+        <span class="language-switcher-label lang-zh">選擇語言 / Select Language</span>
+        <span class="language-switcher-label lang-en">Select Language / 選擇語言</span>
+        <select id="languageSelect" onchange="switchLanguage(this.value)">
+            <option value="en">English</option>
+            <option value="zh">繁體中文</option>
+        </select>
     </div>
 
     <div class="toc">
-        <h2>目錄</h2>
+        <h2 class="lang-zh">目錄</h2>
+        <h2 class="lang-en">Table of Contents</h2>
         <ul>
-            <li><a href="#overview">1. 系統概述</a></li>
-            <li><a href="#login">2. 登入系統</a></li>
-            <li><a href="#dashboard">3. 儀表板</a></li>
-            <li><a href="#stations">4. 充電站管理</a></li>
-            <li><a href="#chargers">5. 充電樁管理</a></li>
-            <li><a href="#transactions">6. 交易記錄</a></li>
-            <li><a href="#power-monitoring">7. 電力監控</a></li>
-            <li><a href="#station-map">8. 充電站地圖</a></li>
-            <li><a href="#tips">9. 使用技巧</a></li>
+            <li><a href="#overview" class="lang-zh">1. 系統概述</a><a href="#overview" class="lang-en">1. System Overview</a></li>
+            <li><a href="#register" class="lang-zh">2. 註冊帳號</a><a href="#register" class="lang-en">2. Account Registration</a></li>
+            <li><a href="#login" class="lang-zh">3. 登入系統</a><a href="#login" class="lang-en">3. System Login</a></li>
+            <li><a href="#dashboard" class="lang-zh">4. 儀表板</a><a href="#dashboard" class="lang-en">4. Dashboard</a></li>
+            <li><a href="#stations" class="lang-zh">5. 充電站管理</a><a href="#stations" class="lang-en">5. Station Management</a></li>
+            <li><a href="#chargers" class="lang-zh">6. 充電樁管理</a><a href="#chargers" class="lang-en">6. Charger Management</a></li>
+            <li><a href="#transactions" class="lang-zh">7. 充電記錄</a><a href="#transactions" class="lang-en">7. Charging Records</a></li>
+            <li><a href="#power-monitoring" class="lang-zh">8. 電力監控</a><a href="#power-monitoring" class="lang-en">8. Power Monitoring</a></li>
+            <li><a href="#station-map" class="lang-zh">9. 充電站地圖</a><a href="#station-map" class="lang-en">9. Station Map</a></li>
+            <li><a href="#tips" class="lang-zh">10. 使用技巧</a><a href="#tips" class="lang-en">10. Usage Tips</a></li>
         </ul>
     </div>
 
     <div class="section" id="overview">
-        <h2>1. 系統概述</h2>
-        <p>碳權平台是一個專為電動車充電站管理而設計的Web應用系統。作為ROLE_USER角色，您可以：</p>
-        <ul>
+        <h2 class="lang-zh">1. 系統概述</h2>
+        <h2 class="lang-en">1. System Overview</h2>
+        <p class="lang-zh">碳權平台是一個專為電動車充電站管理而設計的Web應用系統。您可以：</p>
+        <p class="lang-en">The Carbon Credit Platform is a web application system designed for electric vehicle charging station management. You can:</p>
+        <ul class="lang-zh">
             <li><strong>查看充電站資訊</strong>: 瀏覽所有充電站的基本資訊和地理位置</li>
             <li><strong>管理充電樁</strong>: 查看和維護充電樁設備資訊</li>
-            <li><strong>監控交易記錄</strong>: 查看充電交易歷史和統計資料</li>
+            <li><strong>監控充電記錄</strong>: 查看充電交易歷史和統計資料</li>
             <li><strong>電力監控</strong>: 監控充電站的發電量和用電量</li>
             <li><strong>地圖導航</strong>: 使用互動式地圖查看充電站位置</li>
         </ul>
+        <ul class="lang-en">
+            <li><strong>View Station Information</strong>: Browse basic information and geographical locations of all charging stations</li>
+            <li><strong>Manage Chargers</strong>: View and maintain charger device information</li>
+            <li><strong>Monitor Charging Records</strong>: View charging transaction history and statistics</li>
+            <li><strong>Power Monitoring</strong>: Monitor power generation and consumption of charging stations</li>
+            <li><strong>Map Navigation</strong>: Use interactive maps to view charging station locations</li>
+        </ul>
         
         <div class="info-box">
-            <strong>注意:</strong> 您擁有ROLE_USER權限，可以查看大部分功能，但無法進行系統管理操作。
+            <strong class="lang-zh">注意:</strong><strong class="lang-en">Note:</strong> 
+            <span class="lang-zh">系統支援多語言切換，您可以在右上角選擇繁體中文或英文介面。</span>
+            <span class="lang-en">The system supports multi-language switching. You can select Traditional Chinese or English interface in the top right corner.</span>
+        </div>
+    </div>
+
+    <div class="section" id="register">
+        <h2 class="lang-zh">2. 註冊帳號</h2>
+        <h2 class="lang-en">2. Account Registration</h2>
+        <p class="lang-zh">新用戶需要先註冊帳號才能使用系統功能。註冊過程需要填寫基本資訊並同意相關條款。</p>
+        <p class="lang-en">New users need to register an account before using system functions. The registration process requires filling in basic information and agreeing to relevant terms.</p>
+        
+        <div class="feature-box">
+            <h4 class="lang-zh">註冊步驟</h4>
+            <h4 class="lang-en">Registration Steps</h4>
+            <div class="step-list">
+                <ol class="lang-zh">
+                    <li>前往系統登入頁面，點擊「註冊新帳號」連結</li>
+                    <li>填寫廠商ID（vendor_id）</li>
+                    <li>設定密碼（至少6位元，最多50位元）</li>
+                    <li>確認密碼</li>
+                    <li><strong>必須勾選同意條款</strong>：
+                        <ul>
+                            <li>廠商確認上傳至本平台的所有充電記錄均已獲得使用者明確同意進行碳權轉移，並承諾遵守相關碳權交易法規</li>
+                            <li>廠商保證所上傳的所有資料均為真實、準確且完整，如有虛假資料將承擔相應法律責任</li>
+                        </ul>
+                    </li>
+                    <li>點擊「註冊」按鈕完成註冊</li>
+                </ol>
+                <ol class="lang-en">
+                    <li>Go to the system login page and click the "Register New Account" link</li>
+                    <li>Fill in the vendor ID (vendor_id)</li>
+                    <li>Set password (minimum 6 characters, maximum 50 characters)</li>
+                    <li>Confirm password</li>
+                    <li><strong>Must check to agree to terms</strong>:
+                        <ul>
+                            <li>Vendor confirms that all charging records uploaded to this platform have obtained explicit user consent for carbon credit transfer and commits to comply with relevant carbon trading regulations</li>
+                            <li>Vendor guarantees that all uploaded data is true, accurate, and complete, and will bear corresponding legal responsibility for any false data</li>
+                        </ul>
+                    </li>
+                    <li>Click the "Register" button to complete registration</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="feature-box">
+            <h4 class="lang-zh">註冊要求與條款說明</h4>
+            <h4 class="lang-en">Registration Requirements and Terms</h4>
+            <p class="lang-zh"><strong>重要提醒：</strong>每個廠商ID只能註冊一次，密碼長度需為6-50位元，且必須勾選同意以下兩個條款才能完成註冊：</p>
+            <p class="lang-en"><strong>Important Reminder:</strong> Each vendor ID can only be registered once, password length must be 6-50 characters, and you must check to agree to the following two terms to complete registration:</p>
+            <div class="step-list">
+                <ol class="lang-zh">
+                    <li><strong>碳權轉移同意條款</strong>：廠商確認上傳至本平台的所有充電記錄均已獲得使用者明確同意進行碳權轉移，並承諾遵守相關碳權交易法規</li>
+                    <li><strong>資料真實性保證條款</strong>：廠商保證所上傳的所有資料均為真實、準確且完整，如有虛假資料將承擔相應法律責任</li>
+                </ol>
+                <ol class="lang-en">
+                    <li><strong>Carbon Credit Transfer Consent Terms</strong>: Vendor confirms that all charging records uploaded to this platform have obtained explicit user consent for carbon credit transfer and commits to comply with relevant carbon trading regulations</li>
+                    <li><strong>Data Authenticity Guarantee Terms</strong>: Vendor guarantees that all uploaded data is true, accurate, and complete, and will bear corresponding legal responsibility for any false data</li>
+                </ol>
+            </div>
+            <p class="mt-3 lang-zh"><strong>表單欄位：</strong>廠商ID（4-50位元，註冊後無法修改）、密碼（6-50位元）、確認密碼（必須一致）、同意條款（必須勾選）。</p>
+            <p class="mt-3 lang-en"><strong>Form Fields:</strong> Vendor ID (4-50 characters, cannot be modified after registration), Password (6-50 characters), Confirm Password (must match), Terms Agreement (must be checked).</p>
+        </div>
+        
+        <div class="warning-box">
+            <strong class="lang-zh">法律責任提醒:</strong>
+            <strong class="lang-en">Legal Responsibility Reminder:</strong>
+            <ul class="lang-zh">
+                <li>同意條款具有法律約束力，請仔細閱讀後再勾選</li>
+                <li>上傳虛假資料可能面臨法律責任</li>
+                <li>必須確保已獲得用戶明確同意才能進行碳權轉移</li>
+            </ul>
+            <ul class="lang-en">
+                <li>Agreement terms have legal binding force, please read carefully before checking</li>
+                <li>Uploading false data may face legal responsibility</li>
+                <li>Must ensure explicit user consent has been obtained before conducting carbon credit transfer</li>
+            </ul>
+        </div>
+        
+        <div class="info-box">
+            <strong class="lang-zh">註冊成功後:</strong><span class="lang-zh"> 系統會自動導向登入頁面，您可以使用新註冊的帳號和密碼登入系統。</span>
+            <strong class="lang-en">After Successful Registration:</strong><span class="lang-en"> The system will automatically redirect to the login page, and you can log in with your newly registered account and password.</span>
         </div>
     </div>
 
     <div class="section" id="login">
-        <h2>2. 登入系統</h2>
+        <h2 class="lang-zh">3. 登入系統</h2>
+        <h2 class="lang-en">3. System Login</h2>
         <div class="feature-box">
-            <h4>登入步驟</h4>
+            <h4 class="lang-zh">登入步驟</h4>
+            <h4 class="lang-en">Login Steps</h4>
             <div class="step-list">
-                <ol>
+                <ol class="lang-zh">
                     <li>開啟瀏覽器，前往系統登入頁面</li>
                     <li>輸入您的供應商ID（vendor_id）</li>
                     <li>輸入您的密碼</li>
                     <li>點擊「登入」按鈕</li>
                     <li>系統會驗證您的身份並導向主頁面</li>
                 </ol>
+                <ol class="lang-en">
+                    <li>Open browser and go to the system login page</li>
+                    <li>Enter your vendor ID (vendor_id)</li>
+                    <li>Enter your password</li>
+                    <li>Click the "Login" button</li>
+                    <li>The system will verify your identity and redirect to the main page</li>
+                </ol>
             </div>
         </div>
         
         <div class="warning-box">
-            <strong>安全提醒:</strong>
-            <ul>
+            <strong class="lang-zh">安全提醒:</strong>
+            <strong class="lang-en">Security Reminder:</strong>
+            <ul class="lang-zh">
                 <li>請妥善保管您的登入憑證</li>
                 <li>不要在公共電腦上勾選「記住我」</li>
                 <li>登出時請點擊「登出」按鈕</li>
                 <li>如發現異常登入，請立即聯繫管理員</li>
             </ul>
+            <ul class="lang-en">
+                <li>Please keep your login credentials safe</li>
+                <li>Do not check "Remember Me" on public computers</li>
+                <li>Please click the "Logout" button when logging out</li>
+                <li>If you notice unusual login activity, please contact the administrator immediately</li>
+            </ul>
         </div>
     </div>
 
     <div class="section" id="dashboard">
-        <h2>3. 儀表板</h2>
-        <p>登入後，您會看到系統的主儀表板，包含以下功能區域：</p>
+        <h2 class="lang-zh">4. 儀表板</h2>
+        <h2 class="lang-en">4. Dashboard</h2>
+        <p class="lang-zh">登入後，您會看到系統的主儀表板，包含以下功能區域：</p>
+        <p class="lang-en">After logging in, you will see the main dashboard of the system, which includes the following functional areas:</p>
         
         <div class="feature-box">
-            <h4>左側導航欄</h4>
-            <ul>
+            <h4 class="lang-zh">左側導航欄</h4>
+            <h4 class="lang-en">Left Navigation Bar</h4>
+            <ul class="lang-zh">
                 <li><strong>充電站管理</strong>: 查看和管理充電站資訊</li>
                 <li><strong>充電樁管理</strong>: 查看和管理充電樁設備</li>
-                <li><strong>交易記錄</strong>: 查看充電交易歷史</li>
-                <li><strong>電力監控</strong>: 監控發電和用電量</li>
+                <li><strong>充電記錄</strong>: 查看充電交易歷史</li>
+                <li><strong>充電站用電</strong>: 監控充電站用電量</li>
                 <li><strong>充電站地圖</strong>: 互動式地圖查看</li>
+            </ul>
+            <ul class="lang-en">
+                <li><strong>Station Management</strong>: View and manage charging station information</li>
+                <li><strong>Chargers Management</strong>: View and manage charger devices</li>
+                <li><strong>Charging Records</strong>: View charging transaction history</li>
+                <li><strong>Station Power</strong>: Monitor charging station power consumption</li>
+                <li><strong>Station Map</strong>: Interactive map viewing</li>
             </ul>
         </div>
         
         <div class="feature-box">
-            <h4>統計卡片</h4>
-            <p>儀表板頂部顯示重要統計資訊：</p>
-            <ul>
+            <h4 class="lang-zh">統計卡片</h4>
+            <h4 class="lang-en">Statistics Cards</h4>
+            <p class="lang-zh">儀表板頂部顯示重要統計資訊：</p>
+            <p class="lang-en">The top of the dashboard displays important statistical information:</p>
+            <ul class="lang-zh">
                 <li><strong>充電站數量</strong>: 顯示您管理的充電站總數</li>
                 <li><strong>總充電度數</strong>: 顯示累計充電量</li>
                 <li><strong>平均充電度數</strong>: 顯示平均每次充電量</li>
                 <li><strong>綠色能源佔比</strong>: 顯示綠色能源使用比例</li>
             </ul>
+            <ul class="lang-en">
+                <li><strong>Station Count</strong>: Shows the total number of charging stations you manage</li>
+                <li><strong>Total Charging kWh</strong>: Shows cumulative charging amount</li>
+                <li><strong>Average Charging kWh</strong>: Shows average charging amount per session</li>
+                <li><strong>Green Energy Rate</strong>: Shows the proportion of green energy usage</li>
+            </ul>
         </div>
     </div>
 
     <div class="section" id="stations">
-        <h2>4. 充電站管理</h2>
-        <p>充電站管理頁面讓您查看和管理所有充電站的基本資訊。</p>
+        <h2 class="lang-zh">5. 充電站管理</h2>
+        <h2 class="lang-en">5. Station Management</h2>
+        <p class="lang-zh">充電站管理頁面讓您查看和管理所有充電站資訊，支援按名稱搜尋和狀態篩選。</p>
+        <p class="lang-en">The station management page allows you to view and manage all station information, with support for name search and status filtering.</p>
         
         <div class="feature-box">
-            <h4>功能特色</h4>
-            <ul>
+            <h4 class="lang-zh">功能特色</h4>
+            <h4 class="lang-en">Features</h4>
+            <ul class="lang-zh">
                 <li><strong>充電站列表</strong>: 以表格形式顯示所有充電站</li>
                 <li><strong>搜尋功能</strong>: 可依站名、地址等條件搜尋</li>
                 <li><strong>排序功能</strong>: 可依各欄位排序</li>
                 <li><strong>分頁顯示</strong>: 大量資料時自動分頁</li>
             </ul>
+            <ul class="lang-en">
+                <li><strong>Station List</strong>: Display all charging stations in table format</li>
+                <li><strong>Search Function</strong>: Search by station name, address, etc.</li>
+                <li><strong>Sorting Function</strong>: Sort by various fields</li>
+                <li><strong>Pagination</strong>: Automatic pagination for large datasets</li>
+            </ul>
         </div>
         
         <div class="feature-box">
-            <h4>欄位說明</h4>
-            <ul>
-                <li><strong>站名</strong>: 充電站的名稱</li>
+            <h4 class="lang-zh">欄位說明</h4>
+            <h4 class="lang-en">Field Descriptions</h4>
+            <ul class="lang-zh">
+                <li><strong>充電站ID</strong>: 充電站的唯一識別碼</li>
+                <li><strong>廠商ID</strong>: 所屬廠商識別碼</li>
+                <li><strong>充電站名稱</strong>: 充電站的名稱</li>
+                <li><strong>充電站功率</strong>: 充電站功率</li>
+                <li><strong>城市</strong>: 充電站所在城市</li>
                 <li><strong>地址</strong>: 充電站的詳細地址</li>
-                <li><strong>經度/緯度</strong>: GPS座標位置</li>
-                <li><strong>容量</strong>: 充電站的總容量</li>
+                <li><strong>儲能啟用</strong>: 是否啟用儲能功能</li>
+                <li><strong>電源來源</strong>: 電源類型（傳統電網/綠能）</li>
+                <li><strong>GPS緯度/經度</strong>: GPS座標位置</li>
                 <li><strong>狀態</strong>: 充電站的營運狀態</li>
+                <li><strong>上傳時間</strong>: 資料上傳時間</li>
+            </ul>
+            <ul class="lang-en">
+                <li><strong>Station ID</strong>: Unique identifier for the charging station</li>
+                <li><strong>Vendor ID</strong>: Associated vendor identifier</li>
+                <li><strong>Station Name</strong>: Name of the charging station</li>
+                <li><strong>Station Power</strong>: Station power</li>
+                <li><strong>City</strong>: City where the charging station is located</li>
+                <li><strong>Address</strong>: Detailed address of the charging station</li>
+                <li><strong>Storage Enabled</strong>: Whether energy storage function is enabled</li>
+                <li><strong>Power Source</strong>: Power type (Traditional Grid/Green Energy)</li>
+                <li><strong>GPS Latitude/Longitude</strong>: GPS coordinate location</li>
+                <li><strong>Status</strong>: Operational status of the charging station</li>
+                <li><strong>Upload Time</strong>: Data upload time</li>
             </ul>
         </div>
         
         <div class="step-list">
-            <h4>操作步驟</h4>
-            <ol>
+            <h4 class="lang-zh">操作步驟</h4>
+            <h4 class="lang-en">Operation Steps</h4>
+            <ol class="lang-zh">
                 <li>點擊左側導航欄的「充電站管理」</li>
                 <li>在搜尋框輸入關鍵字進行搜尋</li>
                 <li>點擊欄位標題進行排序</li>
                 <li>使用分頁按鈕瀏覽更多資料</li>
-                <li>點擊「查看詳情」查看特定充電站資訊</li>
+                <li>點擊「刷新」按鈕更新資料</li>
+            </ol>
+            <ol class="lang-en">
+                <li>Click "Station Management" in the left navigation bar</li>
+                <li>Enter keywords in the search box to search</li>
+                <li>Click column headers to sort</li>
+                <li>Use pagination buttons to browse more data</li>
+                <li>Click "Refresh" button to update data</li>
             </ol>
         </div>
     </div>
 
     <div class="section" id="chargers">
-        <h2>5. 充電樁管理</h2>
-        <p>充電樁管理頁面讓您查看和管理所有充電樁設備的詳細資訊。</p>
+        <h2 class="lang-zh">6. 充電樁管理</h2>
+        <h2 class="lang-en">6. Chargers Management</h2>
+        <p class="lang-zh">充電樁管理頁面讓您查看和管理所有充電樁信息，支持按名稱搜索、充電站和狀態篩選。</p>
+        <p class="lang-en">The chargers management page allows you to view and manage all charger information, with support for name search, station and status filtering.</p>
         
         <div class="feature-box">
-            <h4>功能特色</h4>
-            <ul>
+            <h4 class="lang-zh">功能特色</h4>
+            <h4 class="lang-en">Features</h4>
+            <ul class="lang-zh">
                 <li><strong>充電樁列表</strong>: 顯示所有充電樁設備</li>
                 <li><strong>設備狀態</strong>: 即時顯示充電樁狀態</li>
                 <li><strong>技術規格</strong>: 顯示功率、電壓、電流等技術參數</li>
                 <li><strong>啟用日期</strong>: 顯示首次啟用日期</li>
             </ul>
+            <ul class="lang-en">
+                <li><strong>Charger List</strong>: Display all charger devices</li>
+                <li><strong>Device Status</strong>: Real-time display of charger status</li>
+                <li><strong>Technical Specifications</strong>: Display power, voltage, current and other technical parameters</li>
+                <li><strong>Activation Date</strong>: Display first activation date</li>
+            </ul>
         </div>
         
         <div class="feature-box">
-            <h4>欄位說明</h4>
-            <ul>
-                <li><strong>充電樁ID</strong>: 設備的唯一識別碼</li>
-                <li><strong>連接器ID</strong>: 連接器的識別碼</li>
-                <li><strong>充電站</strong>: 所屬充電站</li>
-                <li><strong>類型</strong>: 充電樁類型（快充/慢充）</li>
-                <li><strong>品牌</strong>: 設備品牌</li>
-                <li><strong>功率</strong>: 充電功率（kW）</li>
-                <li><strong>狀態</strong>: 設備狀態（啟用/停用）</li>
+            <h4 class="lang-zh">欄位說明</h4>
+            <h4 class="lang-en">Field Descriptions</h4>
+            <ul class="lang-zh">
+                <li><strong>充電樁ID</strong>: 充電樁的唯一識別碼</li>
+                <li><strong>連接ID</strong>: 充電樁連接器ID</li>
+                <li><strong>廠商ID</strong>: 所屬廠商識別碼</li>
+                <li><strong>充電站ID</strong>: 所屬充電站識別碼</li>
+                <li><strong>充電樁類型</strong>: 充電樁類型</li>
+                <li><strong>充電樁品牌</strong>: 充電樁品牌</li>
+                <li><strong>充電功率(kW)</strong>: 充電樁功率</li>
+                <li><strong>充電電流(A)</strong>: 充電樁電流</li>
+                <li><strong>充電電壓(V)</strong>: 充電樁電壓</li>
+                <li><strong>狀態</strong>: 充電樁狀態</li>
+                <li><strong>上傳時間</strong>: 資料上傳時間</li>
+                <li><strong>首次啟用日期</strong>: 充電樁首次啟用日期</li>
+            </ul>
+            <ul class="lang-en">
+                <li><strong>Charger ID</strong>: Unique identifier for the charger</li>
+                <li><strong>Connector ID</strong>: Charger connector ID</li>
+                <li><strong>Vendor ID</strong>: Associated vendor identifier</li>
+                <li><strong>Station ID</strong>: Associated charging station identifier</li>
+                <li><strong>Charger Type</strong>: Charger type</li>
+                <li><strong>Charger Brand</strong>: Charger brand</li>
+                <li><strong>Charger KW</strong>: Charger power</li>
+                <li><strong>Charger A</strong>: Charger current</li>
+                <li><strong>Charger V</strong>: Charger voltage</li>
+                <li><strong>Status</strong>: Charger status</li>
+                <li><strong>Upload Time</strong>: Data upload time</li>
+                <li><strong>First Enable Date</strong>: Charger first enable date</li>
             </ul>
         </div>
         
         <div class="info-box">
-            <strong>注意:</strong> 充電樁使用複合主鍵（充電樁ID + 連接器ID），因為一個充電樁可能有多個連接器。
+            <strong class="lang-zh">注意:</strong><span class="lang-zh"> 充電樁使用複合主鍵（充電樁ID + 連接ID），因為一個充電樁可能有多個連接器。</span>
+            <strong class="lang-en">Note:</strong><span class="lang-en"> Chargers use composite primary keys (Charger ID + Connector ID) because one charger may have multiple connectors.</span>
         </div>
     </div>
 
     <div class="section" id="transactions">
-        <h2>6. 交易記錄</h2>
-        <p>交易記錄頁面讓您查看所有充電交易的歷史記錄和統計資料。</p>
+        <h2 class="lang-zh">7. 充電記錄</h2>
+        <h2 class="lang-en">7. Charging Records</h2>
+        <p class="lang-zh">充電記錄頁面讓您查看所有充電交易記錄，支持按交易號搜索、充電站篩選和日期範圍篩選。</p>
+        <p class="lang-en">The charging records page allows you to view all charging transaction records, with support for transaction number search, station filtering and date range filtering.</p>
         
         <div class="feature-box">
-            <h4>功能特色</h4>
-            <ul>
-                <li><strong>交易歷史</strong>: 完整的充電交易記錄</li>
-                <li><strong>詳細資訊</strong>: 包含客戶、車輛、充電量等資訊</li>
-                <li><strong>碳權交易</strong>: 顯示是否同意碳權交易</li>
+            <h4 class="lang-zh">功能特色</h4>
+            <h4 class="lang-en">Features</h4>
+            <ul class="lang-zh">
+                <li><strong>充電歷史</strong>: 完整的充電交易記錄</li>
+                <li><strong>詳細資訊</strong>: 包含客戶、充電量等資訊</li>
                 <li><strong>時間範圍</strong>: 可依時間範圍篩選</li>
+                <li><strong>充電站篩選</strong>: 可依充電站進行篩選</li>
+            </ul>
+            <ul class="lang-en">
+                <li><strong>Charging History</strong>: Complete charging transaction records</li>
+                <li><strong>Detailed Information</strong>: Includes customer, charging amount and other information</li>
+                <li><strong>Time Range</strong>: Filter by time range</li>
+                <li><strong>Station Filter</strong>: Filter by charging station</li>
             </ul>
         </div>
         
         <div class="feature-box">
-            <h4>欄位說明</h4>
-            <ul>
-                <li><strong>交易編號</strong>: 唯一的交易識別碼</li>
-                <li><strong>充電站</strong>: 交易發生的充電站</li>
-                <li><strong>充電樁</strong>: 使用的充電樁設備</li>
+            <h4 class="lang-zh">欄位說明</h4>
+            <h4 class="lang-en">Field Descriptions</h4>
+            <ul class="lang-zh">
+                <li><strong>交易號</strong>: 唯一的交易識別碼</li>
+                <li><strong>廠商ID</strong>: 所屬廠商識別碼</li>
+                <li><strong>充電站ID</strong>: 交易發生的充電站</li>
+                <li><strong>充電站名稱</strong>: 充電站名稱</li>
+                <li><strong>充電樁ID</strong>: 使用的充電樁設備</li>
+                <li><strong>連接ID</strong>: 充電樁連接器ID</li>
+                <li><strong>發票號</strong>: 交易發票號碼</li>
                 <li><strong>客戶ID</strong>: 充電客戶識別碼</li>
-                <li><strong>開始/結束時間</strong>: 充電時間範圍</li>
-                <li><strong>充電量</strong>: 實際充電度數（kWh）</li>
-                <li><strong>車輛資訊</strong>: 車型、噸位、車牌號碼</li>
-                <li><strong>碳權交易</strong>: 是否同意參與碳權交易</li>
+                <li><strong>發票日期</strong>: 發票開立日期</li>
+                <li><strong>開始時間</strong>: 充電開始時間</li>
+                <li><strong>結束時間</strong>: 充電結束時間</li>
+                <li><strong>充電量(kWh)</strong>: 充電量</li>
+                <li><strong>上傳時間</strong>: 資料上傳時間</li>
+            </ul>
+            <ul class="lang-en">
+                <li><strong>Transaction No</strong>: Unique transaction identifier</li>
+                <li><strong>Vendor ID</strong>: Associated vendor identifier</li>
+                <li><strong>Station ID</strong>: Charging station where transaction occurred</li>
+                <li><strong>Station Name</strong>: Charging station name</li>
+                <li><strong>Charger ID</strong>: Charger device used</li>
+                <li><strong>Connector ID</strong>: Charger connector ID</li>
+                <li><strong>Invoice No</strong>: Transaction invoice number</li>
+                <li><strong>Customer ID</strong>: Charging customer identifier</li>
+                <li><strong>Invoice Date</strong>: Invoice issue date</li>
+                <li><strong>Start Time</strong>: Charging start time</li>
+                <li><strong>End Time</strong>: Charging end time</li>
+                <li><strong>Charging (kWh)</strong>: Charging amount</li>
+                <li><strong>Upload Time</strong>: Data upload time</li>
             </ul>
         </div>
         
         <div class="step-list">
-            <h4>操作步驟</h4>
-            <ol>
-                <li>點擊左側導航欄的「交易記錄」</li>
+            <h4 class="lang-zh">操作步驟</h4>
+            <h4 class="lang-en">Operation Steps</h4>
+            <ol class="lang-zh">
+                <li>點擊左側導航欄的「充電記錄」</li>
                 <li>使用搜尋功能找到特定交易</li>
+                <li>選擇充電站進行篩選</li>
+                <li>選擇日期範圍進行篩選</li>
                 <li>點擊欄位標題進行排序</li>
                 <li>查看交易詳細資訊</li>
-                <li>匯出交易資料（如需要）</li>
+            </ol>
+            <ol class="lang-en">
+                <li>Click "Charging Records" in the left navigation bar</li>
+                <li>Use search function to find specific transactions</li>
+                <li>Select charging station for filtering</li>
+                <li>Select date range for filtering</li>
+                <li>Click column headers to sort</li>
+                <li>View transaction details</li>
             </ol>
         </div>
     </div>
 
     <div class="section" id="power-monitoring">
-        <h2>7. 電力監控</h2>
-        <p>電力監控頁面讓您即時監控充電站的發電量和用電量，以及相關統計資料。</p>
+        <h2 class="lang-zh">8. 充電站用電</h2>
+        <h2 class="lang-en">8. Station Power</h2>
+        <p class="lang-zh">充電站用電頁面讓您查看和管理充電站用電信息，包括各類電力來源和能源消耗數據。</p>
+        <p class="lang-en">The station power page allows you to view and manage charging station power information, including various power sources and energy consumption data.</p>
         
         <div class="feature-box">
-            <h4>統計卡片</h4>
-            <ul>
+            <h4 class="lang-zh">統計卡片</h4>
+            <h4 class="lang-en">Statistics Cards</h4>
+            <ul class="lang-zh">
                 <li><strong>充電站數量</strong>: 顯示監控的充電站總數</li>
                 <li><strong>總充電度數</strong>: 顯示累計充電量</li>
                 <li><strong>平均充電度數</strong>: 顯示平均每次充電量</li>
                 <li><strong>綠色能源佔比</strong>: 顯示綠色能源使用比例</li>
             </ul>
-        </div>
-        
-        <div class="feature-box">
-            <h4>監控表格</h4>
-            <ul>
-                <li><strong>發電量</strong>: 各充電站的發電量資料</li>
-                <li><strong>用電量</strong>: 各充電站的用電量資料</li>
-                <li><strong>交易累計度數</strong>: 從交易記錄統計的同一天累計度數</li>
-                <li><strong>誤差率</strong>: 發電量與用電量的差異比例</li>
+            <ul class="lang-en">
+                <li><strong>Station Count</strong>: Shows total number of monitored charging stations</li>
+                <li><strong>Total Charging kWh</strong>: Shows cumulative charging amount</li>
+                <li><strong>Average Charging kWh</strong>: Shows average charging amount per session</li>
+                <li><strong>Green Energy Rate</strong>: Shows proportion of green energy usage</li>
             </ul>
         </div>
         
         <div class="feature-box">
-            <h4>誤差率計算</h4>
-            <p>誤差率 = |發電量 - 用電量| / 發電量 × 100%</p>
-            <p>滑鼠懸停在誤差率欄位可查看計算方法說明。</p>
+            <h4 class="lang-zh">監控表格</h4>
+            <h4 class="lang-en">Monitoring Table</h4>
+            <ul class="lang-zh">
+                <li><strong>廠商ID</strong>: 所屬廠商識別碼</li>
+                <li><strong>充電站ID</strong>: 充電站識別碼</li>
+                <li><strong>充電站功率(kWh)</strong>: 充電站功率</li>
+                <li><strong>日期信息</strong>: 日期信息</li>
+                <li><strong>日期充電度數(kWh)</strong>: 日期充電度數</li>
+                <li><strong>交易累計度數(kWh)</strong>: 交易累計度數</li>
+                <li><strong>誤差率(%)</strong>: 誤差率</li>
+                <li><strong>上傳時間</strong>: 資料上傳時間</li>
+            </ul>
+            <ul class="lang-en">
+                <li><strong>Vendor ID</strong>: Associated vendor identifier</li>
+                <li><strong>Station ID</strong>: Charging station identifier</li>
+                <li><strong>Station Power (kWh)</strong>: Station power</li>
+                <li><strong>Date Information</strong>: Date information</li>
+                <li><strong>Date Charging kWh</strong>: Date charging kWh</li>
+                <li><strong>Transaction Cumulative kWh</strong>: Transaction cumulative kWh</li>
+                <li><strong>Error Rate (%)</strong>: Error rate</li>
+                <li><strong>Upload Time</strong>: Data upload time</li>
+            </ul>
+        </div>
+        
+        <div class="feature-box">
+            <h4 class="lang-zh">誤差率計算</h4>
+            <h4 class="lang-en">Error Rate Calculation</h4>
+            <p class="lang-zh">誤差率 = (交易累計度數 - 日期充電度數) ÷ 交易累計度數 × 100%</p>
+            <p class="lang-en">Error Rate = (Transaction Cumulative kWh - Date Charging kWh) ÷ Transaction Cumulative kWh × 100%</p>
+            <p class="lang-zh">滑鼠懸停在誤差率欄位可查看計算方法說明。</p>
+            <p class="lang-en">Hover over the error rate field to view calculation method explanation.</p>
         </div>
         
         <div class="info-box">
-            <strong>提示:</strong> 電力監控資料會即時更新，幫助您了解充電站的能源使用效率。
+            <strong class="lang-zh">提示:</strong><span class="lang-zh"> 充電站用電資料會即時更新，幫助您了解充電站的能源使用效率。</span>
+            <strong class="lang-en">Tip:</strong><span class="lang-en"> Station power data updates in real-time, helping you understand the energy efficiency of charging stations.</span>
         </div>
     </div>
 
     <div class="section" id="station-map">
-        <h2>8. 充電站地圖</h2>
-        <p>充電站地圖提供互動式地圖功能，讓您直觀地查看所有充電站的地理位置。</p>
+        <h2 class="lang-zh">9. 充電站地圖</h2>
+        <h2 class="lang-en">9. Station Map</h2>
+        <p class="lang-zh">充電站地圖提供互動式地圖功能，讓您直觀地查看所有充電站的地理位置。</p>
+        <p class="lang-en">The station map provides interactive map functionality, allowing you to intuitively view the geographical locations of all charging stations.</p>
         
         <div class="feature-box">
-            <h4>地圖功能</h4>
-            <ul>
-                <li><strong>互動式地圖</strong>: 基於Google Maps的互動地圖</li>
+            <h4 class="lang-zh">地圖功能</h4>
+            <h4 class="lang-en">Map Features</h4>
+            <ul class="lang-zh">
+                <li><strong>互動式地圖</strong>: 基於Leaflet的互動地圖</li>
                 <li><strong>充電站標記</strong>: 所有充電站以標記形式顯示</li>
                 <li><strong>位置搜尋</strong>: 可搜尋特定地址或地點</li>
                 <li><strong>路線規劃</strong>: 提供導航路線規劃</li>
-                <li><strong>地理位置</strong>: 自動獲取您的位置並顯示藍色箭頭</li>
+                <li><strong>當前位置</strong>: 自動獲取您的位置並顯示藍色箭頭</li>
+            </ul>
+            <ul class="lang-en">
+                <li><strong>Interactive Map</strong>: Interactive map based on Leaflet</li>
+                <li><strong>Station Markers</strong>: All charging stations displayed as markers</li>
+                <li><strong>Location Search</strong>: Search for specific addresses or places</li>
+                <li><strong>Route Planning</strong>: Provides navigation route planning</li>
+                <li><strong>Current Location</strong>: Automatically gets your location and displays blue arrow</li>
             </ul>
         </div>
         
         <div class="step-list">
-            <h4>使用步驟</h4>
-            <ol>
+            <h4 class="lang-zh">使用步驟</h4>
+            <h4 class="lang-en">Usage Steps</h4>
+            <ol class="lang-zh">
                 <li>點擊左側導航欄的「充電站地圖」</li>
                 <li>允許瀏覽器獲取您的地理位置</li>
                 <li>地圖會自動定位到您的位置（藍色箭頭）</li>
@@ -444,59 +799,133 @@
                 <li>使用搜尋框搜尋特定地點</li>
                 <li>點擊「查看詳情」連結查看充電站完整資訊</li>
             </ol>
+            <ol class="lang-en">
+                <li>Click "Station Map" in the left navigation bar</li>
+                <li>Allow browser to get your current location</li>
+                <li>Map will automatically locate to your position (blue arrow)</li>
+                <li>Click on station markers to view detailed information</li>
+                <li>Use search box to search for specific locations</li>
+                <li>Click "View Details" link to view complete station information</li>
+            </ol>
         </div>
         
         <div class="warning-box">
-            <strong>注意:</strong>
-            <ul>
-                <li>首次使用時需要允許瀏覽器獲取地理位置</li>
+            <strong class="lang-zh">注意:</strong>
+            <strong class="lang-en">Note:</strong>
+            <ul class="lang-zh">
+                <li>首次使用時需要允許瀏覽器獲取當前位置</li>
                 <li>地圖載入可能需要一些時間，請耐心等待</li>
                 <li>建議使用Chrome或Firefox瀏覽器以獲得最佳體驗</li>
+            </ul>
+            <ul class="lang-en">
+                <li>First use requires allowing browser to get current location</li>
+                <li>Map loading may take some time, please be patient</li>
+                <li>Recommended to use Chrome or Firefox browser for best experience</li>
             </ul>
         </div>
     </div>
 
     <div class="section" id="tips">
-        <h2>9. 使用技巧</h2>
+        <h2 class="lang-zh">10. 使用技巧</h2>
+        <h2 class="lang-en">10. Usage Tips</h2>
         
         <div class="feature-box">
-            <h4>搜尋技巧</h4>
-            <ul>
+            <h4 class="lang-zh">搜尋技巧</h4>
+            <h4 class="lang-en">Search Tips</h4>
+            <ul class="lang-zh">
                 <li><strong>關鍵字搜尋</strong>: 使用部分關鍵字即可找到相關資料</li>
                 <li><strong>組合搜尋</strong>: 可同時使用多個條件進行篩選</li>
                 <li><strong>清除搜尋</strong>: 點擊搜尋框旁的清除按鈕重置搜尋條件</li>
             </ul>
+            <ul class="lang-en">
+                <li><strong>Keyword Search</strong>: Use partial keywords to find related data</li>
+                <li><strong>Combined Search</strong>: Can use multiple conditions for filtering simultaneously</li>
+                <li><strong>Clear Search</strong>: Click the clear button next to the search box to reset search conditions</li>
+            </ul>
         </div>
         
         <div class="feature-box">
-            <h4>表格操作</h4>
-            <ul>
+            <h4 class="lang-zh">表格操作</h4>
+            <h4 class="lang-en">Table Operations</h4>
+            <ul class="lang-zh">
                 <li><strong>排序</strong>: 點擊欄位標題可進行升序/降序排序</li>
                 <li><strong>分頁</strong>: 大量資料時使用分頁按鈕瀏覽</li>
                 <li><strong>每頁顯示</strong>: 可調整每頁顯示的記錄數量</li>
                 <li><strong>匯出</strong>: 部分頁面支援資料匯出功能</li>
             </ul>
+            <ul class="lang-en">
+                <li><strong>Sorting</strong>: Click column headers for ascending/descending sort</li>
+                <li><strong>Pagination</strong>: Use pagination buttons to browse large datasets</li>
+                <li><strong>Records per Page</strong>: Can adjust the number of records displayed per page</li>
+                <li><strong>Export</strong>: Some pages support data export functionality</li>
+            </ul>
         </div>
         
         <div class="feature-box">
-            <h4>瀏覽器建議</h4>
-            <ul>
+            <h4 class="lang-zh">語言切換</h4>
+            <h4 class="lang-en">Language Switching</h4>
+            <ul class="lang-zh">
+                <li><strong>多語言支援</strong>: 系統支援繁體中文和英文介面</li>
+                <li><strong>即時切換</strong>: 可在右上角語言選擇器即時切換語言</li>
+                <li><strong>記憶設定</strong>: 系統會記住您的語言偏好設定</li>
+            </ul>
+            <ul class="lang-en">
+                <li><strong>Multi-language Support</strong>: System supports Traditional Chinese and English interfaces</li>
+                <li><strong>Instant Switching</strong>: Can switch languages instantly using the language selector in the top right corner</li>
+                <li><strong>Remember Settings</strong>: System will remember your language preference settings</li>
+            </ul>
+        </div>
+        
+        <div class="feature-box">
+            <h4 class="lang-zh">瀏覽器建議</h4>
+            <h4 class="lang-en">Browser Recommendations</h4>
+            <ul class="lang-zh">
                 <li><strong>推薦瀏覽器</strong>: Chrome、Firefox、Edge最新版本</li>
                 <li><strong>螢幕解析度</strong>: 建議使用1920x1080或更高解析度</li>
                 <li><strong>網路連線</strong>: 建議使用穩定的網路連線</li>
                 <li><strong>JavaScript</strong>: 請確保瀏覽器已啟用JavaScript</li>
             </ul>
+            <ul class="lang-en">
+                <li><strong>Recommended Browsers</strong>: Latest versions of Chrome, Firefox, Edge</li>
+                <li><strong>Screen Resolution</strong>: Recommended to use 1920x1080 or higher resolution</li>
+                <li><strong>Network Connection</strong>: Recommended to use stable network connection</li>
+                <li><strong>JavaScript</strong>: Please ensure JavaScript is enabled in your browser</li>
+            </ul>
         </div>
         
         <div class="info-box">
-            <strong>技術支援:</strong> 如遇到技術問題，請聯繫系統管理員或查看系統日誌。
+            <strong class="lang-zh">技術支援:</strong><span class="lang-zh"> 如遇到技術問題，請聯繫系統管理員或查看系統日誌。</span>
+            <strong class="lang-en">Technical Support:</strong><span class="lang-en"> If you encounter technical issues, please contact the system administrator or check system logs.</span>
         </div>
     </div>
 
     <div class="footer">
-        <p><strong>碳權平台用戶使用說明</strong></p>
-        <p>版本: 1.0 | 最後更新: 2024年6月19日 | 適用對象: ROLE_USER</p>
-        <p>本文件僅供內部使用，請勿外流</p>
+        <p class="lang-zh"><strong>碳權平台用戶使用說明</strong></p>
+        <p class="lang-en"><strong>Carbon Credit Platform User Guide</strong></p>
+        <p class="lang-zh">版本: 1.0 | 最後更新: 2025年1月 | 開發商: gochabar / 充壩</p>
+        <p class="lang-en">Version: 1.0 | Last Updated: January 2025 | Developer: gochabar / 充壩</p>
+        <p class="lang-zh">本文件僅供內部使用，請勿外流</p>
+        <p class="lang-en">This document is for internal use only, please do not distribute</p>
     </div>
+
+    <script>
+        // 語言切換功能
+        function switchLanguage(lang) {
+            const body = document.body;
+            body.setAttribute('data-lang', lang);
+            
+            // 保存語言偏好到 localStorage
+            localStorage.setItem('userGuideLanguage', lang);
+            
+            // 更新選擇器的值
+            document.getElementById('languageSelect').value = lang;
+        }
+        
+        // 頁面載入時恢復語言設定
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedLang = localStorage.getItem('userGuideLanguage') || 'zh';
+            switchLanguage(savedLang);
+        });
+    </script>
 </body>
 </html> 

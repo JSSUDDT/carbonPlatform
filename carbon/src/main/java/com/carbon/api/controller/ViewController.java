@@ -113,6 +113,14 @@ public class ViewController {
     }
     
     /**
+     * 使用手冊頁面
+     */
+    @GetMapping({"/USER_GUIDE", "/USER_GUIDE.html"})
+    public String userGuide() {
+        return "USER_GUIDE";
+    }
+    
+    /**
      * 處理充電樁管理頁面請求（帶參數）
      * 支持搜索、站點過濾和狀態過濾
      */

@@ -29,8 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         logger.debug("Processing request: " + path);
         
-        if (path.endsWith(".html") || 
-            path.endsWith(".css") || 
+        if (path.endsWith(".css") || 
             path.endsWith(".js") || 
             path.endsWith(".ico") || 
             path.startsWith("/css/") || 

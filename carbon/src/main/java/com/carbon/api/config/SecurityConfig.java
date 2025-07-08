@@ -50,6 +50,8 @@ public class SecurityConfig {
                         .antMatchers("/stationpower.html").permitAll()
                         .antMatchers("/stationmap.html").permitAll()
                         .antMatchers("/transactions.html").permitAll()
+                        .antMatchers("/USER_GUIDE").permitAll()
+                        .antMatchers("/USER_GUIDE.html").permitAll()
                         .antMatchers("/css/**").permitAll()
                         .antMatchers("/js/**").permitAll()
                         .antMatchers("/images/**").permitAll()
