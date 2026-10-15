@@ -5,11 +5,11 @@ import com.carbon.api.dto.StationRequest;
 import com.carbon.api.entity.CarbonStation;
 import com.carbon.api.repository.StationRepository;
 import com.carbon.api.service.AuthorizationService;
+import com.carbon.api.service.GeocodingService;
 import com.carbon.api.service.StationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +28,9 @@ public class StationServiceImpl implements StationService {
     
     @Autowired
     private AuthorizationService authorizationService;
+    
+    @Autowired
+    private GeocodingService geocodingService;
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -103,6 +106,15 @@ public class StationServiceImpl implements StationService {
                         logger.debug("Updating station, stationId: {}", stationInfo.getStationId());
                     }
                     
+                    // 在設置新值之前，先保存舊的經緯度和國家代碼（用於判斷是否需要重新調用 API）
+                    String oldLatitude = station.getGpsLatitude();
+                    String oldLongitude = station.getGpsLongitude();
+                    String oldCountry = station.getCountry();
+                    boolean isNewStation = (station.getStationId() == null);
+                    boolean coordinatesChanged = isNewStation || 
+                            !equalsIgnoreEmpty(oldLatitude, stationInfo.getGpsLatitude()) ||
+                            !equalsIgnoreEmpty(oldLongitude, stationInfo.getGpsLongitude());
+                    
                     // 設置屬性
                     station.setStationId(stationInfo.getStationId());
                     station.setVendorId(request.getVendorId());
@@ -116,6 +128,44 @@ public class StationServiceImpl implements StationService {
                     station.setGpsLongitude(stationInfo.getGpsLongitude());
                     station.setStationStatus(stationInfo.getStationStatus());
                     station.setUpdateTime(LocalDateTime.now().format(formatter));
+                    
+                    // 根據經緯度自動獲取國家代碼
+                    if (stationInfo.getGpsLatitude() != null && 
+                        stationInfo.getGpsLongitude() != null &&
+                        !stationInfo.getGpsLatitude().trim().isEmpty() &&
+                        !stationInfo.getGpsLongitude().trim().isEmpty()) {
+                        
+                        // 如果經緯度沒有改變且已有國家代碼，則跳過 API 調用
+                        if (!coordinatesChanged && oldCountry != null && 
+                            !oldCountry.trim().isEmpty() && 
+                            !"NA".equals(oldCountry)) {
+                            station.setCountry(oldCountry);
+                            logger.debug("充電站 {} 經緯度未改變且已有國家代碼 {}，跳過 API 調用", 
+                                    stationInfo.getStationId(), oldCountry);
+                        } else {
+                            // 需要調用 API 獲取國家代碼
+                            logger.info("充電站 {} 需要調用 OpenCage API 獲取國家代碼 (lat={}, lng={})", 
+                                    stationInfo.getStationId(), 
+                                    stationInfo.getGpsLatitude(), 
+                                    stationInfo.getGpsLongitude());
+                            try {
+                                String countryCode = geocodingService.getCountryCode(
+                                        stationInfo.getGpsLatitude(), 
+                                        stationInfo.getGpsLongitude());
+                                station.setCountry(countryCode);
+                                logger.info("為充電站 {} 設置國家代碼: {}", 
+                                        stationInfo.getStationId(), countryCode);
+                            } catch (Exception e) {
+                                logger.error("獲取國家代碼時發生錯誤，設置為 NA: {}", e.getMessage(), e);
+                                station.setCountry("NA");
+                            }
+                        }
+                    } else {
+                        // 如果沒有經緯度，設置為 NA
+                        logger.debug("充電站 {} 沒有經緯度資訊，設置國家代碼為 NA", 
+                                stationInfo.getStationId());
+                        station.setCountry("NA");
+                    }
                     
                     // 保存
                     stationRepository.save(station);
@@ -198,5 +248,14 @@ public class StationServiceImpl implements StationService {
     public CarbonStation getStationInfoById(String stationId) {
         logger.debug("根據ID獲取充電站信息，stationId: {}", stationId);
         return stationRepository.findByStationId(stationId);
+    }
+    
+    /**
+     * 比較兩個字串是否相等（忽略空值和空白）
+     */
+    private boolean equalsIgnoreEmpty(String str1, String str2) {
+        String s1 = (str1 == null) ? "" : str1.trim();
+        String s2 = (str2 == null) ? "" : str2.trim();
+        return s1.equals(s2);
     }
 } 

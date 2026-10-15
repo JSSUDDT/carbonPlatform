@@ -34,7 +34,35 @@
     <!-- 應用的詳細日誌 -->
     <logger name="com.carbon" level="DEBUG" />
     
-    <!-- Hibernate和MyBatis的SQL輸出日誌 -->
-    <logger name="org.hibernate.SQL" level="DEBUG" />
-    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE" />
+    <!-- Hibernate和MyBatis的SQL輸出日誌 - 強制關閉 -->
+    <logger name="org.hibernate.SQL" level="OFF" />
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="OFF" />
+    
+    <!-- 強制關閉所有Hibernate相關日誌 -->
+    <logger name="org.hibernate" level="OFF" />
+    <logger name="org.hibernate.engine" level="OFF" />
+    <logger name="org.hibernate.jdbc" level="OFF" />
+    <logger name="org.hibernate.loader" level="OFF" />
+    <logger name="org.hibernate.persister" level="OFF" />
+    <logger name="org.hibernate.query" level="OFF" />
+    <logger name="org.hibernate.resource" level="OFF" />
+    <logger name="org.hibernate.transaction" level="OFF" />
+    <logger name="org.hibernate.type" level="OFF" />
+    
+    <!-- 關閉Spring Data JPA相關日誌 -->
+    <logger name="org.springframework.orm.jpa" level="OFF" />
+    <logger name="org.springframework.jdbc" level="OFF" />
+    
+    <!-- 強制關閉所有可能的SQL日誌 -->
+    <logger name="org.hibernate.*" level="OFF" />
+    <logger name="org.springframework.orm.*" level="OFF" />
+    <logger name="org.springframework.jdbc.*" level="OFF" />
+    
+    <!-- 關閉JPA相關日誌 -->
+    <logger name="javax.persistence" level="OFF" />
+    <logger name="org.eclipse.persistence" level="OFF" />
+    
+    <!-- 關閉所有數據庫相關日誌 -->
+    <logger name="org.springframework.data.jpa" level="OFF" />
+    <logger name="org.springframework.data.repository" level="OFF" />
 </configuration> 

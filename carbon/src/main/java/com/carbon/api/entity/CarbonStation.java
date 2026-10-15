@@ -43,6 +43,9 @@ public class CarbonStation implements Serializable {
     @Column(name = "gps_longitude", length = 50)
     private String gpsLongitude;
 
+    @Column(name = "country", length = 10)
+    private String country;
+
     @Column(name = "station_status", length = 1)
     private String stationStatus;
 
