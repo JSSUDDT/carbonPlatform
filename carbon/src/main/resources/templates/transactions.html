@@ -24,6 +24,18 @@
             border-radius: 2px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
+        
+        /* 國家篩選下拉框樣式調整 */
+        #countryFilter {
+            min-width: 100px !important;
+            max-width: 120px !important;
+            padding-right: 20px !important;
+        }
+        
+        /* 確保下拉框文字不會與箭頭重疊 */
+        #countryFilter option {
+            padding-right: 8px;
+        }
     </style>
 </head>
 <body>
@@ -83,17 +95,23 @@
                             <button type="button" class="btn btn-sm btn-outline-primary" id="refreshBtn">
                                 <i class="fas fa-sync-alt mr-1"></i><span th:text="#{transactions.refresh}">刷新</span>
                             </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" id="toggleVehicleInfoBtn" style="display: none;">
-                                <i class="fas fa-car mr-1"></i><span th:text="#{transactions.vehicleInfo}">車輛信息</span>
+                        </div>
+                        <div class="btn-group mr-2">
+                            <button type="button" class="btn btn-sm btn-success" id="exportExcelBtn">
+                                <i class="fas fa-file-excel mr-1"></i><span th:text="#{export.excel}">匯出Excel</span>
                             </button>
                         </div>
+                        <select class="custom-select custom-select-sm mr-2" id="countryFilter" style="min-width: 100px; max-width: 120px;">
+                            <option value="" th:text="#{transactions.allCountries}">全部國家</option>
+                            <!-- 國家選項將通過JavaScript加載 -->
+                        </select>
                         <select class="custom-select custom-select-sm mr-2" id="stationFilter" style="width: auto;">
                             <option value="" th:text="#{chargers.allStatus}">全部充電站</option>
                             <!-- 充電站選項將通過JavaScript加載 -->
                         </select>
                         <div class="input-group date-range-picker" style="width: 300px;">
                             <input type="text" class="form-control form-control-sm" id="dateRangePicker" th:placeholder="#{transactions.dateRange}" placeholder="選擇日期範圍">
-                            <div class="input-group-append">
+                            <div class="input-group-append" style="cursor: pointer;" id="dateRangePickerIcon">
                                 <span class="input-group-text"><i class="fas fa-calendar"></i></span>
                             </div>
                         </div>
@@ -143,19 +161,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card bg-success text-white">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="card-title" th:text="#{transactions.carbonRate}">碳權同意率</h6>
-                                        <h2 class="mb-0" id="carbonCreditRate">0%</h2>
-                                    </div>
-                                    <i class="fas fa-leaf fa-3x text-white-50"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
                 
                 <div class="table-responsive">
@@ -174,8 +179,6 @@
                                 <th th:text="#{transactions.startTime}">開始時間</th>
                                 <th th:text="#{transactions.endTime}">結束時間</th>
                                 <th th:text="#{transactions.kwh}">充電量(kWh)</th>
-                                <th th:text="#{transactions.carType}">車輛類型</th>
-                                <th th:text="#{transactions.carTonnage}">車輛噸位</th>
                                 <th th:text="#{transactions.carNo}">車輛號碼</th>
                                 <th th:text="#{transactions.uploadTime}">上傳時間</th>
                             </tr>
@@ -233,6 +236,8 @@
     <!-- Moment.js and DateRangePicker -->
     <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- 多語言支持 -->
     <script th:src="@{/js/locale.js}"></script>
     <!-- 自定義JavaScript -->
@@ -244,6 +249,52 @@
         let startTimeFrom = '';
         let startTimeTo = '';
         let userRole = ''; // 存儲用戶角色
+        
+        // 國家代碼到國家名稱的映射（支援多語系）
+        function getCountryName(countryCode, lang) {
+            if (!countryCode || countryCode === 'NA') {
+                return lang === 'en' ? 'N/A' : '不適用';
+            }
+            
+            const countryMap = {
+                'TW': { zh: '台灣', en: 'Taiwan' },
+                'US': { zh: '美國', en: 'United States' },
+                'CN': { zh: '中國', en: 'China' },
+                'JP': { zh: '日本', en: 'Japan' },
+                'KR': { zh: '韓國', en: 'South Korea' },
+                'SG': { zh: '新加坡', en: 'Singapore' },
+                'MY': { zh: '馬來西亞', en: 'Malaysia' },
+                'TH': { zh: '泰國', en: 'Thailand' },
+                'VN': { zh: '越南', en: 'Vietnam' },
+                'PH': { zh: '菲律賓', en: 'Philippines' },
+                'ID': { zh: '印尼', en: 'Indonesia' },
+                'IN': { zh: '印度', en: 'India' },
+                'GB': { zh: '英國', en: 'United Kingdom' },
+                'FR': { zh: '法國', en: 'France' },
+                'DE': { zh: '德國', en: 'Germany' },
+                'IT': { zh: '義大利', en: 'Italy' },
+                'ES': { zh: '西班牙', en: 'Spain' },
+                'AU': { zh: '澳洲', en: 'Australia' },
+                'NZ': { zh: '紐西蘭', en: 'New Zealand' },
+                'CA': { zh: '加拿大', en: 'Canada' },
+                'MX': { zh: '墨西哥', en: 'Mexico' },
+                'BR': { zh: '巴西', en: 'Brazil' },
+                'AR': { zh: '阿根廷', en: 'Argentina' },
+                'RU': { zh: '俄羅斯', en: 'Russia' },
+                'AE': { zh: '阿拉伯聯合大公國', en: 'United Arab Emirates' },
+                'SA': { zh: '沙烏地阿拉伯', en: 'Saudi Arabia' },
+                'ZA': { zh: '南非', en: 'South Africa' },
+                'EG': { zh: '埃及', en: 'Egypt' }
+            };
+            
+            const country = countryMap[countryCode.toUpperCase()];
+            if (country) {
+                return country[lang] || countryCode;
+            }
+            
+            // 如果找不到映射，返回國家代碼
+            return countryCode;
+        }
         
         // 初始化DataTable
         function initDataTable() {
@@ -260,17 +311,12 @@
                 languageUrl = '/carbon/js/datatables/i18n/English.json';
             }
             
-            // 根據用戶角色設置車輛信息欄位的可見性
+            // 設置欄位寬度
             let columnDefs = [
                 { "width": "120px", "targets": 0 },
                 { "width": "80px", "targets": 1 },
                 { "width": "100px", "targets": 2 }
             ];
-            
-            // 如果不是管理員，隱藏所有車輛信息欄位
-            if (userRole !== 'ROLE_ADMIN') {
-                columnDefs.push({ "targets": [12, 13, 14], "visible": false, "className": "vehicle-info-column" }); // 車輛類型、車輛噸位、車輛號碼
-            }
             
             dataTable = $('#transactionsTable').DataTable({
                 pageLength: 10,
@@ -318,8 +364,19 @@
             $('#dateRangePicker').daterangepicker({
                 opens: 'left',
                 autoUpdateInput: false,
-                locale: locale
+                locale: locale,
+                // 設定預設為最近兩週
+                startDate: moment().subtract(14, 'days'),
+                endDate: moment()
             });
+            
+            // 設定預設日期範圍並自動觸發
+            const defaultStartDate = moment().subtract(14, 'days');
+            const defaultEndDate = moment();
+            
+            $('#dateRangePicker').val(defaultStartDate.format('YYYY-MM-DD') + ' - ' + defaultEndDate.format('YYYY-MM-DD'));
+            startTimeFrom = defaultStartDate.format('YYYY-MM-DD') + ' 00:00:00';
+            startTimeTo = defaultEndDate.format('YYYY-MM-DD') + ' 23:59:59';
             
             $('#dateRangePicker').on('apply.daterangepicker', function(ev, picker) {
                 $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
@@ -331,6 +388,7 @@
                 // 應用日期篩選
                 const searchInput = document.getElementById('searchInput').value;
                 const stationFilter = document.getElementById('stationFilter').value;
+                // 國家篩選在前端處理，不需要傳遞給後端
                 loadTransactions(searchInput, stationFilter, startTimeFrom, startTimeTo);
             });
             
@@ -342,7 +400,13 @@
                 // 清空日期篩選
                 const searchInput = document.getElementById('searchInput').value;
                 const stationFilter = document.getElementById('stationFilter').value;
+                // 國家篩選在前端處理，不需要傳遞給後端
                 loadTransactions(searchInput, stationFilter, '', '');
+            });
+            
+            // 點擊日曆圖示觸發 dateRangePicker
+            $('#dateRangePickerIcon').on('click', function() {
+                $('#dateRangePicker').trigger('click');
             });
         }
         
@@ -352,13 +416,56 @@
             
             if (response) {
                 stations = Array.isArray(response) ? response : [];
+                populateCountryFilter();
                 populateStationFilter();
             }
         }
         
-        // 填充充電站篩選下拉框
+        // 填充國家篩選下拉框
+        function populateCountryFilter() {
+            const countryFilter = document.getElementById('countryFilter');
+            const currentLang = getCurrentLanguage();
+            // 嘗試從翻譯函數獲取，如果失敗則從 DOM 讀取已渲染的文字
+            let allCountriesText = translate('transactions.allCountries');
+            // 如果翻譯函數返回 key 本身（表示找不到翻譯），嘗試從 DOM 讀取
+            if (allCountriesText === 'transactions.allCountries') {
+                const defaultOption = countryFilter.querySelector('option[value=""]');
+                if (defaultOption) {
+                    allCountriesText = defaultOption.textContent || (currentLang === 'en' ? 'All Countries' : '全部國家');
+                } else {
+                    allCountriesText = currentLang === 'en' ? 'All Countries' : '全部國家';
+                }
+            }
+            countryFilter.innerHTML = `<option value="">${allCountriesText}</option>`;
+            
+            if (stations.length === 0) {
+                return;
+            }
+            
+            // 提取所有唯一的國家代碼
+            const countrySet = new Set();
+            stations.forEach(station => {
+                if (station.country && station.country.trim() !== '' && station.country !== 'NA') {
+                    countrySet.add(station.country.toUpperCase());
+                }
+            });
+            
+            // 將國家代碼轉換為陣列並排序
+            const countries = Array.from(countrySet).sort();
+            
+            // 填充下拉框
+            countries.forEach(countryCode => {
+                const option = document.createElement('option');
+                option.value = countryCode;
+                option.textContent = getCountryName(countryCode, currentLang);
+                countryFilter.appendChild(option);
+            });
+        }
+        
+        // 填充充電站篩選下拉框（根據選中的國家進行過濾）
         function populateStationFilter() {
             const stationFilter = document.getElementById('stationFilter');
+            const countryFilter = document.getElementById('countryFilter');
             const currentLang = getCurrentLanguage();
             const allStationsText = currentLang === 'en' ? 'All Charging Stations' : '全部充電站';
             stationFilter.innerHTML = `<option value="">${allStationsText}</option>`;
@@ -367,7 +474,17 @@
                 return;
             }
             
-            stations.forEach(station => {
+            // 獲取選中的國家
+            const selectedCountry = countryFilter ? countryFilter.value : '';
+            
+            // 根據國家篩選充電站
+            const filteredStations = selectedCountry ? 
+                stations.filter(station => 
+                    station.country && 
+                    station.country.toUpperCase() === selectedCountry
+                ) : stations;
+            
+            filteredStations.forEach(station => {
                 const option = document.createElement('option');
                 option.value = station.stationId;
                 option.textContent = `${station.stationName} (${station.stationId})`;
@@ -422,6 +539,16 @@
                 if (response) {
                     let filteredTransactions = Array.isArray(response) ? response : [];
                     
+                    // 調試信息：顯示加載到的數據
+                    console.log('加載到的交易數據:', filteredTransactions);
+                    if (filteredTransactions.length > 0) {
+                        console.log('第一筆交易的時間字段:');
+                        console.log('  startTime:', filteredTransactions[0].startTime);
+                        console.log('  endTime:', filteredTransactions[0].endTime);
+                        console.log('  createTime:', filteredTransactions[0].createTime);
+                        console.log('  invoiceDate:', filteredTransactions[0].invoiceDate);
+                    }
+                    
                     // 前端搜索過濾
                     if (search) {
                         const searchLower = search.toLowerCase();
@@ -446,6 +573,20 @@
                                 
                                 return String(value).toLowerCase().includes(searchLower);
                             });
+                        });
+                    }
+                    
+                    // 國家篩選（前端過濾）
+                    const countryFilter = document.getElementById('countryFilter');
+                    const selectedCountry = countryFilter ? countryFilter.value : '';
+                    if (selectedCountry) {
+                        filteredTransactions = filteredTransactions.filter(transaction => {
+                            // 根據交易記錄的 stationId 找到對應的充電站
+                            const stationInfo = stations.find(station => station.stationId === transaction.stationId);
+                            if (stationInfo && stationInfo.country) {
+                                return stationInfo.country.toUpperCase() === selectedCountry;
+                            }
+                            return false;
                         });
                     }
                     
@@ -491,6 +632,23 @@
                 }
                 
                 // 設置單元格內容
+                const originalStartTime = transaction.startTime || '';
+                const originalEndTime = transaction.endTime || '';
+                const originalCreateTime = transaction.createTime || '';
+                
+                const convertedStartTime = convertToLocalTime(originalStartTime);
+                const convertedEndTime = convertToLocalTime(originalEndTime);
+                // 上傳時間已經是UTC+8，不需要轉換
+                const convertedCreateTime = originalCreateTime;
+                
+                // 調試信息
+                if (originalStartTime && convertedStartTime !== originalStartTime) {
+                    console.log(`開始時間轉換: ${originalStartTime} -> ${convertedStartTime}`);
+                }
+                if (originalEndTime && convertedEndTime !== originalEndTime) {
+                    console.log(`結束時間轉換: ${originalEndTime} -> ${convertedEndTime}`);
+                }
+                
                 row.innerHTML = `
                     <td>${transaction.transNo || ''}</td>
                     <td>${transaction.vendorId || ''}</td>
@@ -501,13 +659,11 @@
                     <td>${transaction.invoiceNo || ''}</td>
                     <td>${transaction.customerId || ''}</td>
                     <td>${transaction.invoiceDate || ''}</td>
-                    <td>${transaction.startTime || ''}</td>
-                    <td>${transaction.endTime || ''}</td>
+                    <td>${convertedStartTime}</td>
+                    <td>${convertedEndTime}</td>
                     <td>${transaction.kwh || ''}</td>
-                    <td>${getCarTypeText(transaction.carType) || ''}</td>
-                    <td>${transaction.carTonnage || ''}</td>
                     <td>${transaction.carNo || ''}</td>
-                    <td>${transaction.createTime || ''}</td>
+                    <td>${convertedCreateTime}</td>
                 `;
                 
                 tableBody.appendChild(row);
@@ -523,45 +679,68 @@
             document.getElementById('totalTransactions').textContent = transactions.length;
             
             let totalKwh = 0;
-            let carbonCreditCount = 0;
             
             transactions.forEach(transaction => {
                 if (transaction.kwh) {
                     totalKwh += parseFloat(transaction.kwh);
                 }
-                
-                if (transaction.carbonCredit === '1') {
-                    carbonCreditCount++;
-                }
             });
             
             document.getElementById('totalKwh').textContent = totalKwh.toFixed(2);
-            
-            const carbonCreditRate = transactions.length > 0 ? 
-                ((carbonCreditCount / transactions.length) * 100).toFixed(2) : '0';
-            document.getElementById('carbonCreditRate').textContent = `${carbonCreditRate}%`;
         }
         
-        // 獲取車輛類型文本
-        function getCarTypeText(type) {
-            const currentLang = getCurrentLanguage();
+        
+        // 將UTC+0時間轉換為UTC+8時間
+        function convertToLocalTime(utcTimeString) {
+            console.log('開始時間轉換，輸入:', utcTimeString);
             
-            if (currentLang === 'en') {
-                switch(type) {
-                    case '1': return 'Private Car';
-                    case '2': return 'Bus';
-                    case '3': return 'Truck';
-                    case '4': return 'Other';
-                    default: return type;
+            if (!utcTimeString || utcTimeString.trim() === '') {
+                console.log('時間字符串為空，返回空字符串');
+                return '';
+            }
+            
+            try {
+                // 檢查時間格式是否包含時區信息
+                let timeString = utcTimeString.trim();
+                console.log('處理後的時間字符串:', timeString);
+                
+                // 如果時間字符串不包含時區信息，假設為UTC時間
+                if (!timeString.includes('Z') && !timeString.includes('+') && !timeString.includes('-')) {
+                    // 添加UTC時區標識
+                    timeString = timeString + 'Z';
+                    console.log('添加UTC標識後:', timeString);
                 }
-            } else {
-                switch(type) {
-                    case '1': return '私家車';
-                    case '2': return '客車';
-                    case '3': return '貨車';
-                    case '4': return '其他';
-                    default: return type;
+                
+                // 創建Date對象
+                const utcDate = new Date(timeString);
+                console.log('創建的Date對象:', utcDate);
+                
+                // 檢查是否為有效日期
+                if (isNaN(utcDate.getTime())) {
+                    console.warn('無法解析時間:', utcTimeString);
+                    return utcTimeString; // 如果解析失敗，返回原始字符串
                 }
+                
+                // 轉換為台灣時間（UTC+8）
+                // 獲取UTC時間的毫秒數，然後加上8小時
+                const taiwanTime = new Date(utcDate.getTime() + (8 * 60 * 60 * 1000));
+                console.log('轉換後的台灣時間:', taiwanTime);
+                
+                // 格式化為易讀的字符串
+                const year = taiwanTime.getFullYear();
+                const month = String(taiwanTime.getMonth() + 1).padStart(2, '0');
+                const day = String(taiwanTime.getDate()).padStart(2, '0');
+                const hours = String(taiwanTime.getHours()).padStart(2, '0');
+                const minutes = String(taiwanTime.getMinutes()).padStart(2, '0');
+                const seconds = String(taiwanTime.getSeconds()).padStart(2, '0');
+                
+                const result = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+                console.log(`時間轉換完成: ${utcTimeString} (UTC+0) -> ${result} (UTC+8)`);
+                
+                return result;
+            } catch (error) {
+                console.warn('時間轉換失敗:', utcTimeString, error);
+                return utcTimeString; // 如果轉換失敗，返回原始字符串
             }
         }
         
@@ -588,22 +767,6 @@
             document.getElementById('loadingSpinner').classList.add('d-none');
         }
         
-        // 切換車輛信息顯示
-        function toggleVehicleInfo() {
-            const columns = dataTable.columns([12, 13, 14]); // 修正車輛信息列的索引
-            const isVisible = columns.visible()[0];
-            columns.visible(!isVisible);
-            
-            // 更新按鈕狀態
-            const btn = document.getElementById('toggleVehicleInfoBtn');
-            if (!isVisible) {
-                btn.classList.remove('btn-outline-secondary');
-                btn.classList.add('btn-secondary');
-            } else {
-                btn.classList.remove('btn-secondary');
-                btn.classList.add('btn-outline-secondary');
-            }
-        }
         
         // 檢查用戶權限
         async function checkUserRole() {
@@ -615,18 +778,7 @@
                     userRole = response.resultMsg;
                     console.log('當前用戶角色:', userRole);
                     
-                    const toggleVehicleInfoBtn = document.getElementById('toggleVehicleInfoBtn');
-                    
-                    // 檢查是否為管理員
-                    if (userRole === 'ROLE_ADMIN') {
-                        console.log('顯示車輛信息按鈕');
-                        toggleVehicleInfoBtn.style.display = 'inline-block';
-                    } else {
-                        console.log('隱藏車輛信息按鈕');
-                        toggleVehicleInfoBtn.style.display = 'none';
-                    }
-                    
-                    // 重新初始化DataTable以應用角色權限
+                    // 初始化DataTable
                     initDataTable();
                 } else {
                     console.log('無效的角色響應:', response);
@@ -655,6 +807,16 @@
                 applyFilters();
             });
             
+            // 國家篩選變更事件
+            $('#countryFilter').on('change', function() {
+                // 當國家改變時，重新填充充電站篩選下拉框
+                populateStationFilter();
+                // 清空充電站篩選（因為國家改變了）
+                $('#stationFilter').val('');
+                // 應用篩選
+                applyFilters();
+            });
+            
             // 充電站篩選變更事件
             $('#stationFilter').on('change', function() {
                 applyFilters();
@@ -671,16 +833,161 @@
         function applyFilters() {
             const search = $('#searchInput').val().trim();
             const stationId = $('#stationFilter').val();
+            // 國家篩選在前端處理，不需要傳遞給後端
             loadTransactions(search, stationId, startTimeFrom, startTimeTo);
         }
         
         // 重置所有篩選條件
         function resetFilters() {
             $('#searchInput').val('');
+            $('#countryFilter').val('');
             $('#stationFilter').val('');
             $('#dateRangePicker').val('');
             startTimeFrom = '';
             startTimeTo = '';
+            // 重新填充充電站篩選（因為國家篩選被清空了）
+            populateStationFilter();
+        }
+        
+        // ===== 匯出功能 =====
+        
+        // 取得多語言欄位名稱
+        function getColumnHeaders() {
+            const currentLang = getCurrentLanguage();
+            
+            if (currentLang === 'en') {
+                return [
+                    'Transaction No',
+                    'Vendor ID',
+                    'Station ID',
+                    'Station Name',
+                    'Charger ID',
+                    'Connect ID',
+                    'Invoice No',
+                    'Customer ID',
+                    'Invoice Date',
+                    'Start Time',
+                    'End Time',
+                    'Charging (kWh)',
+                    'Car No',
+                    'Upload Time'
+                ];
+            } else {
+                return [
+                    '交易號',
+                    '廠商ID',
+                    '充電站ID',
+                    '充電站名稱',
+                    '充電樁ID',
+                    '連接ID',
+                    '發票號',
+                    '客戶ID',
+                    '發票日期',
+                    '開始時間',
+                    '結束時間',
+                    '充電量(kWh)',
+                    '車輛號碼',
+                    '上傳時間'
+                ];
+            }
+        }
+        
+        // 準備匯出資料
+        function prepareExportData() {
+            return transactions.map(t => {
+                // 查找充電站名稱
+                let stationName = t.stationId || '';
+                const stationInfo = stations.find(s => s.stationId === t.stationId);
+                if (stationInfo && stationInfo.stationName) {
+                    stationName = stationInfo.stationName;
+                }
+                
+                return [
+                    t.transNo || '',
+                    t.vendorId || '',
+                    t.stationId || '',
+                    stationName,
+                    t.chargerId || '',
+                    t.connectId || '',
+                    t.invoiceNo || '',
+                    t.customerId || '',
+                    t.invoiceDate || '',
+                    convertToLocalTime(t.startTime) || '',
+                    convertToLocalTime(t.endTime) || '',
+                    t.kwh || '',
+                    t.carNo || '',
+                    t.createTime || ''
+                ];
+            });
+        }
+        
+        // 匯出主函數（僅 Excel，全部使用前端處理）
+        function exportData() {
+            const dataCount = transactions.length;
+            
+            if (dataCount === 0) {
+                showAlert('error', translate('No data to export'));
+                return;
+            }
+            
+            console.log(`準備匯出 ${dataCount} 筆資料為 Excel（前端處理）`);
+            exportToExcelFrontend();
+        }
+        
+        // 前端 Excel 匯出
+        function exportToExcelFrontend() {
+            try {
+                console.log('開始前端 Excel 匯出');
+                
+                const headers = getColumnHeaders();
+                const data = prepareExportData();
+                
+                // 建立工作表資料（表頭 + 資料）
+                const ws_data = [headers, ...data];
+                
+                // 建立工作簿和工作表
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(ws_data);
+                
+                // 設定欄寬
+                const colWidths = [
+                    {wch: 20}, // Transaction No
+                    {wch: 15}, // Vendor ID
+                    {wch: 15}, // Station ID
+                    {wch: 20}, // Station Name
+                    {wch: 15}, // Charger ID
+                    {wch: 12}, // Connect ID
+                    {wch: 15}, // Invoice No
+                    {wch: 15}, // Customer ID
+                    {wch: 12}, // Invoice Date
+                    {wch: 20}, // Start Time
+                    {wch: 20}, // End Time
+                    {wch: 15}, // kWh
+                    {wch: 15}, // Car No
+                    {wch: 20}  // Upload Time
+                ];
+                ws['!cols'] = colWidths;
+                
+                // 新增工作表到工作簿
+                const currentLang = getCurrentLanguage();
+                const sheetName = currentLang === 'en' ? 'Charging Records' : '充電記錄';
+                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+                
+                // 生成檔案名稱
+                const dateStr = new Date().toISOString().split('T')[0];
+                const fileName = currentLang === 'en' ? 
+                    `Charging_Records_${dateStr}.xlsx` : 
+                    `充電記錄_${dateStr}.xlsx`;
+                
+                // 下載檔案
+                XLSX.writeFile(wb, fileName);
+                
+                console.log('Excel 匯出成功');
+                showAlert('success', translate('Export successful'));
+            } catch (error) {
+                console.error('Excel 匯出失敗:', error);
+                showAlert('error', translate('Export failed') + ': ' + error.message);
+            }
         }
         
         // 在頁面加載時初始化
@@ -699,11 +1006,13 @@
             // 初始化事件監聽器
             initEventListeners();
             
-            // 加載充電記錄數據
-            loadTransactions();
+            // 綁定匯出按鈕事件
+            $('#exportExcelBtn').on('click', function() {
+                exportData();
+            });
             
-            // 車輛信息切換按鈕點擊事件
-            document.getElementById('toggleVehicleInfoBtn').addEventListener('click', toggleVehicleInfo);
+            // 加載充電記錄數據（使用預設的兩週日期範圍）
+            loadTransactions('', '', startTimeFrom, startTimeTo);
         });
     </script>
 </body>

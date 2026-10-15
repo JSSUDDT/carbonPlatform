@@ -56,7 +56,11 @@ const translations = {
         'Failed to check user role': 'Failed to check user role',
         'Failed to load station list': 'Failed to load station list',
         'Failed to load station power data': 'Failed to load station power data',
-        'Failed to load station map data': 'Failed to load station map data'
+        'Failed to load station map data': 'Failed to load station map data',
+        
+        // Transaction Management
+        'transactions.allCountries': 'All Countries',
+        'transactions.countryFilter': 'Country Filter'
     },
     zh_TW: {
         // Station Management
@@ -107,7 +111,11 @@ const translations = {
         'Failed to check user role': '檢查使用者角色失敗',
         'Failed to load station list': '載入充電站清單失敗',
         'Failed to load station power data': '載入充電站電力資料失敗',
-        'Failed to load station map data': '載入充電站地圖資料失敗'
+        'Failed to load station map data': '載入充電站地圖資料失敗',
+        
+        // Transaction Management
+        'transactions.allCountries': '全部國家',
+        'transactions.countryFilter': '國家篩選'
     }
 };
 
