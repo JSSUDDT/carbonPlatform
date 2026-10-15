@@ -15,7 +15,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -41,6 +40,9 @@ public class VendorController {
     
     @Autowired
     private AuthorizationService authorizationService;
+    
+    @Autowired
+    private ExportService exportService;
     
     @PostMapping("/GetToken")
     public ResponseEntity<TokenResponse> getToken(@Valid @RequestBody TokenRequest request) {
@@ -535,5 +537,100 @@ public class VendorController {
         // 默認情況（未登錄），返回所有啟用的充電站
         logger.debug("No authenticated user, returning all enabled stations");
         return ResponseEntity.ok(stationService.getStationInfo(null, search, "1"));
+    }
+    
+    /**
+     * 匯出充電記錄為 Excel
+     * 
+     * 說明：
+     * 1. 僅支援 XLSX 格式匯出
+     * 2. 支援中文和英文多語言
+     * 3. ROLE_ADMIN 可以匯出所有充電記錄
+     * 4. ROLE_USER 只能匯出自己的充電記錄
+     * 5. 支援按充電站和時間範圍篩選
+     */
+    @GetMapping("/ChargeInfo/export")
+    public ResponseEntity<byte[]> exportChargeInfo(
+            @RequestParam String format,
+            @RequestParam(required = false) String language,
+            @RequestParam(required = false) String vendorId,
+            @RequestParam(required = false) String stationId,
+            @RequestParam(required = false) String startTimeFrom,
+            @RequestParam(required = false) String startTimeTo) {
+        
+        try {
+            logger.info("收到匯出請求，格式: {}, 語言: {}, vendorId: {}, stationId: {}", 
+                    format, language, vendorId, stationId);
+            
+            // 只支援 xlsx 格式
+            if (!"xlsx".equalsIgnoreCase(format)) {
+                logger.error("不支援的匯出格式: {}，僅支援 xlsx", format);
+                return ResponseEntity.badRequest()
+                        .body("僅支援 Excel (xlsx) 格式".getBytes());
+            }
+            
+            // 預設語言為繁體中文
+            if (language == null || language.trim().isEmpty()) {
+                language = "zh_TW";
+            }
+            
+            // 檢查權限
+            boolean isAdmin = authorizationService.isCurrentUserAdmin();
+            
+            if (!isAdmin) {
+                // 普通用戶只能匯出自己的資料
+                String currentVendorId = authorizationService.getCurrentVendorId();
+                logger.info("普通用戶權限，當前 vendorId: {}, 請求 vendorId: {}", currentVendorId, vendorId);
+                
+                if (currentVendorId == null) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body("未授權".getBytes());
+                }
+                
+                // 確保用戶只能查詢自己的資料
+                if (vendorId != null && !vendorId.equals(currentVendorId)) {
+                    logger.warn("用戶嘗試查詢其他 vendorId 的資料");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body("無權限查詢其他廠商資料".getBytes());
+                }
+                
+                // 強制使用當前用戶的 vendorId
+                vendorId = currentVendorId;
+            } else {
+                // 管理員可以匯出所有資料或指定 vendorId 的資料
+                logger.info("管理員權限，vendorId: {}", vendorId);
+            }
+            
+            // 匯出 Excel
+            java.io.ByteArrayOutputStream outputStream = exportService.exportChargeInfoToExcel(
+                    vendorId, stationId, startTimeFrom, startTimeTo, language);
+            
+            String contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            String dateStr = java.time.LocalDateTime.now().format(
+                    java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
+            String fileName = "en".equals(language) ? 
+                    String.format("Charging_Records_%s.xlsx", dateStr) : 
+                    String.format("充電記錄_%s.xlsx", dateStr);
+            
+            // 設定回應標頭
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setContentType(org.springframework.http.MediaType.parseMediaType(contentType));
+            
+            // 使用 RFC 5987 編碼方式支援中文檔名
+            String encodedFileName = java.net.URLEncoder.encode(fileName, "UTF-8").replaceAll("\\+", "%20");
+            // 只使用 filename*，避免 Tomcat 無法處理 filename 中的中文字元
+            headers.add("Content-Disposition", 
+                    String.format("attachment; filename*=UTF-8''%s", encodedFileName));
+            headers.setContentLength(outputStream.size());
+            
+            logger.info("Excel 匯出完成，檔案大小: {} bytes", outputStream.size());
+            
+            return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
+            
+        } catch (Exception e) {
+            logger.error("匯出失敗", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(("匯出失敗: " + e.getMessage()).getBytes());
+        }
     }
 } 

@@ -74,4 +74,9 @@ public interface ChargeRepository extends JpaRepository<CarbonCharge, Long> {
      * 根據廠商ID和startTime小於等於指定時間查詢充電交易
      */
     List<CarbonCharge> findByVendorIdAndStartTimeLessThanEqual(String vendorId, String startTimeTo);
+    
+    /**
+     * 根據場站ID和startTime範圍查詢充電交易（管理員使用）
+     */
+    List<CarbonCharge> findByStationIdAndStartTimeBetween(String stationId, String startTimeFrom, String startTimeTo);
 } 
