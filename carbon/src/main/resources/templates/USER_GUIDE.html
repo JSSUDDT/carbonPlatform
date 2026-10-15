@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>碳權平台 - 用戶使用說明</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        /* 語言切換器樣式 */
+        .language-switcher {
+            text-align: center;
+            margin: 20px 0 30px 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #00A170, #1B5E20);
+            border-radius: 8px;
+            border: 2px solid #88B04B;
+            box-shadow: 0 2px 10px rgba(0,161,112,0.2);
+        }
+        
+        .language-switcher-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: white;
+            font-size: 16px;
+        }
+        
+        .language-switcher select {
+            border: 2px solid #34B3A9;
+            background: white;
+            font-size: 16px;
+            font-weight: 600;
+            color: #495057;
+            cursor: pointer;
+            outline: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            min-width: 150px;
+            transition: all 0.3s ease;
+        }
+        
+        .language-switcher select:hover {
+            border-color: #00A170;
+            box-shadow: 0 2px 8px rgba(52, 179, 169, 0.3);
+        }
+        
+        .language-switcher select:focus {
+            outline: none;
+        }
+        
+        /* 隱藏非當前語言的內容 */
+        .lang-zh { display: none; }
+        .lang-en { display: block; }
+        
+        body[data-lang="zh"] .lang-zh { display: block; }
+        body[data-lang="zh"] .lang-en { display: none; }
+        
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 40px;
+            background: #fafafa;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #00A170;
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, #00A170, #1B5E20);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,161,112,0.2);
+            position: relative;
+        }
+        
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #00A170, #1B5E20);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,161,112,0.3);
+        }
+        
+        .back-button:hover {
+            background: linear-gradient(135deg, #1B5E20, #00A170);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,161,112,0.4);
+        }
+        
+        .back-button:active {
+            transform: translateY(0);
+        }
+        
+        .header h1 {
+            color: white;
+            font-size: 32px;
+            margin: 0;
+            font-weight: bold;
+        }
+        
+        .header .subtitle {
+            color: #E8F5E9;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        
+        .section {
+            margin-bottom: 50px;
+            page-break-inside: avoid;
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #00A170;
+        }
+        
+        .section h2 {
+            color: #00A170;
+            border-bottom: 2px solid #00A170;
+            padding-bottom: 10px;
+            font-size: 24px;
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+        
+        .section h3 {
+            color: #1B5E20;
+            font-size: 20px;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            border-left: 3px solid #00A170;
+            padding-left: 15px;
+        }
+        
+        .section h4 {
+            color: #88B04B;
+            font-size: 18px;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .info-table th {
+            background: #00A170;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .info-table td {
+            padding: 12px;
+            border: 1px solid #dee2e6;
+            vertical-align: top;
+            background: white;
+        }
+        
+        .info-table tr:nth-child(even) td {
+            background: #E8F5E9;
+        }
+        
+        .step-list {
+            background: #E8F5E9;
+            border: 1px solid #00A170;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #333;
+        }
+        
+        .step-list h4 {
+            color: #00A170;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .step-list ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .step-list li {
+            margin: 10px 0;
+            line-height: 1.8;
+        }
+        
+        .feature-list {
+            margin: 20px 0;
+            background: #E8F5E9;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #88B04B;
+            color: #333;
+        }
+        
+        .feature-list ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .feature-list li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #856404;
+        }
+        
+        .info-box {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #0c5460;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #155724;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #00A170;
+            color: #6c757d;
+            font-size: 14px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .highlight {
+            background: #E8F5E9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #1B5E20;
+        }
+        
+        .code {
+            background: #f8f9fa;
+            color: #00A170;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            border: 1px solid #dee2e6;
+        }
+        
+        @media print {
+            body {
+                font-size: 12px;
+                background: white;
+            }
+            
+            .header h1 {
+                font-size: 28px;
+            }
+            
+            .section {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+            
+            .language-switcher,
+            .back-button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body data-lang="zh">
+    <div class="header">
+        <a href="javascript:history.back()" class="back-button">
+            ← 返回
+        </a>
+        <h1>碳權平台 - 用戶使用說明</h1>
+        <div class="subtitle">Carbon Credit Platform - User Guide</div>
+        <div class="subtitle">版本: 1.0 | 更新日期: 2025年1月</div>
+    </div>
+
+    <div class="language-switcher">
+        <label class="language-switcher-label">選擇語言 / Select Language:</label>
+        <select onchange="switchLanguage(this.value)">
+            <option value="zh">繁體中文</option>
+            <option value="en">English</option>
+        </select>
+    </div>
+
+    <!-- 繁體中文版本 -->
+    <div class="lang-zh">
+        <div class="section">
+            <h2>1. 系統簡介</h2>
+            <p>碳權平台是一個專為電動車充電站管理而設計的Web應用系統。本平台提供以下主要功能：</p>
+            <div class="feature-list">
+                <ul>
+                    <li><strong>充電站管理</strong>: 查看和管理充電站資訊</li>
+                    <li><strong>充電樁管理</strong>: 查看和維護充電樁設備資訊</li>
+                    <li><strong>充電記錄監控</strong>: 查看充電交易歷史和統計資料</li>
+                    <li><strong>電力監控</strong>: 監控充電站的發電量和用電量</li>
+                    <li><strong>地圖導航</strong>: 使用互動式地圖查看充電站位置</li>
+                </ul>
+            </div>
+            <p>本系統專為內部企業管理使用而設計，支援多語言介面（繁體中文/英文）。</p>
+            
+            <div class="success-box">
+                <strong>系統特色：</strong>採用現代化Web技術，提供直觀易用的操作介面，支援即時資料更新和多種資料匯出格式。
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>2. 功能操作指引</h2>
+            
+            <h3>2.1 註冊新帳號</h3>
+            <table class="info-table">
+                <tr>
+                    <th>功能名稱</th>
+                    <td>註冊新帳號</td>
+                </tr>
+                <tr>
+                    <th>適用對象</th>
+                    <td>新用戶</td>
+                </tr>
+                <tr>
+                    <th>操作路徑</th>
+                    <td>系統註冊頁面</td>
+                </tr>
+                <tr>
+                    <th>使用目的</th>
+                    <td>建立新的廠商帳號以使用系統功能</td>
+                </tr>
+                <tr>
+                    <th>需填欄位</th>
+                    <td>廠商ID、密碼、確認密碼、用戶角色</td>
+                </tr>
+            </table>
+            
+            <div class="step-list">
+                <h4>操作步驟：</h4>
+                <ol>
+                    <li>前往系統註冊頁面：<span class="code">https://appprod.japaneast.cloudapp.azure.com/carbon/register</span></li>
+                    <li>填寫廠商ID（<span class="highlight">vendor_id</span>，將用作登錄名，請使用唯一標識）</li>
+                    <li>設定密碼並確認密碼</li>
+                                    <li>選擇用戶角色：Regular User - Charging Facility Management（一般用戶）</li>
+                    <li>點擊「註冊」按鈕完成註冊</li>
+                </ol>
+            </div>
+            
+            <div class="warning-box">
+                <strong>重要提醒：</strong>廠商ID將用作登錄名，請使用唯一標識。註冊成功後即可使用新帳號登入系統。
+            </div>
+
+            <h3>2.2 登入系統</h3>
+            <table class="info-table">
+                <tr>
+                    <th>功能名稱</th>
+                    <td>系統登入</td>
+                </tr>
+                <tr>
+                    <th>適用對象</th>
+                    <td>已註冊用戶</td>
+                </tr>
+                <tr>
+                    <th>操作路徑</th>
+                    <td>系統登入頁面</td>
+                </tr>
+                <tr>
+                    <th>使用目的</th>
+                    <td>驗證身份並進入系統主介面</td>
+                </tr>
+                <tr>
+                    <th>需填欄位</th>
+                    <td>廠商ID、密碼</td>
+                </tr>
+            </table>
+            
+            <div class="step-list">
+                <h4>操作步驟：</h4>
+                <ol>
+                    <li>前往系統登入頁面：<span class="code">https://appprod.japaneast.cloudapp.azure.com/carbon/login</span></li>
+                    <li>輸入您的廠商ID（<span class="highlight">vendor_id</span>）</li>
+                    <li>輸入您的密碼</li>
+                    <li>點擊「登入」按鈕</li>
+                    <li>系統會驗證您的身份並導向主頁面</li>
+                </ol>
+            </div>
+            
+            <div class="info-box">
+                <strong>系統特色：</strong>碳權平台 - 綠色能源，智慧出行。登入成功後即可使用完整的充電站管理功能。
+            </div>
+
+            <h3>2.3 充電站管理</h3>
+            <table class="info-table">
+                <tr>
+                    <th>功能名稱</th>
+                    <td>充電站管理</td>
+                </tr>
+                <tr>
+                    <th>適用對象</th>
+                    <td>廠商用戶</td>
+                </tr>
+                <tr>
+                    <th>操作路徑</th>
+                    <td>左側導航欄 > 充電站管理</td>
+                </tr>
+                <tr>
+                    <th>使用目的</th>
+                    <td>查看和管理所有充電站資訊</td>
+                </tr>
+                <tr>
+                    <th>主要功能</th>
+                    <td>搜尋、排序、分頁顯示、資料刷新</td>
+                </tr>
+            </table>
+            
+            <div class="step-list">
+                <h4>操作步驟：</h4>
+                <ol>
+                    <li>點擊左側導航欄的「充電站管理」</li>
+                    <li>在搜尋框輸入關鍵字進行搜尋</li>
+                    <li>點擊欄位標題進行排序</li>
+                    <li>使用分頁按鈕瀏覽更多資料</li>
+                    <li>點擊「刷新」按鈕更新資料</li>
+                </ol>
+            </div>
+
+            <h3>2.4 充電樁管理</h3>
+            <table class="info-table">
+                <tr>
+                    <th>功能名稱</th>
+                    <td>充電樁管理</td>
+                </tr>
+                <tr>
+                    <th>適用對象</th>
+                    <td>廠商用戶</td>
+                </tr>
+                <tr>
+                    <th>操作路徑</th>
+                    <td>左側導航欄 > 充電樁管理</td>
+                </tr>
+                <tr>
+                    <th>使用目的</th>
+                    <td>查看和管理所有充電樁設備資訊</td>
+                </tr>
+                <tr>
+                    <th>主要功能</th>
+                    <td>設備狀態監控、技術規格查看、啟用日期管理</td>
+                </tr>
+            </table>
+
+            <h3>2.5 充電記錄</h3>
+            <table class="info-table">
+                <tr>
+                    <th>功能名稱</th>
+                    <td>充電記錄</td>
+                </tr>
+                <tr>
+                    <th>適用對象</th>
+                    <td>廠商用戶</td>
+                </tr>
+                <tr>
+                    <th>操作路徑</th>
+                    <td>左側導航欄 > 充電記錄</td>
+                </tr>
+                <tr>
+                    <th>使用目的</th>
+                    <td>查看所有充電交易記錄</td>
+                </tr>
+                <tr>
+                    <th>主要功能</th>
+                    <td>交易搜尋、充電站篩選、日期範圍篩選、資料排序</td>
+                </tr>
+            </table>
+            
+            <div class="step-list">
+                <h4>操作步驟：</h4>
+                <ol>
+                    <li>點擊左側導航欄的「充電記錄」</li>
+                    <li>使用搜尋功能找到特定交易</li>
+                    <li>選擇充電站進行篩選</li>
+                    <li>選擇日期範圍進行篩選</li>
+                    <li>點擊欄位標題進行排序</li>
+                    <li>查看交易詳細資訊</li>
+                </ol>
+            </div>
+
+            <h3>2.6 電力監控</h3>
+            <table class="info-table">
+                <tr>
+                    <th>功能名稱</th>
+                    <td>充電站用電監控</td>
+                </tr>
+                <tr>
+                    <th>適用對象</th>
+                    <td>廠商用戶</td>
+                </tr>
+                <tr>
+                    <th>操作路徑</th>
+                    <td>左側導航欄 > 充電站用電</td>
+                </tr>
+                <tr>
+                    <th>使用目的</th>
+                    <td>監控充電站用電量和誤差率</td>
+                </tr>
+                <tr>
+                    <th>主要功能</th>
+                    <td>用電量統計、誤差率計算、即時資料更新</td>
+                </tr>
+            </table>
+
+            <h3>2.7 充電站地圖</h3>
+            <table class="info-table">
+                <tr>
+                    <th>功能名稱</th>
+                    <td>充電站地圖</td>
+                </tr>
+                <tr>
+                    <th>適用對象</th>
+                    <td>所有用戶</td>
+                </tr>
+                <tr>
+                    <th>操作路徑</th>
+                    <td>左側導航欄 > 充電站地圖</td>
+                </tr>
+                <tr>
+                    <th>使用目的</th>
+                    <td>互動式地圖查看充電站位置</td>
+                </tr>
+                <tr>
+                    <th>主要功能</th>
+                    <td>地圖導航、位置搜尋、路線規劃、當前位置顯示</td>
+                </tr>
+            </table>
+            
+            <div class="step-list">
+                <h4>操作步驟：</h4>
+                <ol>
+                    <li>點擊左側導航欄的「充電站地圖」</li>
+                    <li>允許瀏覽器獲取您的地理位置</li>
+                    <li>地圖會自動定位到您的位置（藍色箭頭）</li>
+                    <li>點擊充電站標記查看詳細資訊</li>
+                    <li>使用搜尋框搜尋特定地點</li>
+                    <li>點擊「查看詳情」連結查看充電站完整資訊</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>3. 使用技巧</h2>
+            
+            <h3>3.1 搜尋技巧</h3>
+            <div class="feature-list">
+                <ul>
+                    <li><strong>關鍵字搜尋</strong>: 使用部分關鍵字即可找到相關資料</li>
+                    <li><strong>組合搜尋</strong>: 可同時使用多個條件進行篩選</li>
+                    <li><strong>清除搜尋</strong>: 點擊搜尋框旁的清除按鈕重置搜尋條件</li>
+                </ul>
+            </div>
+
+            <h3>3.2 表格操作</h3>
+            <div class="feature-list">
+                <ul>
+                    <li><strong>排序</strong>: 點擊欄位標題可進行升序/降序排序</li>
+                    <li><strong>分頁</strong>: 大量資料時使用分頁按鈕瀏覽</li>
+                    <li><strong>每頁顯示</strong>: 可調整每頁顯示的記錄數量</li>
+                    <li><strong>匯出</strong>: 部分頁面支援資料匯出功能</li>
+                </ul>
+            </div>
+
+            <h3>3.3 瀏覽器建議</h3>
+            <div class="feature-list">
+                <ul>
+                    <li><strong>推薦瀏覽器</strong>: Chrome、Firefox、Edge最新版本</li>
+                    <li><strong>螢幕解析度</strong>: 建議使用1920x1080或更高解析度</li>
+                    <li><strong>網路連線</strong>: 建議使用穩定的網路連線</li>
+                    <li><strong>JavaScript</strong>: 請確保瀏覽器已啟用JavaScript</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>4. 法律條款與責任</h2>
+            
+            <div class="warning-box">
+                <h4>重要法律條款</h4>
+                <p><strong>碳權轉移同意條款</strong>：廠商確認上傳至本平台的所有充電記錄均已獲得使用者明確同意進行碳權轉移，並承諾遵守相關碳權交易法規。</p>
+                <p><strong>資料真實性保證條款</strong>：廠商保證所上傳的所有資料均為真實、準確且完整，如有虛假資料將承擔相應法律責任。</p>
+            </div>
+            
+            <div class="info-box">
+                <h4>技術支援</h4>
+                <p>如遇到技術問題，請聯繫系統管理員或查看系統日誌。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- English Version -->
+    <div class="lang-en">
+        <div class="section">
+            <h2>1. System Introduction</h2>
+            <p>The Carbon Credit Platform is a web application system designed for electric vehicle charging station management. This platform provides the following main features:</p>
+            <div class="feature-list">
+                <ul>
+                    <li><strong>Charging Station Management</strong>: View and manage charging station information</li>
+                    <li><strong>Charging Pile Management</strong>: View and maintain charging pile equipment information</li>
+                    <li><strong>Charging Record Monitoring</strong>: View charging transaction history and statistics</li>
+                    <li><strong>Power Monitoring</strong>: Monitor charging station power generation and consumption</li>
+                    <li><strong>Map Navigation</strong>: Use interactive maps to view charging station locations</li>
+                </ul>
+            </div>
+            <p>This system is designed for internal enterprise management use and supports multi-language interface (Traditional Chinese/English).</p>
+            
+            <div class="success-box">
+                <strong>System Features:</strong> Uses modern web technologies to provide an intuitive and user-friendly interface, supports real-time data updates and multiple data export formats.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>2. Feature Operation Guide</h2>
+            
+            <h3>2.1 Register New Account</h3>
+            <table class="info-table">
+                <tr>
+                    <th>Feature Name</th>
+                    <td>Register New Account</td>
+                </tr>
+                <tr>
+                    <th>Target Users</th>
+                    <td>New Users</td>
+                </tr>
+                <tr>
+                    <th>Operation Path</th>
+                    <td>System Registration Page</td>
+                </tr>
+                <tr>
+                    <th>Purpose</th>
+                    <td>Create new vendor account to use system features</td>
+                </tr>
+                <tr>
+                    <th>Required Fields</th>
+                    <td>Vendor ID, Password, Confirm Password, User Role</td>
+                </tr>
+            </table>
+            
+            <div class="step-list">
+                <h4>Operation Steps:</h4>
+                <ol>
+                    <li>Go to system registration page: <span class="code">https://appprod.japaneast.cloudapp.azure.com/carbon/register</span></li>
+                    <li>Fill in Vendor ID (<span class="highlight">vendor_id</span>, will be used as login name, please use unique identifier)</li>
+                    <li>Set password and confirm password</li>
+                    <li>Select user role: Regular User - Charging Facility Management</li>
+                    <li>Click "Register" button to complete registration</li>
+                </ol>
+            </div>
+            
+            <div class="warning-box">
+                <strong>Important Reminder:</strong> Vendor ID will be used as login name, please use unique identifier. After successful registration, you can use the new account to log in to the system.
+            </div>
+
+            <h3>2.2 System Login</h3>
+            <table class="info-table">
+                <tr>
+                    <th>Feature Name</th>
+                    <td>System Login</td>
+                </tr>
+                <tr>
+                    <th>Target Users</th>
+                    <td>Registered Users</td>
+                </tr>
+                <tr>
+                    <th>Operation Path</th>
+                    <td>System Login Page</td>
+                </tr>
+                <tr>
+                    <th>Purpose</th>
+                    <td>Verify identity and enter system main interface</td>
+                </tr>
+                <tr>
+                    <th>Required Fields</th>
+                    <td>Vendor ID, Password</td>
+                </tr>
+            </table>
+            
+            <div class="step-list">
+                <h4>Operation Steps:</h4>
+                <ol>
+                    <li>Go to system login page: <span class="code">https://appprod.japaneast.cloudapp.azure.com/carbon/login</span></li>
+                    <li>Enter your Vendor ID (<span class="highlight">vendor_id</span>)</li>
+                    <li>Enter your password</li>
+                    <li>Click "Login" button</li>
+                    <li>System will verify your identity and redirect to main page</li>
+                </ol>
+            </div>
+            
+            <div class="info-box">
+                <strong>System Features:</strong> Carbon Credit Platform - Green Energy, Smart Mobility. After successful login, you can use complete charging station management features.
+            </div>
+
+            <h3>2.3 Charging Station Management</h3>
+            <table class="info-table">
+                <tr>
+                    <th>Feature Name</th>
+                    <td>Charging Station Management</td>
+                </tr>
+                <tr>
+                    <th>Target Users</th>
+                    <td>Vendor Users</td>
+                </tr>
+                <tr>
+                    <th>Operation Path</th>
+                    <td>Left Navigation Bar > Charging Station Management</td>
+                </tr>
+                <tr>
+                    <th>Purpose</th>
+                    <td>View and manage all charging station information</td>
+                </tr>
+                <tr>
+                    <th>Main Features</th>
+                    <td>Search, Sort, Pagination Display, Data Refresh</td>
+                </tr>
+            </table>
+            
+            <div class="step-list">
+                <h4>Operation Steps:</h4>
+                <ol>
+                    <li>Click "Charging Station Management" in the left navigation bar</li>
+                    <li>Enter keywords in the search box to search</li>
+                    <li>Click column headers to sort</li>
+                    <li>Use pagination buttons to browse more data</li>
+                    <li>Click "Refresh" button to update data</li>
+                </ol>
+            </div>
+
+            <h3>2.4 Charging Pile Management</h3>
+            <table class="info-table">
+                <tr>
+                    <th>Feature Name</th>
+                    <td>Charging Pile Management</td>
+                </tr>
+                <tr>
+                    <th>Target Users</th>
+                    <td>Vendor Users</td>
+                </tr>
+                <tr>
+                    <th>Operation Path</th>
+                    <td>Left Navigation Bar > Charging Pile Management</td>
+                </tr>
+                <tr>
+                    <th>Purpose</th>
+                    <td>View and manage all charging pile equipment information</td>
+                </tr>
+                <tr>
+                    <th>Main Features</th>
+                    <td>Equipment Status Monitoring, Technical Specifications View, Activation Date Management</td>
+                </tr>
+            </table>
+
+            <h3>2.5 Charging Records</h3>
+            <table class="info-table">
+                <tr>
+                    <th>Feature Name</th>
+                    <td>Charging Records</td>
+                </tr>
+                <tr>
+                    <th>Target Users</th>
+                    <td>Vendor Users</td>
+                </tr>
+                <tr>
+                    <th>Operation Path</th>
+                    <td>Left Navigation Bar > Charging Records</td>
+                </tr>
+                <tr>
+                    <th>Purpose</th>
+                    <td>View all charging transaction records</td>
+                </tr>
+                <tr>
+                    <th>Main Features</th>
+                    <td>Transaction Search, Charging Station Filter, Date Range Filter, Data Sorting</td>
+                </tr>
+            </table>
+            
+            <div class="step-list">
+                <h4>Operation Steps:</h4>
+                <ol>
+                    <li>Click "Charging Records" in the left navigation bar</li>
+                    <li>Use search function to find specific transactions</li>
+                    <li>Select charging station to filter</li>
+                    <li>Select date range to filter</li>
+                    <li>Click column headers to sort</li>
+                    <li>View transaction details</li>
+                </ol>
+            </div>
+
+            <h3>2.6 Power Monitoring</h3>
+            <table class="info-table">
+                <tr>
+                    <th>Feature Name</th>
+                    <td>Charging Station Power Monitoring</td>
+                </tr>
+                <tr>
+                    <th>Target Users</th>
+                    <td>Vendor Users</td>
+                </tr>
+                <tr>
+                    <th>Operation Path</th>
+                    <td>Left Navigation Bar > Charging Station Power</td>
+                </tr>
+                <tr>
+                    <th>Purpose</th>
+                    <td>Monitor charging station power consumption and error rates</td>
+                </tr>
+                <tr>
+                    <th>Main Features</th>
+                    <td>Power Consumption Statistics, Error Rate Calculation, Real-time Data Updates</td>
+                </tr>
+            </table>
+
+            <h3>2.7 Charging Station Map</h3>
+            <table class="info-table">
+                <tr>
+                    <th>Feature Name</th>
+                    <td>Charging Station Map</td>
+                </tr>
+                <tr>
+                    <th>Target Users</th>
+                    <td>All Users</td>
+                </tr>
+                <tr>
+                    <th>Operation Path</th>
+                    <td>Left Navigation Bar > Charging Station Map</td>
+                </tr>
+                <tr>
+                    <th>Purpose</th>
+                    <td>Interactive map to view charging station locations</td>
+                </tr>
+                <tr>
+                    <th>Main Features</th>
+                    <td>Map Navigation, Location Search, Route Planning, Current Location Display</td>
+                </tr>
+            </table>
+            
+            <div class="step-list">
+                <h4>Operation Steps:</h4>
+                <ol>
+                    <li>Click "Charging Station Map" in the left navigation bar</li>
+                    <li>Allow browser to access your geographic location</li>
+                    <li>Map will automatically locate to your position (blue arrow)</li>
+                    <li>Click charging station markers to view details</li>
+                    <li>Use search box to search for specific locations</li>
+                    <li>Click "View Details" link to view complete charging station information</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>3. Usage Tips</h2>
+            
+            <h3>3.1 Search Tips</h3>
+            <div class="feature-list">
+                <ul>
+                    <li><strong>Keyword Search</strong>: Use partial keywords to find relevant data</li>
+                    <li><strong>Combined Search</strong>: Use multiple conditions for filtering</li>
+                    <li><strong>Clear Search</strong>: Click the clear button next to the search box to reset search conditions</li>
+                </ul>
+            </div>
+
+            <h3>3.2 Table Operations</h3>
+            <div class="feature-list">
+                <ul>
+                    <li><strong>Sorting</strong>: Click column headers for ascending/descending sort</li>
+                    <li><strong>Pagination</strong>: Use pagination buttons for large datasets</li>
+                    <li><strong>Records per Page</strong>: Adjust the number of records displayed per page</li>
+                    <li><strong>Export</strong>: Some pages support data export functionality</li>
+                </ul>
+            </div>
+
+            <h3>3.3 Browser Recommendations</h3>
+            <div class="feature-list">
+                <ul>
+                    <li><strong>Recommended Browsers</strong>: Chrome, Firefox, Edge latest versions</li>
+                    <li><strong>Screen Resolution</strong>: Recommend using 1920x1080 or higher resolution</li>
+                    <li><strong>Network Connection</strong>: Recommend using stable network connection</li>
+                    <li><strong>JavaScript</strong>: Please ensure JavaScript is enabled in your browser</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>4. Legal Terms and Responsibilities</h2>
+            
+            <div class="warning-box">
+                <h4>Important Legal Terms</h4>
+                <p><strong>Carbon Credit Transfer Agreement</strong>: Vendors confirm that all charging records uploaded to this platform have obtained explicit user consent for carbon credit transfer and commit to comply with relevant carbon credit trading regulations.</p>
+                <p><strong>Data Authenticity Guarantee</strong>: Vendors guarantee that all uploaded data is true, accurate and complete, and will bear corresponding legal responsibilities for any false data.</p>
+            </div>
+            
+            <div class="info-box">
+                <h4>Technical Support</h4>
+                <p>If you encounter technical issues, please contact the system administrator or check system logs.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><strong>碳權平台用戶使用說明 / Carbon Credit Platform User Guide</strong></p>
+        <p>版本: 1.0 | 最後更新: 2025年1月 | 開發商: gochabar / 充壩</p>
+        <p>本文件僅供內部使用，請勿外流 / This document is for internal use only, please do not distribute</p>
+    </div>
+
+    <script>
+        function switchLanguage(lang) {
+            document.body.setAttribute('data-lang', lang);
+        }
+    </script>
+</body>
+</html> 

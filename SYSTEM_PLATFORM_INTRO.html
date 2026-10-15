@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>碳權平台 - 系統功能規格書</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        body {
+            font-family: 'Microsoft JhengHei', 'SimSun', serif;
+            line-height: 1.8;
+            color: #333;
+            background: white;
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+        }
+        
+        .document-container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+                 .header {
+             text-align: center;
+             padding: 60px 20px;
+             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+             margin-bottom: 40px;
+             page-break-after: always;
+             border-radius: 0 0 15px 15px;
+             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+         }
+        
+                 .header h1 {
+             color: #00A170;
+             font-size: 32px;
+             margin: 0;
+             font-weight: bold;
+             text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+             letter-spacing: 2px;
+         }
+        
+                 .header .subtitle {
+             color: #666;
+             font-size: 18px;
+             margin-top: 15px;
+             font-weight: 500;
+             letter-spacing: 1px;
+         }
+        
+                 .toc {
+             background: #f8f9fa;
+             padding: 30px;
+             margin: 20px 0;
+             border-left: 4px solid #00A170;
+             page-break-after: always;
+         }
+        
+        .toc h2 {
+            color: #00A170;
+            font-size: 20px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #00A170;
+            padding-bottom: 10px;
+        }
+        
+        .toc ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .toc li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .toc li::before {
+            content: '•';
+            color: #00A170;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        
+        .toc a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .toc a:hover {
+            color: #00A170;
+        }
+        
+                 .section {
+             margin-bottom: 40px;
+             page-break-inside: avoid;
+             page-break-before: always;
+         }
+         
+         .section:first-of-type {
+             page-break-before: auto;
+         }
+        
+        .section h2 {
+            color: #00A170;
+            font-size: 22px;
+            border-bottom: 2px solid #00A170;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .section h3 {
+            color: #1B5E20;
+            font-size: 18px;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .section h4 {
+            color: #88B04B;
+            font-size: 16px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #00A170;
+        }
+        
+        .feature-item h4 {
+            color: #00A170;
+            margin-bottom: 10px;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 5px 0;
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        .feature-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #00A170;
+            font-weight: bold;
+        }
+        
+        .tech-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .tech-table th {
+            background: #00A170;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        .tech-table td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .tech-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+            border: 1px solid #00A170;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .highlight-box h4 {
+            color: #1B5E20;
+            margin-bottom: 15px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #00A170;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00A170;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px;
+            background: #f8f9fa;
+            border-top: 2px solid #00A170;
+            margin-top: 40px;
+        }
+        
+        .page-number {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 12px;
+        }
+        
+                 .document-info {
+             background: rgba(255,255,255,0.9);
+             padding: 25px;
+             margin: 30px auto;
+             border-radius: 12px;
+             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+             max-width: 500px;
+             backdrop-filter: blur(10px);
+         }
+        
+        .document-info table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .document-info td {
+            padding: 8px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+                 .document-info td:first-child {
+             font-weight: bold;
+             color: #00A170;
+             width: 120px;
+             font-size: 15px;
+         }
+         
+         .document-info td:last-child {
+             color: #333;
+             font-weight: 500;
+         }
+        
+                 @media print {
+             body {
+                 background: white;
+             }
+             
+             .document-container {
+                 box-shadow: none;
+             }
+             
+             .section {
+                 page-break-inside: avoid;
+                 page-break-before: always;
+             }
+             
+             .section:first-of-type {
+                 page-break-before: auto;
+             }
+             
+             .header {
+                 page-break-after: always;
+             }
+             
+             .toc {
+                 page-break-after: always;
+             }
+         }
+        
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+                 <!-- 文件標題頁 -->
+         <div class="header">
+             <h1>碳權平台系統功能規格書</h1>
+             <div class="subtitle">Carbon Platform System Specification</div>
+             <div style="margin-top: 20px; color: #666;">
+                 <p>推動綠色能源發展，實現碳中和目標</p>
+                 <p>Promoting Green Energy Development, Achieving Carbon Neutrality Goals</p>
+             </div>
+             
+                           <!-- 文件版本信息 -->
+              <div class="document-info">
+                 <table>
+                     <tr>
+                         <td>文件版本</td>
+                         <td>v1.0</td>
+                     </tr>
+                     <tr>
+                         <td>發布日期</td>
+                         <td>2025年7月</td>
+                     </tr>
+                     <tr>
+                         <td>文件類型</td>
+                         <td>系統功能規格</td>
+                     </tr>
+                     <tr>
+                         <td>適用對象</td>
+                         <td>系統管理員、開發人員、業務用戶</td>
+                     </tr>
+                     <tr>
+                         <td>維護部門</td>
+                         <td>技術開發團隊</td>
+                     </tr>
+                 </table>
+             </div>
+         </div>
+         
+         <!-- 目錄頁 -->
+         <div class="content">
+             <div class="toc">
+                 <h2>目錄 (Table of Contents)</h2>
+                 <ul>
+                     <li><a href="#overview">1. 系統概述</a></li>
+                     <li><a href="#architecture">2. 系統架構</a></li>
+                     <li><a href="#features">3. 功能特色</a></li>
+                     <li><a href="#modules">4. 核心模組</a></li>
+                     <li><a href="#security">5. 安全機制</a></li>
+                     <li><a href="#performance">6. 性能指標</a></li>
+                     <li><a href="#deployment">7. 部署環境</a></li>
+                 </ul>
+             </div>
+         </div>
+            
+                     <!-- 內容開始 -->
+         <div class="content">
+             <!-- 1. 系統概述 -->
+             <div class="section" id="overview">
+                <h2>1. 系統概述</h2>
+                
+                <h3>1.1 專案背景</h3>
+                <p>碳權平台是一個專為電動車充電設施管理與碳權交易而設計的綜合性系統。隨著全球對環境保護的重視程度不斷提升，電動車的普及率持續增長，如何有效管理充電設施並量化碳排放減少的效益，成為當前重要的技術課題。</p>
+                
+                <h3>1.2 系統目標</h3>
+                <ul class="feature-list">
+                    <li>提供完整的充電設施管理解決方案</li>
+                    <li>實現碳權交易的數位化管理</li>
+                    <li>支援多廠商、多設備的統一管理</li>
+                    <li>提供實時監控和數據分析功能</li>
+                    <li>確保數據安全和系統穩定性</li>
+                </ul>
+                
+                <h3>1.3 業務價值</h3>
+                <div class="highlight-box">
+                    <h4>核心價值主張</h4>
+                    <ul class="feature-list">
+                        <li><strong>環保效益：</strong>促進綠色能源發展，減少碳排放</li>
+                        <li><strong>經濟效益：</strong>支援碳權交易，創造經濟價值</li>
+                        <li><strong>管理效益：</strong>提升充電設施管理效率</li>
+                        <li><strong>社會效益：</strong>推動可持續發展目標</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 2. 系統架構 -->
+            <div class="section" id="architecture">
+                <h2>2. 系統架構</h2>
+                
+                <h3>2.1 整體架構</h3>
+                <p>系統採用現代化的三層架構設計，包含前端展示層、後端業務層和數據持久層。整體架構具有高可用性、可擴展性和安全性等特點。</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <h4>前端層 (Presentation Layer)</h4>
+                        <ul class="feature-list">
+                            <li>Thymeleaf 模板引擎</li>
+                            <li>Bootstrap 4 響應式框架</li>
+                            <li>JavaScript 動態交互</li>
+                            <li>國際化支援</li>
+                        </ul>
+                    </div>
+                    <div class="feature-item">
+                        <h4>後端層 (Business Layer)</h4>
+                        <ul class="feature-list">
+                            <li>Spring Boot 2.6.15</li>
+                            <li>Spring Security 安全框架</li>
+                            <li>JPA/Hibernate 數據訪問</li>
+                            <li>JWT Token 認證</li>
+                        </ul>
+                    </div>
+                    <div class="feature-item">
+                        <h4>數據層 (Data Layer)</h4>
+                        <ul class="feature-list">
+                            <li>MySQL 8.0 數據庫</li>
+                            <li>Azure 雲端部署</li>
+                            <li>數據備份與恢復</li>
+                            <li>性能監控</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <h3>2.2 技術棧</h3>
+                <table class="tech-table">
+                    <thead>
+                        <tr>
+                            <th>技術分類</th>
+                            <th>技術選型</th>
+                            <th>版本</th>
+                            <th>用途說明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>後端框架</td>
+                            <td>Spring Boot</td>
+                            <td>2.6.15</td>
+                            <td>現代化Java應用框架</td>
+                        </tr>
+                        <tr>
+                            <td>安全框架</td>
+                            <td>Spring Security</td>
+                            <td>5.6.0</td>
+                            <td>認證授權與安全控制</td>
+                        </tr>
+                        <tr>
+                            <td>數據持久化</td>
+                            <td>JPA/Hibernate</td>
+                            <td>5.6.0</td>
+                            <td>對象關係映射</td>
+                        </tr>
+                        <tr>
+                            <td>認證機制</td>
+                            <td>JWT Token</td>
+                            <td>0.11.5</td>
+                            <td>無狀態認證</td>
+                        </tr>
+                        <tr>
+                            <td>前端模板</td>
+                            <td>Thymeleaf</td>
+                            <td>3.0.15</td>
+                            <td>服務端模板引擎</td>
+                        </tr>
+                        <tr>
+                            <td>UI框架</td>
+                            <td>Bootstrap</td>
+                            <td>4.6.0</td>
+                            <td>響應式UI設計</td>
+                        </tr>
+                        <tr>
+                            <td>數據庫</td>
+                            <td>MySQL</td>
+                            <td>8.0</td>
+                            <td>關係型數據庫</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 3. 功能特色 -->
+            <div class="section" id="features">
+                <h2>3. 功能特色</h2>
+                
+                <h3>3.1 核心功能模組</h3>
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <h4>充電站管理</h4>
+                        <ul class="feature-list">
+                            <li>GPS定位與地圖展示</li>
+                            <li>充電站狀態實時監控</li>
+                            <li>電力負載管理</li>
+                            <li>多維度數據統計</li>
+                        </ul>
+                    </div>
+                    <div class="feature-item">
+                        <h4>充電樁管理</h4>
+                        <ul class="feature-list">
+                            <li>設備類型與規格管理</li>
+                            <li>品牌與型號追蹤</li>
+                            <li>功率與電流監控</li>
+                            <li>設備狀態追蹤</li>
+                        </ul>
+                    </div>
+                    <div class="feature-item">
+                        <h4>充電記錄管理</h4>
+                        <ul class="feature-list">
+                            <li>充電交易記錄</li>
+                            <li>車輛信息管理</li>
+                            <li>碳權標記功能</li>
+                            <li>歷史數據查詢</li>
+                        </ul>
+                    </div>
+                    <div class="feature-item">
+                        <h4>安全認證系統</h4>
+                        <ul class="feature-list">
+                            <li>JWT Token認證</li>
+                            <li>角色權限控制</li>
+                            <li>數據加密保護</li>
+                            <li>安全審計日誌</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <h3>3.2 特色功能</h3>
+                <div class="highlight-box">
+                    <h4>國際化支援</h4>
+                    <p>系統支援中英文雙語切換，提供本地化的用戶體驗，適應不同地區的用戶需求。包含動態語言切換、本地化日期格式、響應式設計等功能。</p>
+                </div>
+                
+                <div class="highlight-box">
+                    <h4>數據分析與報表</h4>
+                    <p>強大的數據分析功能，提供多維度統計報表，支援圖表展示和趨勢分析。包含多維度數據統計、圖表視覺化、趨勢分析、自定義報表等功能。</p>
+                </div>
+            </div>
+            
+            
+            
+                         <!-- 4. 核心模組 -->
+             <div class="section" id="modules">
+                 <h2>4. 核心模組</h2>
+                
+                                 <h3>4.1 用戶管理模組</h3>
+                <p>提供完整的用戶註冊、登錄、權限管理功能。支援角色基礎訪問控制(RBAC)，包含管理員和普通用戶兩種角色。</p>
+                
+                <h4>主要功能：</h4>
+                <ul class="feature-list">
+                    <li>用戶註冊與登錄</li>
+                    <li>JWT Token認證</li>
+                    <li>角色權限管理</li>
+                    <li>密碼加密存儲</li>
+                </ul>
+                
+                                 <h3>4.2 充電站管理模組</h3>
+                <p>完整的充電站信息管理系統，支援GPS定位、狀態監控、電力負載管理，提供直觀的地圖介面展示充電站分布。</p>
+                
+                <h4>數據字段：</h4>
+                <ul class="feature-list">
+                    <li>充電站ID (主鍵)</li>
+                    <li>廠商ID</li>
+                    <li>充電站名稱</li>
+                    <li>GPS座標 (緯度/經度)</li>
+                    <li>充電站功率</li>
+                    <li>城市和地址信息</li>
+                    <li>儲能啟用狀態</li>
+                    <li>電源來源</li>
+                </ul>
+                
+                                 <h3>4.3 充電樁管理模組</h3>
+                <p>詳細的充電樁設備管理，包含設備類型、功率規格、品牌信息，支援複合主鍵設計，確保數據完整性。</p>
+                
+                <h4>複合主鍵設計：</h4>
+                <ul class="feature-list">
+                    <li>充電樁ID + 連接ID</li>
+                    <li>所屬充電站ID</li>
+                    <li>廠商ID</li>
+                    <li>設備類型和品牌</li>
+                    <li>功率規格 (kW/A/V)</li>
+                    <li>設備狀態</li>
+                </ul>
+                
+                                 <h3>4.4 充電記錄模組</h3>
+                <p>完整的充電交易記錄系統，記錄充電時間、電量消耗、車輛信息，支援碳權標記，為碳權交易提供數據基礎。</p>
+                
+                <h4>交易記錄字段：</h4>
+                <ul class="feature-list">
+                    <li>交易編號 (主鍵)</li>
+                    <li>廠商ID、充電站ID、充電樁ID</li>
+                    <li>開始時間和結束時間</li>
+                    <li>充電量 (kWh)</li>
+                    <li>車輛信息 (車型、噸位、車牌)</li>
+                    <li>碳權標記 (Y/N)</li>
+                    <li>發票信息</li>
+                </ul>
+            </div>
+            
+                         <!-- 5. 安全機制 -->
+             <div class="section" id="security">
+                 <h2>5. 安全機制</h2>
+                
+                                 <h3>5.1 認證機制</h3>
+                <div class="highlight-box">
+                    <h4>JWT Token認證</h4>
+                    <ul class="feature-list">
+                        <li><strong>無狀態認證：</strong>基於JSON Web Token的無狀態認證機制</li>
+                        <li><strong>Token有效期：</strong>12小時 (43200秒)</li>
+                        <li><strong>自動刷新：</strong>支援Token自動刷新機制</li>
+                        <li><strong>密碼加密：</strong>使用BCrypt加密算法</li>
+                    </ul>
+                </div>
+                
+                                 <h3>5.2 授權控制</h3>
+                <ul class="feature-list">
+                    <li><strong>角色基礎訪問控制 (RBAC)：</strong>
+                        <ul>
+                            <li>ROLE_ADMIN：系統管理員權限</li>
+                            <li>ROLE_USER：普通用戶權限</li>
+                        </ul>
+                    </li>
+                    <li><strong>資源訪問控制：</strong>用戶只能訪問自己的數據</li>
+                    <li><strong>API權限控制：</strong>基於Spring Security的註解控制</li>
+                </ul>
+                
+                                 <h3>5.3 數據安全</h3>
+                <ul class="feature-list">
+                    <li><strong>SQL注入防護：</strong>使用JPA參數化查詢</li>
+                    <li><strong>XSS防護：</strong>輸入驗證和輸出編碼</li>
+                    <li><strong>CSRF防護：</strong>Spring Security CSRF保護</li>
+                    <li><strong>敏感數據加密：</strong>密碼等敏感信息加密存儲</li>
+                </ul>
+            </div>
+            
+                         <!-- 6. 性能指標 -->
+             <div class="section" id="performance">
+                 <h2>6. 性能指標</h2>
+                
+
+                
+                                 <h3>6.1 響應時間要求</h3>
+                <table class="tech-table">
+                    <thead>
+                        <tr>
+                            <th>功能模組</th>
+                            <th>響應時間要求</th>
+                            <th>說明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>頁面加載</td>
+                            <td>&lt; 3秒</td>
+                            <td>首次頁面加載時間</td>
+                        </tr>
+                        <tr>
+                            <td>API響應</td>
+                            <td>&lt; 1秒</td>
+                            <td>REST API響應時間</td>
+                        </tr>
+                        <tr>
+                            <td>數據庫查詢</td>
+                            <td>&lt; 500ms</td>
+                            <td>單次數據庫查詢時間</td>
+                        </tr>
+                        <tr>
+                            <td>文件上傳</td>
+                            <td>&lt; 10秒</td>
+                            <td>10MB文件上傳時間</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                                 <h3>6.2 數據處理能力</h3>
+                <ul class="feature-list">
+                    <li><strong>數據庫容量：</strong>1TB+</li>
+                    <li><strong>單表記錄數：</strong>1000萬+</li>
+                    <li><strong>查詢優化：</strong>索引優化</li>
+                    <li><strong>分頁處理：</strong>虛擬滾動</li>
+                </ul>
+            </div>
+            
+                         <!-- 7. 部署環境 -->
+             <div class="section" id="deployment">
+                 <h2>7. 部署環境</h2>
+                
+                                 <h3>7.1 雲端部署配置</h3>
+                <div class="highlight-box">
+                    <h4>Azure雲端部署</h4>
+                    <ul class="feature-list">
+                        <li><strong>數據庫：</strong>Azure MySQL 8.0</li>
+                        <li><strong>應用服務：</strong>Azure App Service</li>
+                        <li><strong>監控：</strong>Azure Application Insights</li>
+                        <li><strong>備份：</strong>自動備份與災難恢復</li>
+                    </ul>
+                </div>
+                
+                                 <h3>7.2 系統配置</h3>
+                <table class="tech-table">
+                    <thead>
+                        <tr>
+                            <th>配置項目</th>
+                            <th>開發環境</th>
+                            <th>生產環境</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>服務器端口</td>
+                            <td>9095</td>
+                            <td>9095</td>
+                        </tr>
+                        <tr>
+                            <td>上下文路徑</td>
+                            <td>/carbon</td>
+                            <td>/carbon</td>
+                        </tr>
+                        <tr>
+                            <td>時區設置</td>
+                            <td>Asia/Taipei</td>
+                            <td>Asia/Taipei</td>
+                        </tr>
+                        <tr>
+                            <td>字符編碼</td>
+                            <td>UTF-8</td>
+                            <td>UTF-8</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+
+            </div>
+            
+                         <!-- 頁碼 -->
+         </div>
+         
+         <!-- 頁腳 -->
+    </div>
+</body>
+</html> 

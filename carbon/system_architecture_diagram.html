@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系統架構與自動化資料傳輸 (System Architecture Diagram)</title>
+    <style>
+        :root {
+            --bg-light: #F8FAFC;
+            --container-bg: #FFFFFF;
+            --primary-dark: #064E3B;
+            --primary-teal: #0B5D52;
+            --accent-green: #10B981;
+            --accent-green-light: #ECFDF5;
+            --accent-gold: #D97706;
+            --accent-gold-bg: #FEF3C7;
+            --accent-blue: #2563EB;
+            --accent-blue-bg: #DBEAFE;
+            --text-main: #0F172A;
+            --text-muted: #475569;
+            --border-light: #E2E8F0;
+            --card-sub-bg: #F8FAFC;
+            --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.05);
+            --shadow-hover: 0 15px 35px rgba(16, 185, 129, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "微軟正黑體", "標楷體", "Segoe UI", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            background-image:
+                radial-gradient(at 10% 10%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
+                radial-gradient(at 90% 90%, rgba(11, 93, 82, 0.06) 0px, transparent 50%);
+            color: var(--text-main);
+            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 1420px;
+            background: var(--container-bg);
+            border-radius: 24px;
+            border: 1px solid var(--border-light);
+            padding: 40px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #F1F5F9;
+            padding-bottom: 25px;
+            margin-bottom: 35px;
+        }
+
+        .title-area h1 {
+            color: var(--primary-dark);
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .title-area p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 6px;
+        }
+
+        .verra-badge {
+            background: var(--accent-green-light);
+            border: 1.5px solid var(--accent-green);
+            color: var(--primary-dark);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+        }
+
+        .pulse-ring {
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulse-animation 1.8s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+
+            70% {
+                transform: scale(1.1);
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .pipeline-layout {
+            display: grid;
+            grid-template-columns: 1fr auto 1.1fr auto 1.2fr auto 1.1fr auto 1.1fr;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .arch-card {
+            background: var(--card-sub-bg);
+            border-radius: 16px;
+            padding: 22px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .arch-card:hover {
+            transform: translateY(-5px);
+            background: #FFFFFF;
+            border-color: var(--accent-green);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .arch-card.highlight-card {
+            background: linear-gradient(180deg, #FFFFFF 0%, #F0FDF4 100%);
+            border: 2px solid var(--accent-green);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #E2E8F0;
+        }
+
+        .card-icon-wrapper {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: var(--accent-green-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+        }
+
+        .card-header h3 {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--primary-teal);
+        }
+
+        .step-tag {
+            margin-left: auto;
+            background: var(--primary-dark);
+            color: #FFFFFF;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+
+        .graphic-node {
+            background: #FFFFFF;
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .graphic-node:hover {
+            border-color: var(--accent-green);
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.1);
+        }
+
+        .node-img {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: #F8FAFC;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            border: 1px solid #E2E8F0;
+        }
+
+        .node-content {
+            flex-grow: 1;
+        }
+
+        .node-content h4 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .node-content p {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 3px;
+            line-height: 1.3;
+        }
+
+        .pill {
+            font-size: 9px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .pill-red {
+            background: #FEE2E2;
+            color: #DC2626;
+        }
+
+        .pill-green {
+            background: #D1FAE5;
+            color: #059669;
+        }
+
+        .pill-blue {
+            background: #DBEAFE;
+            color: #1D4ED8;
+        }
+
+        .pill-gold {
+            background: #FEF3C7;
+            color: #D97706;
+        }
+
+        .flow-connector {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 0 4px;
+        }
+
+        .flow-arrow-container {
+            position: relative;
+            width: 28px;
+            height: 4px;
+            background: #E2E8F0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .flow-particle {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--accent-green), transparent);
+            animation: data-flow 1.5s infinite linear;
+        }
+
+        @keyframes data-flow {
+            0% {
+                left: -100%;
+            }
+
+            100% {
+                left: 100%;
+            }
+        }
+
+        .flow-icon {
+            color: var(--accent-green);
+            font-size: 16px;
+            margin-top: 4px;
+            font-weight: bold;
+        }
+
+        .features-grid {
+            margin-top: 35px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .feature-box {
+            background: var(--card-sub-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 18px;
+            color: var(--text-main);
+            transition: all 0.3s;
+        }
+
+        .feature-box:hover {
+            background: #FFFFFF;
+            border-color: var(--accent-green);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.1);
+        }
+
+        .feature-box h4 {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--primary-teal);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .feature-box p {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-light);
+            padding-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="main-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="title-area">
+                <h1>🌐 系統架構與自動化資料傳輸 (SYSTEM ARCHITECTURE)</h1>
+                <p>台灣電動車充電系統碳權專案 (TEVCS) ｜ 數據採集、防篡改與 Verra 稽核中台</p>
+            </div>
+            <div class="verra-badge">
+                <div class="pulse-ring"></div>
+                Verra Registered Project ID: 5455
+            </div>
+        </div>
+
+        <!-- Pipeline Architecture Grid (5 Layers) -->
+        <div class="pipeline-layout">
+
+            <!-- Layer 1: Data Sources -->
+            <div class="arch-card">
+                <div class="card-header">
+                    <div class="card-icon-wrapper">🅿️</div>
+                    <h3>1. 數據源發起層</h3>
+                </div>
+
+                <div class="graphic-node">
+                    <div class="node-img">🏢</div>
+                    <div class="node-content">
+                        <h4>停車場系統 (PMS)</h4>
+                        <p>停車場車位營運數據</p>
+                    </div>
+                </div>
+
+                <div class="graphic-node">
+                    <div class="node-img">⚡</div>
+                    <div class="node-content">
+                        <h4>CPO 充電樁後台</h4>
+                        <p>充電站與槍頭營運狀態</p>
+                    </div>
+                </div>
+
+                <div class="graphic-node">
+                    <div class="node-img">📟</div>
+                    <div class="node-content">
+                        <h4>智慧電表 (IoT)</h4>
+                        <p>電力度數與總量數據</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connector 1 -->
+            <div class="flow-connector">
+                <div class="flow-arrow-container">
+                    <div class="flow-particle"></div>
+                </div>
+                <div class="flow-icon">➔</div>
+            </div>
+
+            <!-- Layer 2: Security & Transport -->
+            <div class="arch-card">
+                <div class="card-header">
+                    <div class="card-icon-wrapper">🔒</div>
+                    <h3>2. 資安通道層</h3>
+                </div>
+
+                <div class="graphic-node">
+                    <div class="node-img">🛡️</div>
+                    <div class="node-content">
+                        <h4>HTTPS 加密通道 <span class="pill pill-green">SSL/TLS</span></h4>
+                        <p>點對點安全防封包竊聽</p>
+                    </div>
+                </div>
+
+                <div class="graphic-node">
+                    <div class="node-img">🔑</div>
+                    <div class="node-content">
+                        <h4>API-101 JWT 鑑權 <span class="pill pill-gold">12h Token</span></h4>
+                        <p>高安全性動態金鑰憑證</p>
+                    </div>
+                </div>
+
+                <div class="graphic-node">
+                    <div class="node-img">🙈</div>
+                    <div class="node-content">
+                        <h4>網址安全防護 </h4>
+                        <p>伺服器端點隱私保護</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connector 2 -->
+            <div class="flow-connector">
+                <div class="flow-arrow-container">
+                    <div class="flow-particle"></div>
+                </div>
+                <div class="flow-icon">➔</div>
+            </div>
+
+            <!-- Layer 3: API Gateway & Validation Engine (Highlight) -->
+            <div class="arch-card highlight-card">
+                <div class="card-header">
+                    <div class="card-icon-wrapper">⚙️</div>
+                    <h3>3. API 與檢核中台</h3>
+                </div>
+
+                <div class="graphic-node">
+                    <div class="node-img">🗺️</div>
+                    <div class="node-content">
+                        <h4>API-102 場站資訊 </h4>
+                        <p>GPS 經緯度對照</p>
+                    </div>
+                </div>
+
+                <div class="graphic-node">
+                    <div class="node-img">🔌</div>
+                    <div class="node-content">
+                        <h4>API-103 充電槍登記 </h4>
+                        <p>首次啟用日 (firstEnableDate)</p>
+                    </div>
+                </div>
+
+                <div class="graphic-node">
+                    <div class="node-img">🛑</div>
+                    <div class="node-content">
+                        <h4>API-104 交易拋轉</h4>
+                        <p>單號 (transNo)、時間與度數</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connector 3 -->
+            <div class="flow-connector">
+                <div class="flow-arrow-container">
+                    <div class="flow-particle"></div>
+                </div>
+                <div class="flow-icon">➔</div>
+            </div>
+
+            <!-- Layer 4: Data Vault & Audit Service -->
+            <div class="arch-card">
+                <div class="card-header">
+                    <div class="card-icon-wrapper">🗄️</div>
+                    <h3>4. 資料庫與數據管理</h3>
+                </div>
+
+                <div class="graphic-node">
+                    <div class="node-img">💾</div>
+                    <div class="node-content">
+                        <h4>MySQL 碳權資料庫 <span class="pill pill-blue">Append-Only</span></h4>
+                        <p>只讀封存不可篡改軌跡</p>
+                    </div>
+                </div>
+
+                <div class="graphic-node">
+                    <div class="node-img">📊</div>
+                    <div class="node-content">
+                        <h4>原始 kWh 管理引擎 <span class="pill pill-green">原始憑證</span></h4>
+                        <p>精確採集與管理總充電度數</p>
+                    </div>
+                </div>
+
+                <div class="graphic-node">
+                    <div class="node-img">📄</div>
+                    <div class="node-content">
+                        <h4>ExportService <span class="pill pill-green">Excel / CSV</span></h4>
+                        <p>一鍵匯出符合 Verra 審核報表</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connector 4 -->
+            <div class="flow-connector">
+                <div class="flow-arrow-container">
+                    <div class="flow-particle"></div>
+                </div>
+                <div class="flow-icon">➔</div>
+            </div>
+
+            <!-- Layer 5: Verra Registry & VVB Audit -->
+            <div class="arch-card">
+                <div class="card-header">
+                    <div class="card-icon-wrapper">🏅</div>
+                    <h3>5. Verra 認證與 VVB 稽核</h3>
+                </div>
+
+                <div class="graphic-node">
+                    <div class="node-img">🕵️‍♂️</div>
+                    <div class="node-content">
+                        <h4>VVB 第三方查證</h4>
+                        <p>抽驗原始數據與發票交易單號</p>
+                    </div>
+                </div>
+
+                <div class="graphic-node">
+                    <div class="node-img">📐</div>
+                    <div class="node-content">
+                        <h4>Verra 方法論核算</h4>
+                        <p>1 kWh = 0.88 kg CO₂e 減碳量</p>
+                    </div>
+                </div>
+
+                <div class="graphic-node">
+                    <div class="node-img">📜</div>
+                    <div class="node-content">
+                        <h4>Verra VCU 簽發</h4>
+                        <p>核發國際認可碳權額度</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Rule Features Cards (Bottom Grid) -->
+        <div class="features-grid">
+            <div class="feature-box">
+                <h4>🛡️ 防範雙重申報 (Anti-Double Counting)</h4>
+                <p>以交易單號 <code>transNo</code> 作為 Primary Key，跨業者實時查重，徹底杜絕重複報支與雙重計數。</p>
+            </div>
+            <div class="feature-box">
+                <h4>🔒 只讀不可覆蓋 (Write-Once 機制)</h4>
+                <p>經原始碼實證（ChargeServiceImpl）：若 <code>transNo</code> 已存在，回傳 <code>0006</code> 拒絕修改，保障數據權威性。</p>
+            </div>
+            <div class="feature-box">
+                <h4>🔄 完全支援補傳 (Data Backfilling)</h4>
+                <p>若因斷網或系統維護致數據遺漏，只要 <code>transNo</code> 不存在，隨時可呼叫 API-104 補傳歷史交易紀錄。</p>
+            </div>
+            <div class="feature-box">
+                <h4>🚀 免紙本開通新站點與車位</h4>
+                <p>新設場站或充電車位無需紙本申請，調用 API-102 與 API-103 帶入 <code>updateStatus='U'</code> 即可開通。</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            台灣電動車充電系統碳權專案團隊 ｜ Verra Registered Project ID: 5455 (TEVCS) ｜ 碳權平台 API v1.4
+        </div>
+    </div>
+
+</body>
+
+</html>

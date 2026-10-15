@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbon Platform - System Feature Introduction</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        body {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: white;
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+        }
+        
+        .document-container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            margin-bottom: 40px;
+            page-break-after: always;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #00A170;
+            font-size: 32px;
+            margin: 0;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            letter-spacing: 2px;
+        }
+        
+        .header .subtitle {
+            color: #666;
+            font-size: 18px;
+            margin-top: 15px;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+        
+        .toc {
+            background: #f8f9fa;
+            padding: 30px;
+            margin: 20px 0;
+            border-left: 4px solid #00A170;
+            page-break-after: always;
+        }
+        
+        .toc h2 {
+            color: #00A170;
+            font-size: 20px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #00A170;
+            padding-bottom: 10px;
+        }
+        
+        .toc ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .toc li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .toc li::before {
+            content: '•';
+            color: #00A170;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        
+        .toc a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .toc a:hover {
+            color: #00A170;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            page-break-inside: avoid;
+            page-break-before: always;
+        }
+        
+        .section:first-of-type {
+            page-break-before: auto;
+        }
+        
+        .section h2 {
+            color: #00A170;
+            font-size: 22px;
+            border-bottom: 2px solid #00A170;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .section h3 {
+            color: #1B5E20;
+            font-size: 18px;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .section h4 {
+            color: #88B04B;
+            font-size: 16px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #00A170;
+        }
+        
+        .feature-item h4 {
+            color: #00A170;
+            margin-bottom: 10px;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 5px 0;
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        .feature-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #00A170;
+            font-weight: bold;
+        }
+        
+        .tech-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .tech-table th {
+            background: #00A170;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        .tech-table td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .tech-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+            border: 1px solid #00A170;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .highlight-box h4 {
+            color: #1B5E20;
+            margin-bottom: 15px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #00A170;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00A170;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px;
+            background: #f8f9fa;
+            border-top: 2px solid #00A170;
+            margin-top: 40px;
+        }
+        
+        .page-number {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .document-info {
+            background: rgba(255,255,255,0.9);
+            padding: 25px;
+            margin: 30px auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 500px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .document-info table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .document-info td {
+            padding: 8px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .document-info td:first-child {
+            font-weight: bold;
+            color: #00A170;
+            width: 120px;
+            font-size: 15px;
+        }
+        
+        .document-info td:last-child {
+            color: #333;
+            font-weight: 500;
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .document-container {
+                box-shadow: none;
+            }
+            
+            .section {
+                page-break-inside: avoid;
+                page-break-before: always;
+            }
+            
+            .section:first-of-type {
+                page-break-before: auto;
+            }
+            
+            .header {
+                page-break-after: always;
+            }
+            
+            .toc {
+                page-break-after: always;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <!-- Document Title Page -->
+        <div class="header">
+            <h1>Carbon Platform System Specification</h1>
+            <div class="subtitle">碳權平台系統功能規格書</div>
+            <div style="margin-top: 20px; color: #666;">
+                <p>Promoting Green Energy Development, Achieving Carbon Neutrality Goals</p>
+                <p>推動綠色能源發展，實現碳中和目標</p>
+            </div>
+            
+            <!-- Document Version Information -->
+            <div class="document-info">
+                <table>
+                    <tr>
+                        <td>Document Version</td>
+                        <td>v1.0</td>
+                    </tr>
+                    <tr>
+                        <td>Release Date</td>
+                        <td>July 2025</td>
+                    </tr>
+                    <tr>
+                        <td>Document Type</td>
+                        <td>System Specification</td>
+                    </tr>
+                    <tr>
+                        <td>Target Audience</td>
+                        <td>System Administrators, Developers, Business Users</td>
+                    </tr>
+                    <tr>
+                        <td>Maintenance Team</td>
+                        <td>Technical Development Team</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Table of Contents Page -->
+        <div class="content">
+            <div class="toc">
+                <h2>Table of Contents</h2>
+                <ul>
+                    <li><a href="#overview">1. System Overview</a></li>
+                    <li><a href="#architecture">2. System Architecture</a></li>
+                    <li><a href="#features">3. Feature Highlights</a></li>
+                    <li><a href="#modules">4. Core Modules</a></li>
+                    <li><a href="#security">5. Security Mechanisms</a></li>
+                    <li><a href="#performance">6. Performance Metrics</a></li>
+                    <li><a href="#deployment">7. Deployment Environment</a></li>
+                </ul>
+            </div>
+        </div>
+            
+        <!-- Content Start -->
+        <div class="content">
+            <!-- 1. System Overview -->
+            <div class="section" id="overview">
+                <h2>1. System Overview</h2>
+                
+                <h3>1.1 Project Background</h3>
+                <p>The Carbon Platform is a comprehensive system designed for electric vehicle charging facility management and carbon credit trading. With the increasing global focus on environmental protection and the growing adoption of electric vehicles, effectively managing charging facilities and quantifying the benefits of carbon emission reduction has become a critical technical challenge.</p>
+                
+                <h3>1.2 System Objectives</h3>
+                <ul class="feature-list">
+                    <li>Provide complete charging facility management solutions</li>
+                    <li>Implement digital management of carbon credit trading</li>
+                    <li>Support unified management of multiple vendors and devices</li>
+                    <li>Provide real-time monitoring and data analysis capabilities</li>
+                    <li>Ensure data security and system stability</li>
+                </ul>
+                
+                <h3>1.3 Business Value</h3>
+                <div class="highlight-box">
+                    <h4>Core Value Propositions</h4>
+                    <ul class="feature-list">
+                        <li><strong>Environmental Benefits:</strong> Promote green energy development and reduce carbon emissions</li>
+                        <li><strong>Economic Benefits:</strong> Support carbon credit trading and create economic value</li>
+                        <li><strong>Management Benefits:</strong> Improve charging facility management efficiency</li>
+                        <li><strong>Social Benefits:</strong> Drive sustainable development goals</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 2. System Architecture -->
+            <div class="section" id="architecture">
+                <h2>2. System Architecture</h2>
+                
+                <h3>2.1 Overall Architecture</h3>
+                <p>The system adopts a modern three-tier architecture design, including frontend presentation layer, backend business layer, and data persistence layer. The overall architecture features high availability, scalability, and security.</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <h4>Frontend Layer (Presentation Layer)</h4>
+                        <ul class="feature-list">
+                            <li>Thymeleaf Template Engine</li>
+                            <li>Bootstrap 4 Responsive Framework</li>
+                            <li>JavaScript Dynamic Interaction</li>
+                            <li>Internationalization Support</li>
+                        </ul>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Backend Layer (Business Layer)</h4>
+                        <ul class="feature-list">
+                            <li>Spring Boot 2.6.15</li>
+                            <li>Spring Security Framework</li>
+                            <li>JPA/Hibernate Data Access</li>
+                            <li>JWT Token Authentication</li>
+                        </ul>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Data Layer (Data Layer)</h4>
+                        <ul class="feature-list">
+                            <li>MySQL 8.0 Database</li>
+                            <li>Azure Cloud Deployment</li>
+                            <li>Data Backup and Recovery</li>
+                            <li>Performance Monitoring</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <h3>2.2 Technology Stack</h3>
+                <table class="tech-table">
+                    <thead>
+                        <tr>
+                            <th>Technology Category</th>
+                            <th>Technology Choice</th>
+                            <th>Version</th>
+                            <th>Purpose Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Backend Framework</td>
+                            <td>Spring Boot</td>
+                            <td>2.6.15</td>
+                            <td>Modern Java application framework</td>
+                        </tr>
+                        <tr>
+                            <td>Security Framework</td>
+                            <td>Spring Security</td>
+                            <td>5.6.0</td>
+                            <td>Authentication, authorization, and security control</td>
+                        </tr>
+                        <tr>
+                            <td>Data Persistence</td>
+                            <td>JPA/Hibernate</td>
+                            <td>5.6.0</td>
+                            <td>Object-relational mapping</td>
+                        </tr>
+                        <tr>
+                            <td>Authentication Mechanism</td>
+                            <td>JWT Token</td>
+                            <td>0.11.5</td>
+                            <td>Stateless authentication</td>
+                        </tr>
+                        <tr>
+                            <td>Frontend Template</td>
+                            <td>Thymeleaf</td>
+                            <td>3.0.15</td>
+                            <td>Server-side template engine</td>
+                        </tr>
+                        <tr>
+                            <td>UI Framework</td>
+                            <td>Bootstrap</td>
+                            <td>4.6.0</td>
+                            <td>Responsive UI design</td>
+                        </tr>
+                        <tr>
+                            <td>Database</td>
+                            <td>MySQL</td>
+                            <td>8.0</td>
+                            <td>Relational database</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 3. Feature Highlights -->
+            <div class="section" id="features">
+                <h2>3. Feature Highlights</h2>
+                
+                <h3>3.1 Core Feature Modules</h3>
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <h4>Charging Station Management</h4>
+                        <ul class="feature-list">
+                            <li>GPS positioning and map display</li>
+                            <li>Real-time charging station status monitoring</li>
+                            <li>Power load management</li>
+                            <li>Multi-dimensional data statistics</li>
+                        </ul>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Charging Pile Management</h4>
+                        <ul class="feature-list">
+                            <li>Device type and specification management</li>
+                            <li>Brand and model tracking</li>
+                            <li>Power and current monitoring</li>
+                            <li>Device status tracking</li>
+                        </ul>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Charging Record Management</h4>
+                        <ul class="feature-list">
+                            <li>Charging transaction records</li>
+                            <li>Vehicle information management</li>
+                            <li>Carbon credit marking functionality</li>
+                            <li>Historical data query</li>
+                        </ul>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Security Authentication System</h4>
+                        <ul class="feature-list">
+                            <li>JWT Token authentication</li>
+                            <li>Role-based access control</li>
+                            <li>Data encryption protection</li>
+                            <li>Security audit logs</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <h3>3.2 Special Features</h3>
+                <div class="highlight-box">
+                    <h4>Internationalization Support</h4>
+                    <p>The system supports Chinese-English bilingual switching, providing localized user experience to adapt to user needs in different regions. Includes dynamic language switching, localized date formats, responsive design, and other features.</p>
+                </div>
+                
+                <div class="highlight-box">
+                    <h4>Data Analysis and Reporting</h4>
+                    <p>Powerful data analysis capabilities, providing multi-dimensional statistical reports, supporting chart visualization and trend analysis. Includes multi-dimensional data statistics, chart visualization, trend analysis, custom reports, and other features.</p>
+                </div>
+            </div>
+            
+            <!-- 4. Core Modules -->
+            <div class="section" id="modules">
+                <h2>4. Core Modules</h2>
+                
+                <h3>4.1 User Management Module</h3>
+                <p>Provides complete user registration, login, and permission management functionality. Supports Role-Based Access Control (RBAC), including administrator and regular user roles.</p>
+                
+                <h4>Main Features:</h4>
+                <ul class="feature-list">
+                    <li>User registration and login</li>
+                    <li>JWT Token authentication</li>
+                    <li>Role-based permission management</li>
+                    <li>Password encrypted storage</li>
+                </ul>
+                
+                <h3>4.2 Charging Station Management Module</h3>
+                <p>Complete charging station information management system, supporting GPS positioning, status monitoring, power load management, providing intuitive map interface to display charging station distribution.</p>
+                
+                <h4>Data Fields:</h4>
+                <ul class="feature-list">
+                    <li>Charging Station ID (Primary Key)</li>
+                    <li>Vendor ID</li>
+                    <li>Charging Station Name</li>
+                    <li>GPS Coordinates (Latitude/Longitude)</li>
+                    <li>Charging Station Power</li>
+                    <li>City and Address Information</li>
+                    <li>Energy Storage Enable Status</li>
+                    <li>Power Source</li>
+                </ul>
+                
+                <h3>4.3 Charging Pile Management Module</h3>
+                <p>Detailed charging pile device management, including device type, power specifications, brand information, supporting composite primary key design to ensure data integrity.</p>
+                
+                <h4>Composite Primary Key Design:</h4>
+                <ul class="feature-list">
+                    <li>Charging Pile ID + Connection ID</li>
+                    <li>Associated Charging Station ID</li>
+                    <li>Vendor ID</li>
+                    <li>Device Type and Brand</li>
+                    <li>Power Specifications (kW/A/V)</li>
+                    <li>Device Status</li>
+                </ul>
+                
+                <h3>4.4 Charging Record Module</h3>
+                <p>Complete charging transaction record system, recording charging time, power consumption, vehicle information, supporting carbon credit marking, providing data foundation for carbon credit trading.</p>
+                
+                <h4>Transaction Record Fields:</h4>
+                <ul class="feature-list">
+                    <li>Transaction Number (Primary Key)</li>
+                    <li>Vendor ID, Charging Station ID, Charging Pile ID</li>
+                    <li>Start Time and End Time</li>
+                    <li>Charging Amount (kWh)</li>
+                    <li>Vehicle Information (Vehicle Type, Tonnage, License Plate)</li>
+                    <li>Carbon Credit Marking (Y/N)</li>
+                    <li>Invoice Information</li>
+                </ul>
+            </div>
+            
+            <!-- 5. Security Mechanisms -->
+            <div class="section" id="security">
+                <h2>5. Security Mechanisms</h2>
+                
+                <h3>5.1 Authentication Mechanism</h3>
+                <div class="highlight-box">
+                    <h4>JWT Token Authentication</h4>
+                    <ul class="feature-list">
+                        <li><strong>Stateless Authentication:</strong> Stateless authentication mechanism based on JSON Web Token</li>
+                        <li><strong>Token Validity Period:</strong> 12 hours (43200 seconds)</li>
+                        <li><strong>Auto Refresh:</strong> Supports automatic token refresh mechanism</li>
+                        <li><strong>Password Encryption:</strong> Uses BCrypt encryption algorithm</li>
+                    </ul>
+                </div>
+                
+                <h3>5.2 Authorization Control</h3>
+                <ul class="feature-list">
+                    <li><strong>Role-Based Access Control (RBAC):</strong>
+                        <ul>
+                            <li>ROLE_ADMIN: System administrator permissions</li>
+                            <li>ROLE_USER: Regular user permissions</li>
+                        </ul>
+                    </li>
+                    <li><strong>Resource Access Control:</strong> Users can only access their own data</li>
+                    <li><strong>API Permission Control:</strong> Annotation-based control using Spring Security</li>
+                </ul>
+                
+                <h3>5.3 Data Security</h3>
+                <ul class="feature-list">
+                    <li><strong>SQL Injection Protection:</strong> Uses JPA parameterized queries</li>
+                    <li><strong>XSS Protection:</strong> Input validation and output encoding</li>
+                    <li><strong>CSRF Protection:</strong> Spring Security CSRF protection</li>
+                    <li><strong>Sensitive Data Encryption:</strong> Encrypted storage of sensitive information like passwords</li>
+                </ul>
+            </div>
+            
+            <!-- 6. Performance Metrics -->
+            <div class="section" id="performance">
+                <h2>6. Performance Metrics</h2>
+                
+                <h3>6.1 Response Time Requirements</h3>
+                <table class="tech-table">
+                    <thead>
+                        <tr>
+                            <th>Feature Module</th>
+                            <th>Response Time Requirement</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Page Loading</td>
+                            <td>&lt; 3 seconds</td>
+                            <td>Initial page loading time</td>
+                        </tr>
+                        <tr>
+                            <td>API Response</td>
+                            <td>&lt; 1 second</td>
+                            <td>REST API response time</td>
+                        </tr>
+                        <tr>
+                            <td>Database Query</td>
+                            <td>&lt; 500ms</td>
+                            <td>Single database query time</td>
+                        </tr>
+                        <tr>
+                            <td>File Upload</td>
+                            <td>&lt; 10 seconds</td>
+                            <td>10MB file upload time</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>6.2 Data Processing Capability</h3>
+                <ul class="feature-list">
+                    <li><strong>Database Capacity:</strong> 1TB+</li>
+                    <li><strong>Single Table Records:</strong> 10 million+</li>
+                    <li><strong>Query Optimization:</strong> Index optimization</li>
+                    <li><strong>Pagination Processing:</strong> Virtual scrolling</li>
+                </ul>
+            </div>
+            
+            <!-- 7. Deployment Environment -->
+            <div class="section" id="deployment">
+                <h2>7. Deployment Environment</h2>
+                
+                <h3>7.1 Cloud Deployment Configuration</h3>
+                <div class="highlight-box">
+                    <h4>Azure Cloud Deployment</h4>
+                    <ul class="feature-list">
+                        <li><strong>Database:</strong> Azure MySQL 8.0</li>
+                        <li><strong>Application Service:</strong> Azure App Service</li>
+                        <li><strong>Monitoring:</strong> Azure Application Insights</li>
+                        <li><strong>Backup:</strong> Automatic backup and disaster recovery</li>
+                    </ul>
+                </div>
+                
+                <h3>7.2 System Configuration</h3>
+                <table class="tech-table">
+                    <thead>
+                        <tr>
+                            <th>Configuration Item</th>
+                            <th>Development Environment</th>
+                            <th>Production Environment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Server Port</td>
+                            <td>9095</td>
+                            <td>9095</td>
+                        </tr>
+                        <tr>
+                            <td>Context Path</td>
+                            <td>/carbon</td>
+                            <td>/carbon</td>
+                        </tr>
+                        <tr>
+                            <td>Timezone Setting</td>
+                            <td>Asia/Taipei</td>
+                            <td>Asia/Taipei</td>
+                        </tr>
+                        <tr>
+                            <td>Character Encoding</td>
+                            <td>UTF-8</td>
+                            <td>UTF-8</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+    </div>
+</body>
+</html> 

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Authentication Flow Sequence Diagram</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .mermaid {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .description {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .description h3 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        .description ul {
+            padding-left: 20px;
+        }
+        .description li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Token Authentication Flow Sequence Diagram</h1>
+        
+        <div class="mermaid">
+            sequenceDiagram
+                participant Browser as Browser
+                participant Server as Server
+                participant DB as Database
+                
+                Browser->>Server: User Login (Username/Password)
+                Server->>Browser: Send Token
+                
+                Browser->>Server: Request with Token
+                Server->>Server: Token Validation
+                
+                alt JWT Validation
+                    Server->>Server: Signature Verification
+                else Database Validation
+                    Server->>DB: Query Token
+                    DB-->>Server: Return Result
+                end
+                
+                Server->>Browser: Success Response
+        </div>
+        
+        <div class="description">
+            <h3>Process Description</h3>
+            <ul>
+                <li><strong>Login</strong>：User provides credentials, server sends Token</li>
+                <li><strong>Request</strong>：Browser sends request with Token</li>
+                <li><strong>Validation</strong>：Server performs JWT signature verification or database query</li>
+                <li><strong>Response</strong>：Server responds after successful validation</li>
+            </ul>
+            
+            <h3>Technical Features</h3>
+            <ul>
+                <li><strong>Dual Validation</strong>：JWT signature + Database query</li>
+                <li><strong>Stateless</strong>：Uses Token to avoid session storage</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true
+            },
+            sequence: {
+                useMaxWidth: true,
+                diagramMarginX: 50,
+                diagramMarginY: 10,
+                actorMargin: 50,
+                width: 150,
+                height: 65,
+                boxMargin: 10,
+                boxTextMargin: 5,
+                noteMargin: 10,
+                messageMargin: 35,
+                mirrorActors: true,
+                bottomMarginAdj: 1,
+                useMaxWidth: true,
+                rightAngles: false,
+                showSequenceNumbers: false,
+                actorFontSize: 14,
+                actorFontFamily: 'Microsoft JhengHei',
+                noteFontSize: 12,
+                noteFontFamily: 'Microsoft JhengHei',
+                messageFontSize: 12,
+                messageFontFamily: 'Microsoft JhengHei'
+            }
+        });
+    </script>
+</body>
+</html> 
