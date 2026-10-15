@@ -1,0 +1,51 @@
+# ===================================================================
+# 正式環境專用配置 (Production / PROD Environment Configuration)
+# 主機：etreego.mysql.database.azure.com:3306 | Schema: ccms_sit
+# 目的：正式碳權交易與計算平台運行
+# 特色：啟用自動排程定時抓取外部資料庫、支援環境變數注入、INFO資安日誌
+# ===================================================================
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://etreego.mysql.database.azure.com:3306/ccms_sit?useUnicode=true&characterEncoding=utf8&useSSL=true&serverTimezone=Asia/Taipei}
+    username: ${DB_USERNAME:parker}
+    password: ${DB_PASSWORD:a@CxMzz^_v4eeQaV6uEEZ$k8zvs8Wg&5>)UQe^*NWE+}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        show_sql: false
+        format_sql: false
+        use_sql_comments: false
+        generate_statistics: false
+        jdbc:
+          batch_size: 20
+
+# -------------------------------------------------------------------
+# 數據同步模組設定 (正式環境：啟用自動排程同步外部 ccms.trans_mapping)
+# -------------------------------------------------------------------
+sync:
+  enabled: true
+  cron: "0 */10 * * * ?"
+  batch-size: 1000
+  source-schema: ccms
+  source-table: trans_mapping
+  sync-days: 1
+  max-records-per-sync: 10000
+  time-field: charge_start_time
+  real-time:
+    enabled: true
+    interval-seconds: 300
+    max-batch-size: 1000
+
+# -------------------------------------------------------------------
+# 日誌配置：收斂至 INFO/WARN，避免正式環境打印過多數據
+# -------------------------------------------------------------------
+logging:
+  level:
+    root: INFO
+    com.carbon.api: INFO
+    org.springframework: WARN
+    org.springframework.web: WARN

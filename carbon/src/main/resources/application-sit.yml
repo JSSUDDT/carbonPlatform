@@ -1,0 +1,53 @@
+# ===================================================================
+# 測試環境專用配置 (Test / SIT Environment Configuration)
+# 主機：61.91.11.227:4258 | Schema: carbon_sit
+# 目的：供外部 CPO 業者測試 API 上傳與登入後台驗證資料
+# 特色：強制停用背景自動同步排程，開放 DEBUG 日誌便於排查 API
+# ===================================================================
+spring:
+  datasource:
+    url: jdbc:mysql://61.91.11.227:4258/carbon_sit?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Taipei
+    username: etreego
+    password: F5b7#w19537
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        show_sql: false
+        format_sql: false
+        use_sql_comments: false
+        generate_statistics: false
+        jdbc:
+          batch_size: 20
+
+# -------------------------------------------------------------------
+# 數據同步模組設定 (測試環境核心規則：徹底停用外部自動同步)
+# -------------------------------------------------------------------
+sync:
+  enabled: false
+  real-time:
+    enabled: false
+  cron: "0 */10 * * * ?"
+  batch-size: 1000
+  source-schema: ccms
+  source-table: trans_mapping
+  sync-days: 1
+  max-records-per-sync: 10000
+  time-field: charge_start_time
+
+# -------------------------------------------------------------------
+# 日誌配置：開放 DEBUG 等級，便於快速診斷外部業者 API 請求
+# -------------------------------------------------------------------
+logging:
+  level:
+    root: INFO
+    com.carbon: DEBUG
+    com.carbon.api: DEBUG
+    com.carbon.api.controller: DEBUG
+    com.carbon.api.security: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: INFO
+    org.springframework: WARN

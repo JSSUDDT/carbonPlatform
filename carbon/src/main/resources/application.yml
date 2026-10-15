@@ -1,0 +1,83 @@
+# ===================================================================
+# 碳權交易平台 - 共用基礎配置 (Base Application Configuration)
+# ===================================================================
+server:
+  port: 9095
+  servlet:
+    context-path: /carbon
+  tomcat:
+    uri-encoding: UTF-8
+
+spring:
+  # 預設啟用的環境 Profile (預設為 sit 測試環境，本機開箱即用且安全)
+  profiles:
+    active: sit
+  
+  # 控制台 ANSI 彩色輸出
+  output:
+    ansi:
+      enabled: ALWAYS
+      
+  # 字符編碼設定 (全域強制 UTF-8)
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+      force-response: true
+      force-request: true
+      
+  # JSON 序列化時間與時區配置 (強制台北時區 UTC+8)
+  jackson:
+    time-zone: Asia/Taipei
+    date-format: yyyy-MM-dd HH:mm:ss
+
+  # Thymeleaf 模板引擎配置
+  thymeleaf:
+    cache: false
+    check-template: true
+    check-template-location: true
+    encoding: UTF-8
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+
+  # 國際化 i18n 配置
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    cache-duration: 0
+    fallback-to-system-locale: false
+
+# JWT 認證配置 (有效期 12 小時 = 43200000 毫秒)
+jwt:
+  secret: carbonTradingPlatformSecretKey123456789012345678901234567890
+  expiration: 43200000
+
+# OpenCage 地理編碼 API (用於站點經緯度反查國家 ISO 代碼)
+opencage:
+  api:
+    key: c61001ac281a40f7b0ee4c7f33fdcaba
+
+# 共用日誌輸出格式與字元集
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  charset:
+    console: UTF-8
+    file: UTF-8
+  level:
+    # 關閉 Hibernate 與 JPA 冗長的底層 SQL 除錯日誌
+    org.hibernate: ERROR
+    org.hibernate.engine: OFF
+    org.hibernate.jdbc: OFF
+    org.hibernate.loader: OFF
+    org.hibernate.persister: OFF
+    org.hibernate.query: OFF
+    org.hibernate.resource: OFF
+    org.hibernate.transaction: OFF
+    org.hibernate.type: OFF
+    org.springframework.orm.jpa: OFF
+    org.springframework.jdbc: OFF
+    org.springframework.jdbc.core: OFF
+    org.springframework.jdbc.datasource: OFF
