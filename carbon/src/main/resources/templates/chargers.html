@@ -33,6 +33,13 @@
             padding: 0.25rem 0.5rem;
             font-size: 0.875rem;
         }
+        
+        /* 國家篩選下拉框樣式調整 */
+        #countryFilter {
+            min-width: 100px !important;
+            max-width: 120px !important;
+            padding-right: 20px !important;
+        }
     </style>
 </head>
 <body>
@@ -83,9 +90,13 @@
                         <div class="input-group mr-2">
                             <input type="text" class="form-control" id="searchInput" th:placeholder="#{chargers.search}" placeholder="搜索充電樁...">
                         </div>
-                        <button class="btn btn-outline-secondary" id="refreshBtn">
+                        <button class="btn btn-outline-secondary mr-2" id="refreshBtn">
                             <i class="fas fa-sync-alt mr-1"></i><span th:text="#{chargers.refresh}">刷新</span>
                         </button>
+                        <select class="custom-select custom-select-sm mr-2" id="countryFilter" style="min-width: 100px; max-width: 120px;">
+                            <option value="" th:text="#{transactions.allCountries}">全部國家</option>
+                            <!-- 國家選項將通過JavaScript加載 -->
+                        </select>
                         <select class="custom-select" id="statusFilter" style="width: auto;">
                             <option value="" th:text="#{chargers.allStatus}">全部狀態</option>
                             <option value="1" th:text="#{chargers.enabled}">啟用</option>
@@ -126,6 +137,7 @@
                                 <th th:text="#{chargers.status}">狀態</th>
                                 <th th:text="#{chargers.uploadTime}">上傳時間</th>
                                 <th th:text="#{chargers.firstEnableDate}">首次啟用日期</th>
+                                <th th:text="#{chargers.firstTransactionTime}">首次交易時間</th>
                                 <th id="actionsHeader" style="display: none;" th:text="#{chargers.actions}">操作</th>
                             </tr>
                         </thead>
@@ -328,6 +340,93 @@
         let isEditMode = false;
         let editingChargerId = null;
         
+        // 國家代碼到國家名稱的映射（支援多語系）
+        function getCountryName(countryCode, lang) {
+            if (!countryCode || countryCode === 'NA') {
+                return lang === 'en' ? 'N/A' : '不適用';
+            }
+            
+            const countryMap = {
+                'TW': { zh: '台灣', en: 'Taiwan' },
+                'US': { zh: '美國', en: 'United States' },
+                'CN': { zh: '中國', en: 'China' },
+                'JP': { zh: '日本', en: 'Japan' },
+                'KR': { zh: '韓國', en: 'South Korea' },
+                'SG': { zh: '新加坡', en: 'Singapore' },
+                'MY': { zh: '馬來西亞', en: 'Malaysia' },
+                'TH': { zh: '泰國', en: 'Thailand' },
+                'VN': { zh: '越南', en: 'Vietnam' },
+                'PH': { zh: '菲律賓', en: 'Philippines' },
+                'ID': { zh: '印尼', en: 'Indonesia' },
+                'IN': { zh: '印度', en: 'India' },
+                'GB': { zh: '英國', en: 'United Kingdom' },
+                'FR': { zh: '法國', en: 'France' },
+                'DE': { zh: '德國', en: 'Germany' },
+                'IT': { zh: '義大利', en: 'Italy' },
+                'ES': { zh: '西班牙', en: 'Spain' },
+                'AU': { zh: '澳洲', en: 'Australia' },
+                'NZ': { zh: '紐西蘭', en: 'New Zealand' },
+                'CA': { zh: '加拿大', en: 'Canada' },
+                'MX': { zh: '墨西哥', en: 'Mexico' },
+                'BR': { zh: '巴西', en: 'Brazil' },
+                'AR': { zh: '阿根廷', en: 'Argentina' },
+                'RU': { zh: '俄羅斯', en: 'Russia' },
+                'AE': { zh: '阿拉伯聯合大公國', en: 'United Arab Emirates' },
+                'SA': { zh: '沙烏地阿拉伯', en: 'Saudi Arabia' },
+                'ZA': { zh: '南非', en: 'South Africa' },
+                'EG': { zh: '埃及', en: 'Egypt' }
+            };
+            
+            const country = countryMap[countryCode.toUpperCase()];
+            if (country) {
+                return country[lang] || countryCode;
+            }
+            
+            // 如果找不到映射，返回國家代碼
+            return countryCode;
+        }
+        
+        // 填充國家篩選下拉框（從充電站數據中提取）
+        function populateCountryFilter() {
+            const countryFilter = document.getElementById('countryFilter');
+            const currentLang = getCurrentLanguage();
+            // 嘗試從翻譯函數獲取，如果失敗則從 DOM 讀取已渲染的文字
+            let allCountriesText = translate('transactions.allCountries');
+            // 如果翻譯函數返回 key 本身（表示找不到翻譯），嘗試從 DOM 讀取
+            if (allCountriesText === 'transactions.allCountries') {
+                const defaultOption = countryFilter.querySelector('option[value=""]');
+                if (defaultOption) {
+                    allCountriesText = defaultOption.textContent || (currentLang === 'en' ? 'All Countries' : '全部國家');
+                } else {
+                    allCountriesText = currentLang === 'en' ? 'All Countries' : '全部國家';
+                }
+            }
+            countryFilter.innerHTML = `<option value="">${allCountriesText}</option>`;
+            
+            if (stations.length === 0) {
+                return;
+            }
+            
+            // 提取所有唯一的國家代碼
+            const countrySet = new Set();
+            stations.forEach(station => {
+                if (station.country && station.country.trim() !== '' && station.country !== 'NA') {
+                    countrySet.add(station.country.toUpperCase());
+                }
+            });
+            
+            // 將國家代碼轉換為陣列並排序
+            const countries = Array.from(countrySet).sort();
+            
+            // 填充下拉框
+            countries.forEach(countryCode => {
+                const option = document.createElement('option');
+                option.value = countryCode;
+                option.textContent = getCountryName(countryCode, currentLang);
+                countryFilter.appendChild(option);
+            });
+        }
+        
         // 初始化DataTable
         function initDataTable() {
             if (dataTable) {
@@ -369,7 +468,16 @@
                     }
                 },
                 { data: 'createTime' },
-                { data: 'firstEnableDate' }
+                { data: 'firstEnableDate' },
+                { 
+                    data: 'firstTransactionTime',
+                    render: function(data) {
+                        if (data && data.trim() !== '') {
+                            return data;
+                        }
+                        return '<span class="text-muted">尚未有交易</span>';
+                    }
+                }
             ];
             
             // 如果是管理員，添加操作列
@@ -464,6 +572,9 @@
                     stations.forEach(station => {
                         stationSelect.append(`<option value="${station.stationId}">${station.stationId}</option>`);
                     });
+                    
+                    // 填充國家篩選下拉框
+                    populateCountryFilter();
                 }
             } catch (error) {
                 console.error('加載充電站列表失敗:', error);
@@ -503,7 +614,24 @@
                 const response = await apiRequest(endpoint);
                 
                 if (response) {
-                    chargers = Array.isArray(response) ? response : [];
+                    let allChargers = Array.isArray(response) ? response : [];
+                    
+                    // 國家篩選（前端過濾，通過充電站的國家）
+                    const countryFilter = document.getElementById('countryFilter');
+                    const selectedCountry = countryFilter ? countryFilter.value : '';
+                    if (selectedCountry) {
+                        chargers = allChargers.filter(charger => {
+                            // 根據充電樁的 stationId 找到對應的充電站
+                            const stationInfo = stations.find(station => station.stationId === charger.stationId);
+                            if (stationInfo && stationInfo.country) {
+                                return stationInfo.country.toUpperCase() === selectedCountry;
+                            }
+                            return false;
+                        });
+                    } else {
+                        chargers = allChargers;
+                    }
+                    
                     initDataTable();
                     hideAlert();
                 } else {
@@ -742,12 +870,18 @@
             // 刷新按鈕事件監聽
             $('#refreshBtn').on('click', function() {
                 $('#searchInput').val('');
+                $('#countryFilter').val('');
                 $('#stationFilter').val('');
                 $('#statusFilter').val('');
                 loadChargers();
             });
 
             // 篩選事件監聽
+            // 國家篩選變更事件
+            $('#countryFilter').on('change', function() {
+                loadChargers();
+            });
+            
             $('#stationFilter, #statusFilter').on('change', loadChargers);
 
             $('#addChargerBtn').on('click', addCharger);

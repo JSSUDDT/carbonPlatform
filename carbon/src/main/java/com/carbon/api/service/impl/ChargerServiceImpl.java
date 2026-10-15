@@ -4,7 +4,6 @@ import com.carbon.api.dto.ChargerRequest;
 import com.carbon.api.dto.ResultResponse;
 import com.carbon.api.entity.CarbonCharger;
 import com.carbon.api.entity.CarbonStation;
-import com.carbon.api.entity.ConnectorPK;
 import com.carbon.api.repository.ChargerRepository;
 import com.carbon.api.repository.StationRepository;
 import com.carbon.api.service.AuthorizationService;
@@ -17,6 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +37,35 @@ public class ChargerServiceImpl implements ChargerService {
     private AuthorizationService authorizationService;
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    
+    /**
+     * 將 UTC+0 時間轉換為台灣時間 (UTC+8)
+     * @param utcTimeString UTC+0 時間字串
+     * @return 台灣時間字串，如果轉換失敗則返回原字串
+     */
+    private String convertToTaiwanTime(String utcTimeString) {
+        if (utcTimeString == null || utcTimeString.trim().isEmpty()) {
+            return null;
+        }
+        
+        try {
+            // 解析 UTC 時間
+            LocalDateTime utcDateTime = LocalDateTime.parse(utcTimeString, formatter);
+            
+            // 轉換為台灣時間 (UTC+8)
+            ZonedDateTime utcZoned = utcDateTime.atZone(ZoneId.of("UTC"));
+            ZonedDateTime taiwanZoned = utcZoned.withZoneSameInstant(ZoneId.of("Asia/Taipei"));
+            
+            // 格式化為字串
+            return taiwanZoned.format(formatter);
+        } catch (DateTimeParseException e) {
+            logger.warn("Failed to parse time string: {}, returning original string", utcTimeString);
+            return utcTimeString;
+        } catch (Exception e) {
+            logger.error("Error converting time to Taiwan time: {}", e.getMessage());
+            return utcTimeString;
+        }
+    }
 
     @Override
     @Transactional
@@ -179,11 +210,16 @@ public class ChargerServiceImpl implements ChargerService {
             chargers = chargerRepository.findAll();
         }
 
-        // 為每個充電樁添加充電站名稱
+        // 為每個充電樁添加充電站名稱並轉換時區
         for (CarbonCharger charger : chargers) {
             CarbonStation station = stationRepository.findByStationId(charger.getStationId());
             if (station != null) {
                 charger.setStationName(station.getStationName());
+            }
+            
+            // 轉換首次交易時間為台灣時間
+            if (charger.getFirstTransactionTime() != null) {
+                charger.setFirstTransactionTime(convertToTaiwanTime(charger.getFirstTransactionTime()));
             }
         }
 
@@ -195,11 +231,16 @@ public class ChargerServiceImpl implements ChargerService {
         logger.debug("Getting charger information by ID, chargerId: {}", chargerId);
         List<CarbonCharger> chargers = chargerRepository.findByChargerId(chargerId);
         
-        // 為每個充電樁添加充電站名稱
+        // 為每個充電樁添加充電站名稱並轉換時區
         for (CarbonCharger charger : chargers) {
             CarbonStation station = stationRepository.findByStationId(charger.getStationId());
             if (station != null) {
                 charger.setStationName(station.getStationName());
+            }
+            
+            // 轉換首次交易時間為台灣時間
+            if (charger.getFirstTransactionTime() != null) {
+                charger.setFirstTransactionTime(convertToTaiwanTime(charger.getFirstTransactionTime()));
             }
         }
         
@@ -212,10 +253,15 @@ public class ChargerServiceImpl implements ChargerService {
         CarbonCharger charger = chargerRepository.findByChargerIdAndConnectId(chargerId, connectId);
         
         if (charger != null) {
-            // 為充電樁添加充電站名稱
+            // 為充電樁添加充電站名稱並轉換時區
             CarbonStation station = stationRepository.findByStationId(charger.getStationId());
             if (station != null) {
                 charger.setStationName(station.getStationName());
+            }
+            
+            // 轉換首次交易時間為台灣時間
+            if (charger.getFirstTransactionTime() != null) {
+                charger.setFirstTransactionTime(convertToTaiwanTime(charger.getFirstTransactionTime()));
             }
         }
         
@@ -243,11 +289,16 @@ public class ChargerServiceImpl implements ChargerService {
             chargers = chargerRepository.findAll();
         }
         
-        // 為每個充電樁添加充電站名稱
+        // 為每個充電樁添加充電站名稱並轉換時區
         for (CarbonCharger charger : chargers) {
             CarbonStation station = stationRepository.findByStationId(charger.getStationId());
             if (station != null) {
                 charger.setStationName(station.getStationName());
+            }
+            
+            // 轉換首次交易時間為台灣時間
+            if (charger.getFirstTransactionTime() != null) {
+                charger.setFirstTransactionTime(convertToTaiwanTime(charger.getFirstTransactionTime()));
             }
         }
         
