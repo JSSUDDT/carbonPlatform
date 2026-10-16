@@ -71,6 +71,28 @@ public class ChargerServiceImpl implements ChargerService {
         }
     }
 
+    /**
+     * 將首次啟用日期 (yyyy-MM-dd) 視為台北時間 00:00:00，轉為 UTC+0 比較基準
+     * 例如：2026-01-01 -> 2025-12-31 16:00:00 UTC
+     */
+    private String convertEnableDateToUtc(String enableDate) {
+        if (enableDate == null || enableDate.trim().isEmpty()) {
+            return null;
+        }
+        String trimmed = enableDate.trim();
+        try {
+            if (trimmed.length() == 10) {
+                trimmed += " 00:00:00";
+            }
+            LocalDateTime localDt = LocalDateTime.parse(trimmed, formatter);
+            ZonedDateTime taipeiZoned = localDt.atZone(ZoneId.of("Asia/Taipei"));
+            ZonedDateTime utcZoned = taipeiZoned.withZoneSameInstant(ZoneId.of("UTC"));
+            return utcZoned.format(formatter);
+        } catch (Exception e) {
+            return enableDate;
+        }
+    }
+
     @Override
     @Transactional
     public ResultResponse updateChargerInfo(ChargerRequest request) {
@@ -179,10 +201,7 @@ public class ChargerServiceImpl implements ChargerService {
                     
                     // 若有設置首次啟用日期，且首次交易時間為空，嘗試自動從歷史交易紀錄回填
                     if (charger.getFirstTransactionTime() == null && chargerInfo.getFirstEnableDate() != null) {
-                        String minTime = chargerInfo.getFirstEnableDate().trim();
-                        if (minTime.length() == 10) {
-                            minTime += " 00:00:00";
-                        }
+                        String minTime = convertEnableDateToUtc(chargerInfo.getFirstEnableDate());
                         String firstTx = chargeRepository.findFirstTransactionTime(
                                 charger.getChargerId(), charger.getConnectId(), minTime);
                         if (firstTx != null && !firstTx.isEmpty()) {

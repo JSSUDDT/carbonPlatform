@@ -53,4 +53,10 @@ yarn-error.log
 
 # System Files
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# Office Documents & Temporary files
+*.docx
+*.pptx
+~$*
+test_results.json 

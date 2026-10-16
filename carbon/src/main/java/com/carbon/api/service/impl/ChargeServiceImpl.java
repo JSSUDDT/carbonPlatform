@@ -18,9 +18,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class ChargeServiceImpl implements ChargeService {
@@ -40,6 +45,72 @@ public class ChargeServiceImpl implements ChargeService {
     private AuthorizationService authorizationService;
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    private static final Set<String> UTC8_VENDORS = new HashSet<>(Arrays.asList("linbros"));
+
+    /**
+     * 判斷廠商是否上傳 UTC+8 (台灣時間)
+     */
+    private boolean isUtc8Vendor(String vendorId) {
+        if (vendorId == null) {
+            return false;
+        }
+        return UTC8_VENDORS.contains(vendorId.trim().toLowerCase());
+    }
+
+    /**
+     * 將特定業者（如 linbros）傳入的 UTC+8 時間正規化為 UTC+0 儲存
+     * 1. 若為 19 碼 (yyyy-MM-dd HH:mm:ss)，減 8 小時轉為 UTC+0
+     * 2. 若為 10 碼 (yyyy-MM-dd)，補 00:00:00 視為台灣營業日 00:00:00 並減 8 小時轉為 UTC+0 (前一日 16:00:00)
+     */
+    private String normalizeToUtcZero(String vendorId, String timeStr) {
+        if (!StringUtils.hasText(timeStr)) {
+            return timeStr;
+        }
+        if (!isUtc8Vendor(vendorId)) {
+            return timeStr.trim();
+        }
+
+        String trimmed = timeStr.trim();
+        try {
+            if (trimmed.length() == 19) {
+                LocalDateTime localDt = LocalDateTime.parse(trimmed, formatter);
+                ZonedDateTime taipeiZoned = localDt.atZone(ZoneId.of("Asia/Taipei"));
+                ZonedDateTime utcZoned = taipeiZoned.withZoneSameInstant(ZoneId.of("UTC"));
+                return utcZoned.format(formatter);
+            } else if (trimmed.length() == 10) {
+                LocalDateTime localDt = LocalDateTime.parse(trimmed + " 00:00:00", formatter);
+                ZonedDateTime taipeiZoned = localDt.atZone(ZoneId.of("Asia/Taipei"));
+                ZonedDateTime utcZoned = taipeiZoned.withZoneSameInstant(ZoneId.of("UTC"));
+                return utcZoned.format(formatter);
+            }
+        } catch (Exception e) {
+            logger.warn("無法解析業者 {} 時間字串: {}，保留原值", vendorId, timeStr);
+        }
+        return trimmed;
+    }
+
+    /**
+     * 將首次啟用日期 (yyyy-MM-dd) 視為台北時間 00:00:00，轉為 UTC+0 比較基準
+     * 例如：2026-01-01 -> 2025-12-31 16:00:00 UTC
+     */
+    private String convertEnableDateToUtc(String enableDate) {
+        if (!StringUtils.hasText(enableDate)) {
+            return null;
+        }
+        String trimmed = enableDate.trim();
+        try {
+            if (trimmed.length() == 10) {
+                trimmed += " 00:00:00";
+            }
+            LocalDateTime localDt = LocalDateTime.parse(trimmed, formatter);
+            ZonedDateTime taipeiZoned = localDt.atZone(ZoneId.of("Asia/Taipei"));
+            ZonedDateTime utcZoned = taipeiZoned.withZoneSameInstant(ZoneId.of("UTC"));
+            return utcZoned.format(formatter);
+        } catch (Exception e) {
+            return enableDate;
+        }
+    }
 
     @Override
     @Transactional
@@ -139,8 +210,9 @@ public class ChargeServiceImpl implements ChargeService {
                 charge.setInvoiceDate(transInfo.getInvoiceDate());
                 charge.setCarbonCredit(transInfo.getCarbonCredit());
                 
-                charge.setStartTime(transInfo.getStartTime());
-                charge.setEndTime(transInfo.getEndTime());
+                // 時間正規化：若業者傳送 UTC+8 (台灣時間)，自動換算為 UTC+0 儲存
+                charge.setStartTime(normalizeToUtcZero(request.getVendorId(), transInfo.getStartTime()));
+                charge.setEndTime(normalizeToUtcZero(request.getVendorId(), transInfo.getEndTime()));
                 charge.setKwh(transInfo.getKwh());
                 charge.setCarType(transInfo.getCarType());
                 charge.setCarTonnage(transInfo.getCarTonnage());
@@ -168,21 +240,18 @@ public class ChargeServiceImpl implements ChargeService {
 
     /**
      * 自動判定並更新充電樁槍頭的首次交易時間
-     * 規則：交易時間必須大於等於 firstEnableDate (00:00:00)
+     * 規則：交易時間必須大於等於 firstEnableDate (00:00:00 台北時間對應之 UTC 時間)
      */
     private void updateChargerFirstTransactionTime(CarbonCharger charger, String transStartTime) {
         if (charger == null || !StringUtils.hasText(transStartTime)) {
             return;
         }
 
-        // 檢查是否大於等於首次啟用日期
+        // 檢查是否大於等於首次啟用日期 (轉為 UTC 比較基準)
         String enableDate = charger.getFirstEnableDate();
         if (StringUtils.hasText(enableDate)) {
-            String minTime = enableDate.trim();
-            if (minTime.length() == 10) {
-                minTime += " 00:00:00";
-            }
-            if (transStartTime.compareTo(minTime) < 0) {
+            String minTime = convertEnableDateToUtc(enableDate);
+            if (minTime != null && transStartTime.compareTo(minTime) < 0) {
                 // 交易時間早於啟用日期，不視為有效首筆交易
                 return;
             }

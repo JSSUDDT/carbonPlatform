@@ -217,14 +217,11 @@ public class DataSyncServiceImpl implements DataSyncService {
                 return;
             }
 
-            // 檢查是否大於等於首次啟用日期
+            // 檢查是否大於等於首次啟用日期 (以台北時間 00:00:00 對應之 UTC 時間比較)
             String enableDate = charger.getFirstEnableDate();
             if (enableDate != null && !enableDate.trim().isEmpty()) {
-                String minTime = enableDate.trim();
-                if (minTime.length() == 10) {
-                    minTime += " 00:00:00";
-                }
-                if (transStartTime.compareTo(minTime) < 0) {
+                String minTime = convertEnableDateToUtc(enableDate);
+                if (minTime != null && transStartTime.compareTo(minTime) < 0) {
                     return;
                 }
             }
@@ -243,6 +240,29 @@ public class DataSyncServiceImpl implements DataSyncService {
             }
         } catch (Exception e) {
             log.warn("Failed to auto-update charger firstTransactionTime: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 將首次啟用日期 (yyyy-MM-dd) 視為台北時間 00:00:00，轉為 UTC+0 比較基準
+     * 例如：2026-01-01 -> 2025-12-31 16:00:00 UTC
+     */
+    private String convertEnableDateToUtc(String enableDate) {
+        if (enableDate == null || enableDate.trim().isEmpty()) {
+            return null;
+        }
+        String trimmed = enableDate.trim();
+        try {
+            if (trimmed.length() == 10) {
+                trimmed += " 00:00:00";
+            }
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            LocalDateTime localDt = LocalDateTime.parse(trimmed, dtf);
+            java.time.ZonedDateTime taipeiZoned = localDt.atZone(java.time.ZoneId.of("Asia/Taipei"));
+            java.time.ZonedDateTime utcZoned = taipeiZoned.withZoneSameInstant(java.time.ZoneId.of("UTC"));
+            return utcZoned.format(dtf);
+        } catch (Exception e) {
+            return enableDate;
         }
     }
     
