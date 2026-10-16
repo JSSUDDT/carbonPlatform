@@ -88,9 +88,10 @@ public class ChargeServiceImpl implements ChargeService {
                     return new ResultResponse("0003", "No permission to operate on another vendor's station: " + transInfo.getStationId());
                 }
                 
+                CarbonCharger charger = null;
                 // Check if charger and connector exist
                 if (StringUtils.hasText(transInfo.getConnectId())) {
-                    CarbonCharger charger = chargerRepository.findByChargerIdAndConnectId(
+                    charger = chargerRepository.findByChargerIdAndConnectId(
                             transInfo.getChargerId(), transInfo.getConnectId());
                     
                     if (charger == null) {
@@ -149,6 +150,9 @@ public class ChargeServiceImpl implements ChargeService {
                 
                 // Save
                 chargeRepository.save(charge);
+
+                // 自動更新該槍的首次交易時間 (以 firstEnableDate 起算)
+                updateChargerFirstTransactionTime(charger, charge.getStartTime());
                 
                 logger.debug("Transaction record saved successfully, transNo: {}, customerId: {}, carbonCredit: {}", 
                         transInfo.getTransNo(), transInfo.getCustomerId(), transInfo.getCarbonCredit());
@@ -159,6 +163,44 @@ public class ChargeServiceImpl implements ChargeService {
         } catch (Exception e) {
             logger.error("Error occurred when updating charge information", e);
             return ResultResponse.fail();
+        }
+    }
+
+    /**
+     * 自動判定並更新充電樁槍頭的首次交易時間
+     * 規則：交易時間必須大於等於 firstEnableDate (00:00:00)
+     */
+    private void updateChargerFirstTransactionTime(CarbonCharger charger, String transStartTime) {
+        if (charger == null || !StringUtils.hasText(transStartTime)) {
+            return;
+        }
+
+        // 檢查是否大於等於首次啟用日期
+        String enableDate = charger.getFirstEnableDate();
+        if (StringUtils.hasText(enableDate)) {
+            String minTime = enableDate.trim();
+            if (minTime.length() == 10) {
+                minTime += " 00:00:00";
+            }
+            if (transStartTime.compareTo(minTime) < 0) {
+                // 交易時間早於啟用日期，不視為有效首筆交易
+                return;
+            }
+        }
+
+        String currentFirstTx = charger.getFirstTransactionTime();
+        if (!StringUtils.hasText(currentFirstTx)) {
+            charger.setFirstTransactionTime(transStartTime);
+            charger.setUpdateTime(LocalDateTime.now().format(formatter));
+            chargerRepository.save(charger);
+            logger.info("Auto set firstTransactionTime for charger {} connect {}: {}", 
+                    charger.getChargerId(), charger.getConnectId(), transStartTime);
+        } else if (transStartTime.compareTo(currentFirstTx) < 0) {
+            charger.setFirstTransactionTime(transStartTime);
+            charger.setUpdateTime(LocalDateTime.now().format(formatter));
+            chargerRepository.save(charger);
+            logger.info("Calibrated earlier firstTransactionTime for charger {} connect {}: {} -> {}", 
+                    charger.getChargerId(), charger.getConnectId(), currentFirstTx, transStartTime);
         }
     }
 

@@ -79,4 +79,17 @@ public interface ChargeRepository extends JpaRepository<CarbonCharge, Long> {
      * 根據場站ID和startTime範圍查詢充電交易（管理員使用）
      */
     List<CarbonCharge> findByStationIdAndStartTimeBetween(String stationId, String startTimeFrom, String startTimeTo);
+
+    /**
+     * 查詢指定充電樁槍頭在啟用日期起算的第一筆交易時間
+     */
+    @org.springframework.data.jpa.repository.Query(
+        value = "SELECT MIN(c.start_time) FROM carbon_charge c WHERE c.charger_id = :chargerId AND c.connect_id = :connectId AND c.start_time >= :minStartTime", 
+        nativeQuery = true
+    )
+    String findFirstTransactionTime(
+        @org.springframework.data.repository.query.Param("chargerId") String chargerId, 
+        @org.springframework.data.repository.query.Param("connectId") String connectId, 
+        @org.springframework.data.repository.query.Param("minStartTime") String minStartTime
+    );
 } 

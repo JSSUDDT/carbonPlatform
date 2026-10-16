@@ -5,6 +5,7 @@ import com.carbon.api.dto.ResultResponse;
 import com.carbon.api.entity.CarbonCharger;
 import com.carbon.api.entity.CarbonStation;
 import com.carbon.api.repository.ChargerRepository;
+import com.carbon.api.repository.ChargeRepository;
 import com.carbon.api.repository.StationRepository;
 import com.carbon.api.service.AuthorizationService;
 import com.carbon.api.service.ChargerService;
@@ -29,6 +30,9 @@ public class ChargerServiceImpl implements ChargerService {
     
     @Autowired
     private ChargerRepository chargerRepository;
+
+    @Autowired
+    private ChargeRepository chargeRepository;
 
     @Autowired
     private StationRepository stationRepository;
@@ -172,6 +176,22 @@ public class ChargerServiceImpl implements ChargerService {
                     charger.setChargerA(chargerInfo.getChargerA());
                     charger.setChargerV(chargerInfo.getChargerV());
                     charger.setFirstEnableDate(chargerInfo.getFirstEnableDate());
+                    
+                    // 若有設置首次啟用日期，且首次交易時間為空，嘗試自動從歷史交易紀錄回填
+                    if (charger.getFirstTransactionTime() == null && chargerInfo.getFirstEnableDate() != null) {
+                        String minTime = chargerInfo.getFirstEnableDate().trim();
+                        if (minTime.length() == 10) {
+                            minTime += " 00:00:00";
+                        }
+                        String firstTx = chargeRepository.findFirstTransactionTime(
+                                charger.getChargerId(), charger.getConnectId(), minTime);
+                        if (firstTx != null && !firstTx.isEmpty()) {
+                            charger.setFirstTransactionTime(firstTx);
+                            logger.info("Auto populated firstTransactionTime from history for charger {} connect {}: {}", 
+                                    charger.getChargerId(), charger.getConnectId(), firstTx);
+                        }
+                    }
+
                     charger.setUpdateTime(LocalDateTime.now().format(formatter));
                     
                     // 保存充電樁和充電槍頭

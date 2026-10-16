@@ -32,6 +32,9 @@ public class DataSyncServiceImpl implements DataSyncService {
     
     @Autowired
     private ChargeRepository chargeRepository;
+
+    @Autowired
+    private com.carbon.api.repository.ChargerRepository chargerRepository;
     
     // 外部數據查詢SQL
     private static final String EXTERNAL_QUERY = 
@@ -191,12 +194,55 @@ public class DataSyncServiceImpl implements DataSyncService {
             
             // 保存到數據庫
             chargeRepository.save(charge);
+            updateChargerFirstTransactionTime(charge.getChargerId(), charge.getConnectId(), charge.getStartTime());
             log.debug("Successfully synced transaction record: {}", transNo);
             return true;
             
         } catch (Exception e) {
             log.error("Failed to sync transaction record: {}", data, e);
             return false;
+        }
+    }
+
+    /**
+     * 同步過程中自動判定並更新充電樁槍頭的首次交易時間
+     */
+    private void updateChargerFirstTransactionTime(String chargerId, String connectId, String transStartTime) {
+        try {
+            if (chargerId == null || connectId == null || transStartTime == null) {
+                return;
+            }
+            com.carbon.api.entity.CarbonCharger charger = chargerRepository.findByChargerIdAndConnectId(chargerId, connectId);
+            if (charger == null) {
+                return;
+            }
+
+            // 檢查是否大於等於首次啟用日期
+            String enableDate = charger.getFirstEnableDate();
+            if (enableDate != null && !enableDate.trim().isEmpty()) {
+                String minTime = enableDate.trim();
+                if (minTime.length() == 10) {
+                    minTime += " 00:00:00";
+                }
+                if (transStartTime.compareTo(minTime) < 0) {
+                    return;
+                }
+            }
+
+            String currentFirstTx = charger.getFirstTransactionTime();
+            if (currentFirstTx == null || currentFirstTx.trim().isEmpty()) {
+                charger.setFirstTransactionTime(transStartTime);
+                charger.setUpdateTime(formatDateTime(LocalDateTime.now()));
+                chargerRepository.save(charger);
+                log.info("Auto set firstTransactionTime during sync for charger {} connect {}: {}", chargerId, connectId, transStartTime);
+            } else if (transStartTime.compareTo(currentFirstTx) < 0) {
+                charger.setFirstTransactionTime(transStartTime);
+                charger.setUpdateTime(formatDateTime(LocalDateTime.now()));
+                chargerRepository.save(charger);
+                log.info("Calibrated earlier firstTransactionTime during sync for charger {} connect {}: {} -> {}", chargerId, connectId, currentFirstTx, transStartTime);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to auto-update charger firstTransactionTime: {}", e.getMessage());
         }
     }
     
