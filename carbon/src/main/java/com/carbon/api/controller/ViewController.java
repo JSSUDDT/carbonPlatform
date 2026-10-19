@@ -113,11 +113,11 @@ public class ViewController {
     }
     
     /**
-     * 使用手冊頁面
+     * 使用手冊頁面 (暫時隱藏，重定向至充電記錄頁面)
      */
     @GetMapping({"/USER_GUIDE", "/USER_GUIDE.html"})
     public String userGuide() {
-        return "USER_GUIDE";
+        return "redirect:/transactions.html";
     }
     
     /**
