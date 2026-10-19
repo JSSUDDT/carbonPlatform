@@ -539,38 +539,30 @@
                 if (response) {
                     let filteredTransactions = Array.isArray(response) ? response : [];
                     
-                    // 調試信息：顯示加載到的數據
-                    console.log('加載到的交易數據:', filteredTransactions);
-                    if (filteredTransactions.length > 0) {
-                        console.log('第一筆交易的時間字段:');
-                        console.log('  startTime:', filteredTransactions[0].startTime);
-                        console.log('  endTime:', filteredTransactions[0].endTime);
-                        console.log('  createTime:', filteredTransactions[0].createTime);
-                        console.log('  invoiceDate:', filteredTransactions[0].invoiceDate);
+                    // 建立 stationId -> station 對象映射，避免迴圈內 O(N) 重複尋找
+                    const stationMap = new Map();
+                    if (Array.isArray(stations)) {
+                        stations.forEach(s => {
+                            if (s && s.stationId) {
+                                stationMap.set(s.stationId, s);
+                            }
+                        });
                     }
                     
                     // 前端搜索過濾
                     if (search) {
                         const searchLower = search.toLowerCase();
                         filteredTransactions = filteredTransactions.filter(transaction => {
-                            // 獲取充電站名稱
-                            let stationName = '';
-                            const stationInfo = stations.find(station => station.stationId === transaction.stationId);
-                            if (stationInfo && stationInfo.stationName) {
-                                stationName = stationInfo.stationName;
-                            }
+                            const stationInfo = stationMap.get(transaction.stationId);
+                            const stationName = (stationInfo && stationInfo.stationName) ? stationInfo.stationName : '';
                             
                             // 遍歷對象的所有屬性進行搜索
                             return Object.entries(transaction).some(([key, value]) => {
-                                // 確保值存在且轉換為字符串
                                 if (value == null) return false;
-                                
-                                // 如果是stationId，則同時搜索充電站名稱
                                 if (key === 'stationId') {
                                     return String(value).toLowerCase().includes(searchLower) || 
                                            stationName.toLowerCase().includes(searchLower);
                                 }
-                                
                                 return String(value).toLowerCase().includes(searchLower);
                             });
                         });
@@ -581,12 +573,9 @@
                     const selectedCountry = countryFilter ? countryFilter.value : '';
                     if (selectedCountry) {
                         filteredTransactions = filteredTransactions.filter(transaction => {
-                            // 根據交易記錄的 stationId 找到對應的充電站
-                            const stationInfo = stations.find(station => station.stationId === transaction.stationId);
-                            if (stationInfo && stationInfo.country) {
-                                return stationInfo.country.toUpperCase() === selectedCountry;
-                            }
-                            return false;
+                            const stationInfo = stationMap.get(transaction.stationId);
+                            return stationInfo && stationInfo.country && 
+                                   stationInfo.country.toUpperCase() === selectedCountry;
                         });
                     }
                     
@@ -621,53 +610,49 @@
                 return;
             }
             
+            // 建立 stationId -> stationName 快取 Map，避免每次迴圈 O(N) 線性搜尋
+            const stationMap = new Map();
+            if (Array.isArray(stations)) {
+                stations.forEach(s => {
+                    if (s && s.stationId) {
+                        stationMap.set(s.stationId, s.stationName || s.stationId);
+                    }
+                });
+            }
+            
+            // 批量構建 HTML 字串，避免 2,000+ 次直接操作 DOM 引起的頻繁重繪
+            let htmlBuffer = '';
             transactions.forEach(transaction => {
-                const row = document.createElement('tr');
-                
-                // 根據充電站ID查找充電站名稱
-                let stationName = transaction.stationId || '';
-                const stationInfo = stations.find(station => station.stationId === transaction.stationId);
-                if (stationInfo && stationInfo.stationName) {
-                    stationName = stationInfo.stationName;
-                }
-                
-                // 設置單元格內容
+                const stationName = stationMap.get(transaction.stationId) || transaction.stationId || '';
                 const originalStartTime = transaction.startTime || '';
                 const originalEndTime = transaction.endTime || '';
                 const originalCreateTime = transaction.createTime || '';
                 
                 const convertedStartTime = convertToLocalTime(originalStartTime);
                 const convertedEndTime = convertToLocalTime(originalEndTime);
-                // 上傳時間已經是UTC+8，不需要轉換
                 const convertedCreateTime = originalCreateTime;
                 
-                // 調試信息
-                if (originalStartTime && convertedStartTime !== originalStartTime) {
-                    console.log(`開始時間轉換: ${originalStartTime} -> ${convertedStartTime}`);
-                }
-                if (originalEndTime && convertedEndTime !== originalEndTime) {
-                    console.log(`結束時間轉換: ${originalEndTime} -> ${convertedEndTime}`);
-                }
-                
-                row.innerHTML = `
-                    <td>${transaction.transNo || ''}</td>
-                    <td>${transaction.vendorId || ''}</td>
-                    <td>${transaction.stationId || ''}</td>
-                    <td>${stationName}</td>
-                    <td>${transaction.chargerId || ''}</td>
-                    <td>${transaction.connectId || ''}</td>
-                    <td>${transaction.invoiceNo || ''}</td>
-                    <td>${transaction.customerId || ''}</td>
-                    <td>${transaction.invoiceDate || ''}</td>
-                    <td>${convertedStartTime}</td>
-                    <td>${convertedEndTime}</td>
-                    <td>${transaction.kwh || ''}</td>
-                    <td>${transaction.carNo || ''}</td>
-                    <td>${convertedCreateTime}</td>
+                htmlBuffer += `
+                    <tr>
+                        <td>${transaction.transNo || ''}</td>
+                        <td>${transaction.vendorId || ''}</td>
+                        <td>${transaction.stationId || ''}</td>
+                        <td>${stationName}</td>
+                        <td>${transaction.chargerId || ''}</td>
+                        <td>${transaction.connectId || ''}</td>
+                        <td>${transaction.invoiceNo || ''}</td>
+                        <td>${transaction.customerId || ''}</td>
+                        <td>${transaction.invoiceDate || ''}</td>
+                        <td>${convertedStartTime}</td>
+                        <td>${convertedEndTime}</td>
+                        <td>${transaction.kwh || ''}</td>
+                        <td>${transaction.carNo || ''}</td>
+                        <td>${convertedCreateTime}</td>
+                    </tr>
                 `;
-                
-                tableBody.appendChild(row);
             });
+            
+            tableBody.innerHTML = htmlBuffer;
             
             if (dataTable) {
                 dataTable.rows.add($(tableBody).find('tr')).draw();
@@ -689,44 +674,28 @@
             document.getElementById('totalKwh').textContent = totalKwh.toFixed(2);
         }
         
-        
         // 將UTC+0時間轉換為UTC+8時間
         function convertToLocalTime(utcTimeString) {
-            console.log('開始時間轉換，輸入:', utcTimeString);
-            
-            if (!utcTimeString || utcTimeString.trim() === '') {
-                console.log('時間字符串為空，返回空字符串');
+            if (!utcTimeString || typeof utcTimeString !== 'string' || utcTimeString.trim() === '') {
                 return '';
             }
             
             try {
-                // 檢查時間格式是否包含時區信息
                 let timeString = utcTimeString.trim();
-                console.log('處理後的時間字符串:', timeString);
                 
                 // 如果時間字符串不包含時區信息，假設為UTC時間
                 if (!timeString.includes('Z') && !timeString.includes('+') && !timeString.includes('-')) {
-                    // 添加UTC時區標識
                     timeString = timeString + 'Z';
-                    console.log('添加UTC標識後:', timeString);
                 }
                 
-                // 創建Date對象
                 const utcDate = new Date(timeString);
-                console.log('創建的Date對象:', utcDate);
-                
-                // 檢查是否為有效日期
                 if (isNaN(utcDate.getTime())) {
-                    console.warn('無法解析時間:', utcTimeString);
-                    return utcTimeString; // 如果解析失敗，返回原始字符串
+                    return utcTimeString;
                 }
                 
                 // 轉換為台灣時間（UTC+8）
-                // 獲取UTC時間的毫秒數，然後加上8小時
                 const taiwanTime = new Date(utcDate.getTime() + (8 * 60 * 60 * 1000));
-                console.log('轉換後的台灣時間:', taiwanTime);
                 
-                // 格式化為易讀的字符串
                 const year = taiwanTime.getFullYear();
                 const month = String(taiwanTime.getMonth() + 1).padStart(2, '0');
                 const day = String(taiwanTime.getDate()).padStart(2, '0');
@@ -734,13 +703,9 @@
                 const minutes = String(taiwanTime.getMinutes()).padStart(2, '0');
                 const seconds = String(taiwanTime.getSeconds()).padStart(2, '0');
                 
-                const result = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-                console.log(`時間轉換完成: ${utcTimeString} (UTC+0) -> ${result} (UTC+8)`);
-                
-                return result;
+                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
             } catch (error) {
-                console.warn('時間轉換失敗:', utcTimeString, error);
-                return utcTimeString; // 如果轉換失敗，返回原始字符串
+                return utcTimeString;
             }
         }
         
@@ -894,13 +859,16 @@
         
         // 準備匯出資料
         function prepareExportData() {
+            const stationMap = new Map();
+            if (Array.isArray(stations)) {
+                stations.forEach(s => {
+                    if (s && s.stationId) {
+                        stationMap.set(s.stationId, s.stationName || s.stationId);
+                    }
+                });
+            }
             return transactions.map(t => {
-                // 查找充電站名稱
-                let stationName = t.stationId || '';
-                const stationInfo = stations.find(s => s.stationId === t.stationId);
-                if (stationInfo && stationInfo.stationName) {
-                    stationName = stationInfo.stationName;
-                }
+                const stationName = stationMap.get(t.stationId) || t.stationId || '';
                 
                 return [
                     t.transNo || '',
