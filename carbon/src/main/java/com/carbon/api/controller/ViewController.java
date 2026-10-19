@@ -96,11 +96,11 @@ public class ViewController {
     }
     
     /**
-     * 充電站電力頁面
+     * 充電站電力頁面 (暫時隱藏，重定向至充電站管理頁面)
      */
     @GetMapping({"/stationpower", "/stationpower.html"})
     public String stationPower() {
-        return "stationpower";
+        return "redirect:/stations.html";
     }
     
     /**
