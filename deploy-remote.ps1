@@ -117,7 +117,7 @@ function Invoke-RemoteSCP {
     }
     $cmdArgs += @($LocalFile, "$($TargetEnv.User)@$($TargetEnv.Host):$RemoteFile")
 
-    & $Pscp @cmdArgs
+    & $Pscp @cmdArgs | Out-Host
     return $LASTEXITCODE
 }
 
@@ -206,7 +206,7 @@ if ($TailLog) {
 # ==================== 停止服務 ====================
 if ($StopOnly) {
     Write-Host ">>> 正在停止遠端 Carbon 服務..." -ForegroundColor Yellow
-    $stopCmd = "pkill -f '\[c\]arbon-0.0.1-SNAPSHOT.jar' || sudo pkill -f '\[c\]arbon-0.0.1-SNAPSHOT.jar' || true; sleep 2; pkill -9 -f '\[c\]arbon-0.0.1-SNAPSHOT.jar' || sudo pkill -9 -f '\[c\]arbon-0.0.1-SNAPSHOT.jar' || true; echo '服務已停止'"
+    $stopCmd = "pkill -f 'carbon-0.0.1-SNAPSHOT.jar' || sudo pkill -f 'carbon-0.0.1-SNAPSHOT.jar' || true; sleep 2; pkill -9 -f 'carbon-0.0.1-SNAPSHOT.jar' || sudo pkill -9 -f 'carbon-0.0.1-SNAPSHOT.jar' || true; echo '服務已停止'"
     Invoke-RemoteSSH $CurrentEnv $stopCmd
     exit 0
 }
@@ -214,11 +214,11 @@ if ($StopOnly) {
 # ==================== 僅重啟服務 ====================
 if ($RestartOnly) {
     Write-Host ">>> [1/3] 正在停止既有服務..." -ForegroundColor Yellow
-    $stopCmd = "pkill -f '\[c\]arbon-0.0.1-SNAPSHOT.jar' || sudo pkill -f '\[c\]arbon-0.0.1-SNAPSHOT.jar' || true; sleep 2; pkill -9 -f '\[c\]arbon-0.0.1-SNAPSHOT.jar' || sudo pkill -9 -f '\[c\]arbon-0.0.1-SNAPSHOT.jar' || true"
+    $stopCmd = "pkill -f 'carbon-0.0.1-SNAPSHOT.jar' || sudo pkill -f 'carbon-0.0.1-SNAPSHOT.jar' || true; sleep 2; pkill -9 -f 'carbon-0.0.1-SNAPSHOT.jar' || sudo pkill -9 -f 'carbon-0.0.1-SNAPSHOT.jar' || true"
     Invoke-RemoteSSH $CurrentEnv $stopCmd
 
     Write-Host ">>> [2/3] 正在背景啟動服務 (Profile: $($CurrentEnv.Profile), 時區: Asia/Taipei)..." -ForegroundColor Yellow
-    $startCmd = "cd $($CurrentEnv.RemoteDir) && nohup java -Duser.timezone=Asia/Taipei -jar carbon-0.0.1-SNAPSHOT.jar --spring.profiles.active=$($CurrentEnv.Profile) > logs/console.log 2>&1 &"
+    $startCmd = "cd $($CurrentEnv.RemoteDir) && nohup java -Duser.timezone=Asia/Taipei -jar carbon-0.0.1-SNAPSHOT.jar --spring.profiles.active=$($CurrentEnv.Profile) </dev/null > logs/console.log 2>&1 &"
     Invoke-RemoteSSH $CurrentEnv $startCmd
 
     Write-Host ">>> [3/3] 正在驗證服務就緒狀態 (最多等待 30 秒)..." -ForegroundColor Yellow
@@ -355,7 +355,7 @@ Invoke-RemoteSSH $CurrentEnv "mv -f $tempRemoteJar $($CurrentEnv.RemoteDir)/carb
 
 # ==================== 步驟 4: 停止舊進程並重啟服務 ====================
 Write-Host "`n>>> [步驟 4/5] 正在重啟遠端服務..." -ForegroundColor Yellow
-$restartCmd = "pkill -f '\[c\]arbon-0.0.1-SNAPSHOT.jar' || sudo pkill -f '\[c\]arbon-0.0.1-SNAPSHOT.jar' || true; sleep 2; pkill -9 -f '\[c\]arbon-0.0.1-SNAPSHOT.jar' || sudo pkill -9 -f '\[c\]arbon-0.0.1-SNAPSHOT.jar' || true; cd $($CurrentEnv.RemoteDir) && nohup java -Duser.timezone=Asia/Taipei -jar carbon-0.0.1-SNAPSHOT.jar --spring.profiles.active=$($CurrentEnv.Profile) > logs/console.log 2>&1 &"
+$restartCmd = "pkill -f 'carbon-0.0.1-SNAPSHOT.jar' || sudo pkill -f 'carbon-0.0.1-SNAPSHOT.jar' || true; sleep 2; pkill -9 -f 'carbon-0.0.1-SNAPSHOT.jar' || sudo pkill -9 -f 'carbon-0.0.1-SNAPSHOT.jar' || true; cd $($CurrentEnv.RemoteDir) && nohup java -Duser.timezone=Asia/Taipei -jar carbon-0.0.1-SNAPSHOT.jar --spring.profiles.active=$($CurrentEnv.Profile) </dev/null > logs/console.log 2>&1 &"
 Invoke-RemoteSSH $CurrentEnv $restartCmd
 
 # ==================== 步驟 5: 驗證服務健康狀態 ====================
