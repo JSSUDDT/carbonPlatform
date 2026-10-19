@@ -195,6 +195,13 @@ async function login(vendorId, password) {
         return { success: true };
     }
     
+    if (response && response.resultCode === '0003') {
+        const disabledMsg = (typeof getI18nMessage === 'function') 
+            ? getI18nMessage('login.disabled', '該廠商帳號已被停用，請聯絡系統管理員')
+            : '該廠商帳號已被停用，請聯絡系統管理員';
+        return { success: false, message: disabledMsg };
+    }
+    
     return { success: false, message: '登錄失敗，請檢查您的用戶名和密碼' };
 }
 

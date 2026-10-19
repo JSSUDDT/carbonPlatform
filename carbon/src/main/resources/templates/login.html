@@ -442,7 +442,7 @@
                         window.location.href = '/carbon/transactions.html';
                     }, 1000);
                 } else {
-                    showError(getI18nMessage('login.failed', '登錄失敗，請檢查您的用戶名和密碼'));
+                    showError(result.message || getI18nMessage('login.failed', '登錄失敗，請檢查您的用戶名和密碼'));
                 }
             });
         });
@@ -459,6 +459,7 @@
         <span data-i18n="login.error.empty" th:text="#{login.error.empty}">請輸入廠商ID和密碼</span>
         <span data-i18n="login.success" th:text="#{login.success}">登錄成功，正在跳轉...</span>
         <span data-i18n="login.failed" th:text="#{login.failed}">登錄失敗，請檢查您的用戶名和密碼</span>
+        <span data-i18n="login.disabled" th:text="#{login.disabled}">該廠商帳號已被停用，請聯絡系統管理員</span>
     </div>
 </body>
 </html> 

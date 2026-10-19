@@ -29,6 +29,15 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         
         String currentVendorId = getCurrentVendorId();
         boolean hasAccess = currentVendorId != null && currentVendorId.equals(vendorId);
+        
+        if (hasAccess) {
+            CarbonVendor vendor = vendorRepository.findByVendorId(currentVendorId);
+            if (vendor != null && !"1".equals(vendor.getStatus())) {
+                logger.warn("廠商帳號已被停用 (status={})，拒絕訪問資源: vendorId={}", vendor.getStatus(), currentVendorId);
+                return false;
+            }
+        }
+        
         logger.debug("User {} attempting to access vendor {} resources, authorization result: {}", currentVendorId, vendorId, hasAccess);
         return hasAccess;
     }

@@ -13,12 +13,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
 public class VendorServiceImpl implements VendorService {
+
+    private static final Logger logger = LoggerFactory.getLogger(VendorServiceImpl.class);
 
     @Autowired
     private VendorRepository vendorRepository;
@@ -36,6 +41,11 @@ public class VendorServiceImpl implements VendorService {
         CarbonVendor vendor = vendorRepository.findByVendorId(request.getVendorId());
         
         if (vendor != null && passwordEncoder.matches(request.getPassword(), vendor.getPassword())) {
+            // 檢查廠商帳號狀態是否啟用 (1: 啟用, 0: 停用)
+            if (!"1".equals(vendor.getStatus())) {
+                logger.warn("廠商帳號非啟用狀態，拒絕發放 Token: vendorId={}, status={}", request.getVendorId(), vendor.getStatus());
+                return new TokenResponse(null, "0003");
+            }
             String token = jwtTokenProvider.generateToken(vendor.getVendorId(), vendor.getRole());
             return new TokenResponse(token, "0000");
         }
