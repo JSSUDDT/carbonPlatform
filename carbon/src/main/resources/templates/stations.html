@@ -436,13 +436,12 @@
             // 將國家代碼轉換為陣列並排序
             const countries = Array.from(countrySet).sort();
             
-            // 填充下拉框
+            // 填充下拉框（批量生成 HTML，減少 DOM 操作）
+            const options = [`<option value="">${allCountriesText}</option>`];
             countries.forEach(countryCode => {
-                const option = document.createElement('option');
-                option.value = countryCode;
-                option.textContent = getCountryName(countryCode, currentLang);
-                countryFilter.appendChild(option);
+                options.push(`<option value="${countryCode}">${getCountryName(countryCode, currentLang)}</option>`);
             });
+            countryFilter.innerHTML = options.join('');
             
             // 恢復之前選中的國家
             if (currentSelectedCountry) {
@@ -464,8 +463,6 @@
             if (currentLang === 'en') {
                 languageUrl = '/carbon/js/datatables/i18n/English.json';
             }
-            
-            console.log('Initializing DataTable with role:', currentUserRole);
             
             // 根據用戶角色決定是否顯示操作列
             let columns = [
@@ -513,7 +510,6 @@
             
             // 如果是管理員，添加操作列
             if (currentUserRole === 'ROLE_ADMIN') {
-                console.log('Adding action column for admin');
                 columns.push({
                     data: null,
                     orderable: false,
@@ -542,7 +538,6 @@
                 pageLength: 10,
                 order: [0, 'asc'],
                 drawCallback: function() {
-                    console.log('DataTable draw callback, role:', currentUserRole);
                     // 綁定編輯按鈕事件
                     $('.edit-btn').off('click').on('click', function() {
                         const stationId = $(this).data('station-id');
@@ -563,25 +558,17 @@
         async function checkUserRole() {
             try {
                 const response = await apiRequest('/UserRole');
-                console.log('UserRole response:', response);
-                
                 if (response && response.resultMsg) {
                     currentUserRole = response.resultMsg;
-                    console.log('Current user role:', currentUserRole);
-                    
                     // 如果是管理員，顯示管理功能
                     if (currentUserRole === 'ROLE_ADMIN') {
-                        console.log('Showing admin features');
                         $('#addStationBtn').show();
                         $('#actionsHeader').show();
                         await loadVendors(); // 加載廠商列表
                     } else {
-                        console.log('Hiding admin features');
                         $('#addStationBtn').hide();
                         $('#actionsHeader').hide();
                     }
-                } else {
-                    console.log('Invalid role response:', response);
                 }
             } catch (error) {
                 console.error('檢查用戶角色失敗:', error);
@@ -593,16 +580,15 @@
         async function loadVendors() {
             try {
                 const response = await apiRequest('/VendorInfo');
-                
                 if (response) {
                     vendors = Array.isArray(response) ? response : [];
                     
-                    // 填充廠商下拉選單
-                    const vendorSelect = $('#vendorId');
-                    vendorSelect.empty().append(`<option value="">${translate('Please select vendor')}</option>`);
+                    // 填充廠商下拉選單（批量生成 HTML，減少 DOM 操作）
+                    const options = [`<option value="">${translate('Please select vendor')}</option>`];
                     vendors.forEach(vendor => {
-                        vendorSelect.append(`<option value="${vendor.vendorId}">${vendor.vendorId}</option>`);
+                        options.push(`<option value="${vendor.vendorId}">${vendor.vendorId}</option>`);
                     });
+                    $('#vendorId').html(options.join(''));
                 }
             } catch (error) {
                 console.error('加載廠商列表失敗:', error);
@@ -850,22 +836,17 @@
         
         // 頁面初始化
         $(document).ready(async function() {
-            console.log('Page initialization started'); // 添加日誌
-            
             // 檢查認證
             if (!isAuthenticated()) {
-                console.log('User not authenticated, redirecting to login'); // 添加日誌
                 window.location.href = '/login';
                 return;
             }
             
             // 檢查用戶角色
             await checkUserRole();
-            console.log('User role check completed, role:', currentUserRole); // 添加日誌
             
             // 加載充電站數據
             await loadStations();
-            console.log('Stations loaded'); // 添加日誌
 
             // 搜索框事件監聽
             $('#searchInput').on('keyup', function() {
@@ -903,7 +884,6 @@
             
             // 確保管理員功能正確顯示
             if (currentUserRole === 'ROLE_ADMIN') {
-                console.log('Ensuring admin features are visible'); // 添加日誌
                 $('#addStationBtn').show();
                 $('#actionsHeader').show();
             }

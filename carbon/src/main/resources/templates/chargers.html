@@ -335,6 +335,7 @@
         let dataTable;
         let chargers = [];
         let stations = [];
+        let stationMap = new Map();
         let vendors = [];
         let currentUserRole = null;
         let isEditMode = false;
@@ -386,7 +387,7 @@
             return countryCode;
         }
         
-        // 填充國家篩選下拉框（從充電站數據中提取）
+        // 填充國家篩選下拉框（從充電站數據中提取，批量構建 DOM）
         function populateCountryFilter() {
             const countryFilter = document.getElementById('countryFilter');
             const currentLang = getCurrentLanguage();
@@ -401,9 +402,9 @@
                     allCountriesText = currentLang === 'en' ? 'All Countries' : '全部國家';
                 }
             }
-            countryFilter.innerHTML = `<option value="">${allCountriesText}</option>`;
             
             if (stations.length === 0) {
+                countryFilter.innerHTML = `<option value="">${allCountriesText}</option>`;
                 return;
             }
             
@@ -418,13 +419,12 @@
             // 將國家代碼轉換為陣列並排序
             const countries = Array.from(countrySet).sort();
             
-            // 填充下拉框
+            // 填充下拉框（批量字串拼接，減少 DOM 操作）
+            const options = [`<option value="">${allCountriesText}</option>`];
             countries.forEach(countryCode => {
-                const option = document.createElement('option');
-                option.value = countryCode;
-                option.textContent = getCountryName(countryCode, currentLang);
-                countryFilter.appendChild(option);
+                options.push(`<option value="${countryCode}">${getCountryName(countryCode, currentLang)}</option>`);
             });
+            countryFilter.innerHTML = options.join('');
         }
         
         // 初始化DataTable
@@ -441,8 +441,6 @@
             if (currentLang === 'en') {
                 languageUrl = '/carbon/js/datatables/i18n/English.json';
             }
-            
-            console.log('Initializing DataTable with role:', currentUserRole);
             
             // 根據用戶角色決定是否顯示操作列
             let columns = [
@@ -482,7 +480,6 @@
             
             // 如果是管理員，添加操作列
             if (currentUserRole === 'ROLE_ADMIN') {
-                console.log('Adding action column for admin');
                 columns.push({
                     data: null,
                     orderable: false,
@@ -511,7 +508,6 @@
                 pageLength: 10,
                 order: [0, 'asc'],
                 drawCallback: function() {
-                    console.log('DataTable draw callback, role:', currentUserRole);
                     // 綁定編輯按鈕事件
                     $('.edit-btn').off('click').on('click', function() {
                         const chargerId = $(this).data('charger-id');
@@ -532,25 +528,16 @@
         async function checkUserRole() {
             try {
                 const response = await apiRequest('/UserRole');
-                console.log('UserRole response:', response);
-                
                 if (response && response.resultMsg) {
                     currentUserRole = response.resultMsg;
-                    console.log('Current user role:', currentUserRole);
-                    
                     // 如果是管理員，顯示管理功能
                     if (currentUserRole === 'ROLE_ADMIN') {
-                        console.log('Showing admin features');
                         $('#addChargerBtn').show();
                         $('#actionsHeader').show();
-                        await loadStations(); // 加載充電站列表
                     } else {
-                        console.log('Hiding admin features');
                         $('#addChargerBtn').hide();
                         $('#actionsHeader').hide();
                     }
-                } else {
-                    console.log('Invalid role response:', response);
                 }
             } catch (error) {
                 console.error('檢查用戶角色失敗:', error);
@@ -562,16 +549,17 @@
         async function loadStations() {
             try {
                 const response = await apiRequest('/StationInfo');
-                
                 if (response) {
                     stations = Array.isArray(response) ? response : [];
+                    stationMap.clear();
                     
-                    // 填充充電站下拉選單
-                    const stationSelect = $('#stationFilter');
-                    stationSelect.empty().append(`<option value="">${translate('All Stations')}</option>`);
+                    // 填充充電站下拉選單（批量生成 HTML，減少 DOM 操作）
+                    const options = [`<option value="">${translate('All Stations')}</option>`];
                     stations.forEach(station => {
-                        stationSelect.append(`<option value="${station.stationId}">${station.stationId}</option>`);
+                        stationMap.set(station.stationId, station);
+                        options.push(`<option value="${station.stationId}">${station.stationId}</option>`);
                     });
+                    $('#stationFilter').html(options.join(''));
                     
                     // 填充國家篩選下拉框
                     populateCountryFilter();
@@ -616,17 +604,13 @@
                 if (response) {
                     let allChargers = Array.isArray(response) ? response : [];
                     
-                    // 國家篩選（前端過濾，通過充電站的國家）
+                    // 國家篩選（前端過濾，使用 Map O(1) 查找）
                     const countryFilter = document.getElementById('countryFilter');
                     const selectedCountry = countryFilter ? countryFilter.value : '';
                     if (selectedCountry) {
                         chargers = allChargers.filter(charger => {
-                            // 根據充電樁的 stationId 找到對應的充電站
-                            const stationInfo = stations.find(station => station.stationId === charger.stationId);
-                            if (stationInfo && stationInfo.country) {
-                                return stationInfo.country.toUpperCase() === selectedCountry;
-                            }
-                            return false;
+                            const stationInfo = stationMap.get(charger.stationId);
+                            return stationInfo && stationInfo.country && stationInfo.country.toUpperCase() === selectedCountry;
                         });
                     } else {
                         chargers = allChargers;
@@ -651,11 +635,11 @@
                 const response = await apiRequest('/VendorInfo');
                 if (response) {
                     vendors = Array.isArray(response) ? response : [];
-                    const vendorSelect = $('#vendorId');
-                    vendorSelect.empty().append(`<option value="">${translate('Please select vendor')}</option>`);
+                    const options = [`<option value="">${translate('Please select vendor')}</option>`];
                     vendors.forEach(vendor => {
-                        vendorSelect.append(`<option value="${vendor.vendorId}">${vendor.vendorId}</option>`);
+                        options.push(`<option value="${vendor.vendorId}">${vendor.vendorId}</option>`);
                     });
+                    $('#vendorId').html(options.join(''));
                 }
             } catch (error) {
                 console.error('加載廠商列表失敗:', error);
@@ -665,16 +649,20 @@
         // 加載充電站列表（用於表單）
         async function loadStationsForForm() {
             try {
-                const response = await apiRequest('/StationInfo');
-                if (response) {
-                    stations = Array.isArray(response) ? response : [];
-                    const stationSelect = $('#stationId');
-                    stationSelect.empty().append(`<option value="">${translate('Please select station')}</option>`);
-                    stations.forEach(station => {
-                        const display = station.stationName ? `${station.stationName}（${station.stationId}）` : station.stationId;
-                        stationSelect.append(`<option value="${station.stationId}">${display}</option>`);
-                    });
+                if (!stations || stations.length === 0) {
+                    const response = await apiRequest('/StationInfo');
+                    if (response) {
+                        stations = Array.isArray(response) ? response : [];
+                        stationMap.clear();
+                        stations.forEach(station => stationMap.set(station.stationId, station));
+                    }
                 }
+                const options = [`<option value="">${translate('Please select station')}</option>`];
+                stations.forEach(station => {
+                    const display = station.stationName ? `${station.stationName}（${station.stationId}）` : station.stationId;
+                    options.push(`<option value="${station.stationId}">${display}</option>`);
+                });
+                $('#stationId').html(options.join(''));
             } catch (error) {
                 console.error('加載充電站列表失敗:', error);
             }
@@ -843,22 +831,20 @@
         
         // 頁面初始化
         $(document).ready(async function() {
-            console.log('Page initialization started'); // 添加日誌
-            
             // 檢查認證
             if (!isAuthenticated()) {
-                console.log('User not authenticated, redirecting to login'); // 添加日誌
                 window.location.href = '/login';
                 return;
             }
             
             // 檢查用戶角色
             await checkUserRole();
-            console.log('User role check completed, role:', currentUserRole); // 添加日誌
             
+            // 預先載入充電站資料（用於下拉選單、國家篩選與 O(1) 查找快取）
+            await loadStations();
+
             // 加載充電樁數據
             await loadChargers();
-            console.log('Chargers loaded'); // 添加日誌
 
             // 搜索框事件監聽
             $('#searchInput').on('keyup', function() {
@@ -893,7 +879,6 @@
 
             // 確保管理員功能正確顯示
             if (currentUserRole === 'ROLE_ADMIN') {
-                console.log('Ensuring admin features are visible'); // 添加日誌
                 $('#addChargerBtn').show();
                 $('#actionsHeader').show();
             }
