@@ -25,6 +25,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -161,7 +163,6 @@ public class OfflineOnboardingServiceImpl implements OfflineOnboardingService {
         String[] sheetGuides = {
             "■ Sheet 1【1_業者帳號】(對應 API-101)",
             "  • 僅需填寫 1 列資料。包含「業者代碼 (vendorId)」與「預設登入密碼 (password)」。",
-            "  • 匯入時系統會自動加密存入資料庫，並設定為業者權限 (ROLE_USER)。",
             "",
             "■ Sheet 2【2_充電站資訊】(對應 API-102)",
             "  • 一個充電站據點填寫 1 列。包含場站代碼、名稱與 GPS 經緯度（經緯度為官方必填，供國際碳權查驗與地圖定位使用）。",
@@ -383,8 +384,13 @@ public class OfflineOnboardingServiceImpl implements OfflineOnboardingService {
                 break; // 取第一筆非範例業者帳號
             }
 
-            if (!StringUtils.hasText(targetVendorId) || !StringUtils.hasText(rawPassword)) {
-                return new ResultResponse("0001", "Sheet 1【1_業者帳號】未填寫有效之業者代碼 (vendorId) 或密碼 (password)");
+            if (!StringUtils.hasText(targetVendorId)) {
+                return new ResultResponse("0001", "Sheet 1【1_業者帳號】未填寫有效之業者代碼 (vendorId)");
+            }
+
+            // 業者帳號格式檢核：限英數字、減號、底線、點、@，長度 3 ~ 50 字元
+            if (!targetVendorId.matches("^[a-zA-Z0-9._@\\-]{3,50}$")) {
+                return new ResultResponse("0001", "Sheet 1【1_業者帳號】業者代碼 [" + targetVendorId + "] 格式無效（限3~50字元之英數字、減號、底線、小數點或Email格式，且不可包含空格或特殊符號）");
             }
 
             // 權限檢查：僅系統管理員 (ROLE_ADMIN) 具備離線建置與匯入權限，普通業者 (ROLE_USER) 不允許上傳/匯入
@@ -397,6 +403,10 @@ public class OfflineOnboardingServiceImpl implements OfflineOnboardingService {
             boolean vendorCreated = false;
             CarbonVendor vendor = vendorRepository.findByVendorId(targetVendorId);
             if (vendor == null) {
+                // 新建業者帳號防呆：密碼必須非空、非範例，且長度 >= 6
+                if (!StringUtils.hasText(rawPassword) || isSampleOrEmpty(rawPassword) || rawPassword.length() < 6) {
+                    return new ResultResponse("0001", "Sheet 1【1_業者帳號】新業者預設密碼長度至少需6位數，且不可使用範例密碼");
+                }
                 vendor = new CarbonVendor();
                 vendor.setVendorId(targetVendorId);
                 vendor.setPassword(passwordEncoder.encode(rawPassword));
@@ -408,7 +418,7 @@ public class OfflineOnboardingServiceImpl implements OfflineOnboardingService {
                 vendorCreated = true;
                 logger.info("Created new vendor account from offline import: {}", targetVendorId);
             } else {
-                logger.info("Vendor account already exists: {}, will bind records to it", targetVendorId);
+                logger.info("Vendor account already exists: {}, will keep existing password and bind records to it", targetVendorId);
             }
 
             // =========================================================
@@ -417,6 +427,7 @@ public class OfflineOnboardingServiceImpl implements OfflineOnboardingService {
             int stationsCreated = 0;
             int stationsExisting = 0;
             Map<String, CarbonStation> stationCache = new HashMap<>();
+            Set<String> seenStationIdsInExcel = new HashSet<>();
 
             for (int r = 1; r <= sStation.getLastRowNum(); r++) {
                 Row row = sStation.getRow(r);
@@ -428,14 +439,50 @@ public class OfflineOnboardingServiceImpl implements OfflineOnboardingService {
 
                 if (isSampleOrEmpty(stId)) continue;
 
-                CarbonStation station = stationRepository.findByStationId(stId);
+                // 工作表內重復站點檢核
+                if (seenStationIdsInExcel.contains(stId)) {
+                    return new ResultResponse("0001", "Sheet 2【2_充電站資訊】第 " + (r + 1) + " 列：場站代碼 [" + stId + "] 在工作表中重複定義");
+                }
+                seenStationIdsInExcel.add(stId);
+
+                // 場站代碼長度檢查
+                if (stId.length() > 50) {
+                    return new ResultResponse("0001", "Sheet 2【2_充電站資訊】第 " + (r + 1) + " 列：場站代碼 [" + stId + "] 長度超出50字元上限");
+                }
+
+                // GPS 經緯度檢核 (必填，浮點數，緯度 -90~90，經度 -180~180)
+                if (!StringUtils.hasText(lat) || !StringUtils.hasText(lng)) {
+                    return new ResultResponse("0001", "Sheet 2【2_充電站資訊】第 " + (r + 1) + " 列：場站 [" + stId + "] GPS緯度與經度為必填欄位");
+                }
+                double latVal;
+                try {
+                    latVal = Double.parseDouble(lat);
+                } catch (Exception e) {
+                    return new ResultResponse("0001", "Sheet 2【2_充電站資訊】第 " + (r + 1) + " 列：場站 [" + stId + "] GPS緯度非合法數值格式: " + lat);
+                }
+                if (latVal < -90.0 || latVal > 90.0) {
+                    return new ResultResponse("0001", "Sheet 2【2_充電站資訊】第 " + (r + 1) + " 列：場站 [" + stId + "] GPS緯度超出合理範圍 (-90 ~ +90): " + latVal);
+                }
+
+                double lngVal;
+                try {
+                    lngVal = Double.parseDouble(lng);
+                } catch (Exception e) {
+                    return new ResultResponse("0001", "Sheet 2【2_充電站資訊】第 " + (r + 1) + " 列：場站 [" + stId + "] GPS經度非合法數值格式: " + lng);
+                }
+                if (lngVal < -180.0 || lngVal > 180.0) {
+                    return new ResultResponse("0001", "Sheet 2【2_充電站資訊】第 " + (r + 1) + " 列：場站 [" + stId + "] GPS經度超出合理範圍 (-180 ~ +180): " + lngVal);
+                }
+
+                // 根據 (targetVendorId, stId) 判斷場站是否存在（支援不同業者取相同 stationId）
+                CarbonStation station = stationRepository.findByVendorIdAndStationId(targetVendorId, stId);
                 if (station == null) {
                     station = new CarbonStation();
-                    station.setStationId(stId);
                     station.setVendorId(targetVendorId);
+                    station.setStationId(stId);
                     station.setStationName(StringUtils.hasText(stName) ? stName : stId);
-                    station.setGpsLatitude(lat);
-                    station.setGpsLongitude(lng);
+                    station.setGpsLatitude(String.valueOf(latVal));
+                    station.setGpsLongitude(String.valueOf(lngVal));
                     station.setStationStatus("1");
                     station.setCountry("TW");
                     station.setStorageEnable("0");
@@ -456,6 +503,9 @@ public class OfflineOnboardingServiceImpl implements OfflineOnboardingService {
             int chargersCreated = 0;
             int chargersExisting = 0;
             Map<String, CarbonCharger> chargerCache = new HashMap<>();
+            Set<String> seenChargerGunsInExcel = new HashSet<>();
+            LocalDate today = LocalDate.now(ZoneId.of("Asia/Taipei"));
+            LocalDate minEnableDate = LocalDate.of(2010, 1, 1);
 
             for (int r = 1; r <= sCharger.getLastRowNum(); r++) {
                 Row row = sCharger.getRow(r);
@@ -465,22 +515,65 @@ public class OfflineOnboardingServiceImpl implements OfflineOnboardingService {
                 String conId = cleanCell(df.formatCellValue(row.getCell(2)));
                 String enableDate = cleanCell(df.formatCellValue(row.getCell(3)));
 
-                if (isSampleOrEmpty(stId) || isSampleOrEmpty(chId) || !StringUtils.hasText(conId)) continue;
+                if (isSampleOrEmpty(stId) || isSampleOrEmpty(chId)) continue;
+
                 if (!StringUtils.hasText(stId)) {
                     // 若無填寫 stationId，嘗試綁定唯一存在的站
                     if (stationCache.size() == 1) {
                         stId = stationCache.keySet().iterator().next();
+                    } else {
+                        return new ResultResponse("0001", "Sheet 3【3_充電槍資訊】第 " + (r + 1) + " 列：未填寫所屬場站代碼 (stationId)");
                     }
                 }
 
-                CarbonCharger charger = chargerRepository.findByChargerIdAndConnectId(chId, conId);
+                // 檢核場站從屬（防幽靈場站）
+                if (!stationCache.containsKey(stId)) {
+                    CarbonStation dbStation = stationRepository.findByVendorIdAndStationId(targetVendorId, stId);
+                    if (dbStation == null) {
+                        return new ResultResponse("0001", "Sheet 3【3_充電槍資訊】第 " + (r + 1) + " 列：指定之場站代碼 [" + stId + "] 不存在於 Sheet 2 亦未在資料庫中");
+                    }
+                    stationCache.put(stId, dbStation);
+                }
+
+                if (!StringUtils.hasText(chId) || chId.length() > 50) {
+                    return new ResultResponse("0001", "Sheet 3【3_充電槍資訊】第 " + (r + 1) + " 列：充電樁序號 (chargerId) 不得為空且長度限 50 字元以內");
+                }
+
+                // 槍頭序號檢核：必須為正整數 (1, 2, 3...)
+                if (!StringUtils.hasText(conId) || !conId.matches("^[1-9]\\d{0,3}$")) {
+                    return new ResultResponse("0001", "Sheet 3【3_充電槍資訊】第 " + (r + 1) + " 列：充電槍序號 (connectId) [" + conId + "] 格式無效，必須為正整數 (如 1, 2)");
+                }
+
+                // 同場站下不可有重複的 (chId, conId)
+                String chargerGunKey = stId + "#" + chId + "#" + conId;
+                if (seenChargerGunsInExcel.contains(chargerGunKey)) {
+                    return new ResultResponse("0001", "Sheet 3【3_充電槍資訊】第 " + (r + 1) + " 列：充電槍 [" + chId + " - 槍 " + conId + "] 於同場站重複定義");
+                }
+                seenChargerGunsInExcel.add(chargerGunKey);
+
+                // 首次啟用日期 (firstEnableDate) 檢核：格式 YYYY-MM-DD，合理性 2010-01-01 <= 日期 <= 今天+1天
+                if (!StringUtils.hasText(enableDate)) {
+                    return new ResultResponse("0001", "Sheet 3【3_充電槍資訊】第 " + (r + 1) + " 列：首次啟用時間 (firstEnableDate) 不可留空");
+                }
+                LocalDate parsedEnableDate;
+                try {
+                    parsedEnableDate = LocalDate.parse(enableDate);
+                } catch (Exception e) {
+                    return new ResultResponse("0001", "Sheet 3【3_充電槍資訊】第 " + (r + 1) + " 列：首次啟用時間 [" + enableDate + "] 格式無效，需為 YYYY-MM-DD (例如 2025-01-01)");
+                }
+                if (parsedEnableDate.isBefore(minEnableDate) || parsedEnableDate.isAfter(today.plusDays(1))) {
+                    return new ResultResponse("0001", "Sheet 3【3_充電槍資訊】第 " + (r + 1) + " 列：首次啟用時間 [" + enableDate + "] 超出合理範圍（需介於 2010 年至今日）");
+                }
+
+                // 查詢既有充電槍（依 vendorId + stationId + chargerId + connectId 查找）
+                CarbonCharger charger = chargerRepository.findByVendorIdAndStationIdAndChargerIdAndConnectId(targetVendorId, stId, chId, conId);
                 if (charger == null) {
                     charger = new CarbonCharger();
+                    charger.setVendorId(targetVendorId);
+                    charger.setStationId(stId);
                     charger.setChargerId(chId);
                     charger.setConnectId(conId);
-                    charger.setStationId(stId);
-                    charger.setVendorId(targetVendorId);
-                    charger.setFirstEnableDate(StringUtils.hasText(enableDate) ? enableDate : now.substring(0, 10));
+                    charger.setFirstEnableDate(enableDate);
                     charger.setChargerStatus("1");
                     charger.setCreateTime(now);
                     charger.setUpdateTime(now);
@@ -489,7 +582,7 @@ public class OfflineOnboardingServiceImpl implements OfflineOnboardingService {
                 } else {
                     chargersExisting++;
                 }
-                chargerCache.put(chId + "_" + conId, charger);
+                chargerCache.put(chargerGunKey, charger);
             }
 
             // =========================================================
@@ -500,6 +593,8 @@ public class OfflineOnboardingServiceImpl implements OfflineOnboardingService {
             int transSkipped0006 = 0;
             List<String> errorLines = new ArrayList<>();
             List<CarbonCharge> newCharges = new ArrayList<>();
+            Set<String> seenTransNoInExcel = new HashSet<>();
+            LocalDateTime nowTaipei = LocalDateTime.now(ZoneId.of("Asia/Taipei"));
 
             for (int r = 1; r <= sTrans.getLastRowNum(); r++) {
                 Row row = sTrans.getRow(r);
@@ -515,31 +610,99 @@ public class OfflineOnboardingServiceImpl implements OfflineOnboardingService {
                 if (isSampleOrEmpty(transNo) || isSampleOrEmpty(stId) || isSampleOrEmpty(chId)) continue;
                 transTotal++;
 
-                // 防重檢核 (0006)
+                // 必填欄位完整性檢查
+                if (!StringUtils.hasText(transNo) || !StringUtils.hasText(stId) || !StringUtils.hasText(chId) || 
+                    !StringUtils.hasText(conId) || !StringUtils.hasText(startTime) || !StringUtils.hasText(endTime) || !StringUtils.hasText(kwh)) {
+                    errorLines.add("第 " + (r + 1) + " 列 [單號 " + (StringUtils.hasText(transNo) ? transNo : "空") + "]：必填欄位不完整");
+                    continue;
+                }
+
+                // Excel 工作表內交易序號去重
+                if (seenTransNoInExcel.contains(transNo)) {
+                    errorLines.add("第 " + (r + 1) + " 列 [單號 " + transNo + "]：Excel 表內交易單號重複");
+                    continue;
+                }
+                seenTransNoInExcel.add(transNo);
+
+                // 資料庫防重檢核 (代碼 0006)
                 CarbonCharge existingCharge = chargeRepository.findByTransNo(transNo);
                 if (existingCharge != null) {
                     transSkipped0006++;
                     continue;
                 }
 
-                // 檢核必填欄位
-                if (!StringUtils.hasText(stId) || !StringUtils.hasText(chId) || !StringUtils.hasText(conId) ||
-                    !StringUtils.hasText(startTime) || !StringUtils.hasText(endTime) || !StringUtils.hasText(kwh)) {
-                    errorLines.add("第 " + (r + 1) + " 列：交易單號 [" + transNo + "] 必填欄位不完整");
+                // 設備存在性檢核（防幽靈槍/幽靈站交易）
+                String gunKey = stId + "#" + chId + "#" + conId;
+                CarbonCharger targetCharger = chargerCache.get(gunKey);
+                if (targetCharger == null) {
+                    targetCharger = chargerRepository.findByVendorIdAndStationIdAndChargerIdAndConnectId(targetVendorId, stId, chId, conId);
+                    if (targetCharger == null) {
+                        errorLines.add("第 " + (r + 1) + " 列 [單號 " + transNo + "]：對應充電設備不存在 (" + stId + " / " + chId + " / 槍 " + conId + ")");
+                        continue;
+                    }
+                    chargerCache.put(gunKey, targetCharger);
+                }
+
+                // 時間合法性檢核
+                LocalDateTime sDt, eDt;
+                try {
+                    sDt = LocalDateTime.parse(startTime, formatter);
+                    eDt = LocalDateTime.parse(endTime, formatter);
+                } catch (Exception e) {
+                    errorLines.add("第 " + (r + 1) + " 列 [單號 " + transNo + "]：時間格式錯誤 (需為 YYYY-MM-DD HH:mm:ss)");
                     continue;
                 }
 
-                // 檢核度數
-                try {
-                    double kwhVal = Double.parseDouble(kwh);
-                    if (kwhVal <= 0) {
-                        errorLines.add("第 " + (r + 1) + " 列：交易單號 [" + transNo + "] 度數小於等於 0");
-                        continue;
-                    }
-                } catch (Exception e) {
-                    errorLines.add("第 " + (r + 1) + " 列：交易單號 [" + transNo + "] 度數數值格式無效");
+                // 開始時間必須早於結束時間
+                if (!sDt.isBefore(eDt)) {
+                    errorLines.add("第 " + (r + 1) + " 列 [單號 " + transNo + "]：開始時間 (" + startTime + ") 必須早於結束時間 (" + endTime + ")");
                     continue;
                 }
+
+                // 開始時間不得為未來時間（允許 1 小時誤差緩衝）
+                if (sDt.isAfter(nowTaipei.plusHours(1))) {
+                    errorLines.add("第 " + (r + 1) + " 列 [單號 " + transNo + "]：開始時間不可為未來時間 (" + startTime + ")");
+                    continue;
+                }
+
+                // 充電時長物理極限防呆 (<= 72 小時)
+                long durationMinutes = Duration.between(sDt, eDt).toMinutes();
+                if (durationMinutes > 72 * 60) {
+                    errorLines.add("第 " + (r + 1) + " 列 [單號 " + transNo + "]：充電時長 (" + (durationMinutes / 60) + "小時) 超出合理極限 72 小時");
+                    continue;
+                }
+
+                // 充電時間必須大於等於設備首次啟用日期
+                String enableDateStr = targetCharger.getFirstEnableDate();
+                if (StringUtils.hasText(enableDateStr)) {
+                    try {
+                        LocalDate enableDate = LocalDate.parse(enableDateStr);
+                        if (sDt.toLocalDate().isBefore(enableDate)) {
+                            errorLines.add("第 " + (r + 1) + " 列 [單號 " + transNo + "]：交易日期 (" + sDt.toLocalDate() + ") 早於設備首次啟用日期 (" + enableDateStr + ")");
+                            continue;
+                        }
+                    } catch (Exception ignored) {}
+                }
+
+                // 充電度數檢核 (必須大於 0 且 <= 1000 kWh 物理極限上限)
+                double kwhVal;
+                try {
+                    kwhVal = Double.parseDouble(kwh);
+                } catch (Exception e) {
+                    errorLines.add("第 " + (r + 1) + " 列 [單號 " + transNo + "]：充電度數數值格式無效: " + kwh);
+                    continue;
+                }
+                if (kwhVal <= 0.0) {
+                    errorLines.add("第 " + (r + 1) + " 列 [單號 " + transNo + "]：充電度數必須大於 0 (" + kwh + ")");
+                    continue;
+                }
+                if (kwhVal > 1000.0) {
+                    errorLines.add("第 " + (r + 1) + " 列 [單號 " + transNo + "]：充電度數超出合理上限 1000 kWh (" + kwh + ")");
+                    continue;
+                }
+
+                // 格式化充電度數保留兩位小數
+                String normalizedKwh = String.format(Locale.US, "%.2f", kwhVal);
 
                 CarbonCharge charge = new CarbonCharge();
                 charge.setTransNo(transNo);
@@ -549,13 +712,16 @@ public class OfflineOnboardingServiceImpl implements OfflineOnboardingService {
                 charge.setConnectId(conId);
                 charge.setStartTime(convertToUtcZero(startTime));
                 charge.setEndTime(convertToUtcZero(endTime));
-                charge.setKwh(kwh);
+                charge.setKwh(normalizedKwh);
                 charge.setCarbonCredit("1"); // 預設同意碳權
                 charge.setCreateTime(now);
                 charge.setUpdateTime(now);
 
                 newCharges.add(charge);
                 transInserted++;
+
+                // 自動校準充電槍頭之首次交易時間 (firstTransactionTime)
+                updateChargerFirstTransactionTime(targetCharger, charge.getStartTime());
 
                 // 批量持久化 (每 500 筆寫入一次)
                 if (newCharges.size() >= 500) {
@@ -579,13 +745,29 @@ public class OfflineOnboardingServiceImpl implements OfflineOnboardingService {
             summary.append("• 充電交易：成功寫入 ").append(transInserted).append(" 筆，重複略過 (0006) ").append(transSkipped0006).append(" 筆");
 
             if (!errorLines.isEmpty()) {
-                summary.append("\n• 異常略過：").append(errorLines.size()).append(" 筆（前3筆：")
-                       .append(String.join("; ", errorLines.subList(0, Math.min(3, errorLines.size()))))
+                summary.append("\n• 異常略過：").append(errorLines.size()).append(" 筆（前5筆：")
+                       .append(String.join("; ", errorLines.subList(0, Math.min(5, errorLines.size()))))
                        .append("）");
             }
 
             logger.info("Offline onboarding summary: {}", summary.toString());
             return new ResultResponse("0000", summary.toString());
+        }
+    }
+
+    private void updateChargerFirstTransactionTime(CarbonCharger charger, String transStartTime) {
+        if (charger == null || transStartTime == null) return;
+        try {
+            String currentFirstTx = charger.getFirstTransactionTime();
+            if (!StringUtils.hasText(currentFirstTx)) {
+                charger.setFirstTransactionTime(transStartTime);
+                chargerRepository.save(charger);
+            } else if (transStartTime.compareTo(currentFirstTx) < 0) {
+                charger.setFirstTransactionTime(transStartTime);
+                chargerRepository.save(charger);
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to auto-update charger firstTransactionTime: {}", e.getMessage());
         }
     }
 

@@ -418,14 +418,16 @@ public class VendorController {
     public ResponseEntity<?> getStationInfoById(@PathVariable String stationId) {
         logger.debug("Received request to get station information by ID: {}", stationId);
         
-        CarbonStation station = stationService.getStationInfoById(stationId);
-        
-        if (station == null) {
-            return ResponseEntity.notFound().build();
-        }
-        
         // 檢查是否有管理員權限
         boolean isAdmin = authorizationService.isCurrentUserAdmin();
+        String currentVendorId = authorizationService.getCurrentVendorId();
+        
+        CarbonStation station;
+        if (!isAdmin && currentVendorId != null) {
+            station = stationService.getStationInfoByVendorIdAndStationId(currentVendorId, stationId);
+        } else {
+            station = stationService.getStationInfoById(stationId);
+        }
         
         // 如果是普通用戶，則只能查看自己的充電站
         if (!isAdmin && !authorizationService.hasAccessToVendor(station.getVendorId())) {

@@ -30,6 +30,15 @@ public interface StationService {
      * @return 充電站信息，如果不存在則返回null
      */
     CarbonStation getStationInfoById(String stationId);
+
+    /**
+     * 根據廠商ID與充電站ID獲取充電站信息
+     *
+     * @param vendorId 廠商ID
+     * @param stationId 充電站ID
+     * @return 充電站信息，若不存在則返回null
+     */
+    CarbonStation getStationInfoByVendorIdAndStationId(String vendorId, String stationId);
     
     /**
      * 獲取充電站信息，並支持搜索和狀態篩選

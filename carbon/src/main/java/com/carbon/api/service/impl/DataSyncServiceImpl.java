@@ -194,7 +194,7 @@ public class DataSyncServiceImpl implements DataSyncService {
             
             // 保存到數據庫
             chargeRepository.save(charge);
-            updateChargerFirstTransactionTime(charge.getChargerId(), charge.getConnectId(), charge.getStartTime());
+            updateChargerFirstTransactionTime(charge.getVendorId(), charge.getStationId(), charge.getChargerId(), charge.getConnectId(), charge.getStartTime());
             log.debug("Successfully synced transaction record: {}", transNo);
             return true;
             
@@ -207,12 +207,12 @@ public class DataSyncServiceImpl implements DataSyncService {
     /**
      * 同步過程中自動判定並更新充電樁槍頭的首次交易時間
      */
-    private void updateChargerFirstTransactionTime(String chargerId, String connectId, String transStartTime) {
+    private void updateChargerFirstTransactionTime(String vendorId, String stationId, String chargerId, String connectId, String transStartTime) {
         try {
-            if (chargerId == null || connectId == null || transStartTime == null) {
+            if (vendorId == null || stationId == null || chargerId == null || connectId == null || transStartTime == null) {
                 return;
             }
-            com.carbon.api.entity.CarbonCharger charger = chargerRepository.findByChargerIdAndConnectId(chargerId, connectId);
+            com.carbon.api.entity.CarbonCharger charger = chargerRepository.findByVendorIdAndStationIdAndChargerIdAndConnectId(vendorId, stationId, chargerId, connectId);
             if (charger == null) {
                 return;
             }

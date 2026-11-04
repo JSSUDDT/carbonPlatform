@@ -1,5 +1,6 @@
 package com.carbon.api.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -9,11 +10,20 @@ import java.io.Serializable;
 @Data
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
 @IdClass(ConnectorPK.class)
 @Table(name = "carbon_charger")
 public class CarbonCharger implements Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    @Id
+    @Column(name = "vendor_id", nullable = false, length = 50)
+    private String vendorId;
+
+    @Id
+    @Column(name = "station_id", nullable = false, length = 50)
+    private String stationId;
 
     @Id
     @Column(name = "charger_id", length = 50)
@@ -22,12 +32,6 @@ public class CarbonCharger implements Serializable {
     @Id
     @Column(name = "connect_id", length = 50)
     private String connectId;
-
-    @Column(name = "station_id", nullable = false, length = 50)
-    private String stationId;
-
-    @Column(name = "vendor_id", nullable = false, length = 50)
-    private String vendorId;
 
     @Column(name = "charger_type", length = 10)
     private String chargerType;
@@ -68,4 +72,4 @@ public class CarbonCharger implements Serializable {
         this.vendorId = vendorId;
         this.stationId = stationId;
     }
-} 
+}

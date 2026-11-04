@@ -145,37 +145,23 @@ public class ChargeServiceImpl implements ChargeService {
                     continue;
                 }
                 
-                // Check if station exists
-                CarbonStation station = stationRepository.findByStationId(transInfo.getStationId());
+                // Check if station exists (vendor-scoped)
+                CarbonStation station = stationRepository.findByVendorIdAndStationId(request.getVendorId(), transInfo.getStationId());
                 if (station == null) {
-                    logger.error("Station does not exist, stationId: {}", transInfo.getStationId());
+                    logger.error("Station does not exist, vendorId: {}, stationId: {}", request.getVendorId(), transInfo.getStationId());
                     return new ResultResponse("0004", "Station does not exist: " + transInfo.getStationId());
                 }
                 
-                // Check if station belongs to requesting vendor or user is admin
-                if (!station.getVendorId().equals(request.getVendorId()) && !authorizationService.isCurrentUserAdmin()) {
-                    logger.error("Station does not belong to requesting vendor, requestVendorId: {}, stationVendorId: {}, stationId: {}", 
-                            request.getVendorId(), station.getVendorId(), transInfo.getStationId());
-                    return new ResultResponse("0003", "No permission to operate on another vendor's station: " + transInfo.getStationId());
-                }
-                
                 CarbonCharger charger = null;
-                // Check if charger and connector exist
+                // Check if charger and connector exist (vendor-scoped)
                 if (StringUtils.hasText(transInfo.getConnectId())) {
-                    charger = chargerRepository.findByChargerIdAndConnectId(
-                            transInfo.getChargerId(), transInfo.getConnectId());
+                    charger = chargerRepository.findByVendorIdAndStationIdAndChargerIdAndConnectId(
+                            request.getVendorId(), transInfo.getStationId(), transInfo.getChargerId(), transInfo.getConnectId());
                     
                     if (charger == null) {
-                        logger.error("Charger or connector does not exist, chargerId: {}, connectId: {}", 
-                                transInfo.getChargerId(), transInfo.getConnectId());
+                        logger.error("Charger or connector does not exist, vendorId: {}, stationId: {}, chargerId: {}, connectId: {}", 
+                                request.getVendorId(), transInfo.getStationId(), transInfo.getChargerId(), transInfo.getConnectId());
                         return new ResultResponse("0005", "Charger or connector does not exist");
-                    }
-                    
-                    // Check if charger belongs to requesting vendor or user is admin
-                    if (!charger.getVendorId().equals(request.getVendorId()) && !authorizationService.isCurrentUserAdmin()) {
-                        logger.error("Charger does not belong to requesting vendor, requestVendorId: {}, chargerVendorId: {}, chargerId: {}", 
-                                request.getVendorId(), charger.getVendorId(), transInfo.getChargerId());
-                        return new ResultResponse("0003", "No permission to operate on another vendor's charger: " + transInfo.getChargerId());
                     }
                 }
                 

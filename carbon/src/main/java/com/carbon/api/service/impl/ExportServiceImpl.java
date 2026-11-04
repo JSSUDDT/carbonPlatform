@@ -155,12 +155,13 @@ public class ExportServiceImpl implements ExportService {
     private Map<String, String> buildStationNameMap(List<CarbonCharge> charges) {
         Map<String, String> stationNameMap = new HashMap<>();
         charges.forEach(charge -> {
-            if (!stationNameMap.containsKey(charge.getStationId())) {
-                CarbonStation station = stationRepository.findByStationId(charge.getStationId());
+            String key = charge.getVendorId() + "_" + charge.getStationId();
+            if (!stationNameMap.containsKey(key)) {
+                CarbonStation station = stationRepository.findByVendorIdAndStationId(charge.getVendorId(), charge.getStationId());
                 if (station != null && station.getStationName() != null) {
-                    stationNameMap.put(charge.getStationId(), station.getStationName());
+                    stationNameMap.put(key, station.getStationName());
                 } else {
-                    stationNameMap.put(charge.getStationId(), charge.getStationId());
+                    stationNameMap.put(key, charge.getStationId());
                 }
             }
         });
@@ -215,7 +216,7 @@ public class ExportServiceImpl implements ExportService {
             Row row = sheet.createRow(rowNum++);
             int colNum = 0;
 
-            String stationName = stationNameMap.getOrDefault(charge.getStationId(), charge.getStationId());
+            String stationName = stationNameMap.getOrDefault(charge.getVendorId() + "_" + charge.getStationId(), charge.getStationId());
 
             Cell cell0 = row.createCell(colNum++);
             cell0.setCellValue(charge.getTransNo() != null ? charge.getTransNo() : "");

@@ -1,23 +1,29 @@
 package com.carbon.api.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.io.Serializable;
 
 @Data
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
+@IdClass(StationPK.class)
 @Table(name = "carbon_station")
 public class CarbonStation implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @Column(name = "station_id", length = 50)
-    private String stationId;
-
     @Column(name = "vendor_id", nullable = false, length = 50)
     private String vendorId;
+
+    @Id
+    @Column(name = "station_id", length = 50)
+    private String stationId;
 
     @Column(name = "station_name", length = 100)
     private String stationName;
@@ -54,4 +60,4 @@ public class CarbonStation implements Serializable {
     
     @Column(name = "update_time")
     private String updateTime;
-} 
+}

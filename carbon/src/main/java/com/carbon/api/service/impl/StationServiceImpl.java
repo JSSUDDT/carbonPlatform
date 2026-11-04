@@ -88,8 +88,8 @@ public class StationServiceImpl implements StationService {
                                 request.getVendorId(), stationInfo.getStationId());
                     }
                 } else if ("U".equals(updateStatus)) {
-                    // 新增或更新操作
-                    CarbonStation station = stationRepository.findByStationId(stationInfo.getStationId());
+                    // 新增或更新操作（以 vendorId + stationId 查找，允許不同業者取相同 stationId）
+                    CarbonStation station = stationRepository.findByVendorIdAndStationId(request.getVendorId(), stationInfo.getStationId());
                     
                     if (station == null) {
                         // 新增
@@ -97,12 +97,6 @@ public class StationServiceImpl implements StationService {
                         station = new CarbonStation();
                         station.setCreateTime(LocalDateTime.now().format(formatter));
                     } else {
-                        // 更新 - 確認該場站屬於請求的廠商
-                        if (!station.getVendorId().equals(request.getVendorId())) {
-                            logger.error("Attempt to update another vendor's station, requestVendorId: {}, stationVendorId: {}, stationId: {}", 
-                                    request.getVendorId(), station.getVendorId(), stationInfo.getStationId());
-                            return new ResultResponse("0003", "No permission to operate on another vendor's station: " + stationInfo.getStationId());
-                        }
                         logger.debug("Updating station, stationId: {}", stationInfo.getStationId());
                     }
                     
@@ -247,7 +241,14 @@ public class StationServiceImpl implements StationService {
     @Override
     public CarbonStation getStationInfoById(String stationId) {
         logger.debug("根據ID獲取充電站信息，stationId: {}", stationId);
-        return stationRepository.findByStationId(stationId);
+        List<CarbonStation> list = stationRepository.findByStationId(stationId);
+        return (list != null && !list.isEmpty()) ? list.get(0) : null;
+    }
+
+    @Override
+    public CarbonStation getStationInfoByVendorIdAndStationId(String vendorId, String stationId) {
+        logger.debug("根據VendorId和StationId獲取充電站信息，vendorId: {}, stationId: {}", vendorId, stationId);
+        return stationRepository.findByVendorIdAndStationId(vendorId, stationId);
     }
     
     /**

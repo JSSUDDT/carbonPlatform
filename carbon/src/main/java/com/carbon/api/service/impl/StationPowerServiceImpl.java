@@ -67,18 +67,11 @@ public class StationPowerServiceImpl implements StationPowerService {
                 return new ResultResponse("0001", "場站ID不能為空");
             }
             
-            // 檢查場站是否存在
-            CarbonStation station = stationRepository.findByStationId(request.getStationId());
+            // 檢查場站是否存在（依 vendorId + stationId 查找）
+            CarbonStation station = stationRepository.findByVendorIdAndStationId(request.getVendorId(), request.getStationId());
             if (station == null) {
-                logger.error("未找到對應場站 stationId: [{}]", request.getStationId());
+                logger.error("未找到對應場站 vendorId: [{}], stationId: [{}]", request.getVendorId(), request.getStationId());
                 return new ResultResponse("0004", "場站不存在: " + request.getStationId());
-            }
-            
-            // 檢查場站是否屬於請求的廠商
-            if (!station.getVendorId().equals(request.getVendorId()) && !authorizationService.isCurrentUserAdmin()) {
-                logger.error("場站不屬於請求的廠商, 請求廠商: [{}], 場站廠商: [{}], stationId: [{}]", 
-                        request.getVendorId(), station.getVendorId(), request.getStationId());
-                return new ResultResponse("0003", "無權操作其他廠商的場站: " + request.getStationId());
             }
             
             // 更新場站總負載

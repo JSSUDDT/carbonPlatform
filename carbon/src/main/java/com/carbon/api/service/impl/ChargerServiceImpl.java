@@ -106,15 +106,15 @@ public class ChargerServiceImpl implements ChargerService {
         List<CarbonStation> allStations = stationRepository.findAll();
         if (allStations != null) {
             for (CarbonStation s : allStations) {
-                if (s != null && s.getStationId() != null) {
-                    stationNameMap.put(s.getStationId(), s.getStationName());
+                if (s != null && s.getStationId() != null && s.getVendorId() != null) {
+                    stationNameMap.put(s.getVendorId() + "_" + s.getStationId(), s.getStationName());
                 }
             }
         }
         for (CarbonCharger charger : chargers) {
             if (charger != null) {
-                if (charger.getStationId() != null) {
-                    charger.setStationName(stationNameMap.get(charger.getStationId()));
+                if (charger.getStationId() != null && charger.getVendorId() != null) {
+                    charger.setStationName(stationNameMap.get(charger.getVendorId() + "_" + charger.getStationId()));
                 }
                 if (charger.getFirstTransactionTime() != null) {
                     charger.setFirstTransactionTime(convertToTaiwanTime(charger.getFirstTransactionTime()));
@@ -141,18 +141,11 @@ public class ChargerServiceImpl implements ChargerService {
             
             logger.debug("Received charger information update request, vendorId: {}, stationId: {}", request.getVendorId(), request.getStationId());
             
-            // 檢查場站是否存在
-            CarbonStation station = stationRepository.findByStationId(request.getStationId());
+            // 檢查場站是否存在（支援多業者相同 stationId）
+            CarbonStation station = stationRepository.findByVendorIdAndStationId(request.getVendorId(), request.getStationId());
             if (station == null) {
-                logger.error("Station does not exist, stationId: {}", request.getStationId());
+                logger.error("Station does not exist, vendorId: {}, stationId: {}", request.getVendorId(), request.getStationId());
                 return new ResultResponse("0004", "Station does not exist: " + request.getStationId());
-            }
-            
-            // 檢查場站是否屬於該廠商或用戶是否為管理員
-            if (!station.getVendorId().equals(request.getVendorId()) && !authorizationService.isCurrentUserAdmin()) {
-                logger.error("Station does not belong to requesting vendor, requestVendorId: {}, stationVendorId: {}, stationId: {}", 
-                        request.getVendorId(), request.getStationId(), station.getVendorId());
-                return new ResultResponse("0003", "No permission to operate on another vendor's station: " + request.getStationId());
             }
             
             // 獲取充電樁列表，如果為null則初始化為空列表
@@ -193,16 +186,9 @@ public class ChargerServiceImpl implements ChargerService {
                     logger.debug("Adding or updating charger, chargerId: {}, connectId: {}", 
                             chargerInfo.getChargerId(), chargerInfo.getConnectId());
                     
-                    // 檢查充電樁和充電槍頭是否存在
-                    CarbonCharger charger = chargerRepository.findByChargerIdAndConnectId(
-                        chargerInfo.getChargerId(), chargerInfo.getConnectId());
-                    
-                    // 若存在，檢查是否屬於該廠商或用戶是否為管理員
-                    if (charger != null && !charger.getVendorId().equals(request.getVendorId()) && !authorizationService.isCurrentUserAdmin()) {
-                        logger.error("Attempting to update another vendor's charger, requestVendorId: {}, chargerVendorId: {}, chargerId: {}", 
-                                request.getVendorId(), charger.getVendorId(), chargerInfo.getChargerId());
-                        return new ResultResponse("0003", "No permission to operate on another vendor's charger: " + chargerInfo.getChargerId());
-                    }
+                    // 檢查充電樁和充電槍頭是否存在（依 vendorId + stationId + chargerId + connectId 查找）
+                    CarbonCharger charger = chargerRepository.findByVendorIdAndStationIdAndChargerIdAndConnectId(
+                        request.getVendorId(), request.getStationId(), chargerInfo.getChargerId(), chargerInfo.getConnectId());
                     
                     if (charger == null) {
                         // 新增充電樁和充電槍頭
@@ -299,11 +285,12 @@ public class ChargerServiceImpl implements ChargerService {
     @Override
     public CarbonCharger getChargerInfoByIdAndConnectId(String chargerId, String connectId) {
         logger.debug("Getting charger information by ID and connectId, chargerId: {}, connectId: {}", chargerId, connectId);
-        CarbonCharger charger = chargerRepository.findByChargerIdAndConnectId(chargerId, connectId);
+        List<CarbonCharger> list = chargerRepository.findByChargerIdAndConnectId(chargerId, connectId);
+        CarbonCharger charger = (list != null && !list.isEmpty()) ? list.get(0) : null;
         
         if (charger != null) {
             // 為充電樁添加充電站名稱並轉換時區
-            CarbonStation station = stationRepository.findByStationId(charger.getStationId());
+            CarbonStation station = stationRepository.findByVendorIdAndStationId(charger.getVendorId(), charger.getStationId());
             if (station != null) {
                 charger.setStationName(station.getStationName());
             }
