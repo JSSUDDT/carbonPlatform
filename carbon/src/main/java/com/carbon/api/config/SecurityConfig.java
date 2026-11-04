@@ -57,6 +57,8 @@ public class SecurityConfig {
                         .antMatchers("/favicon.ico").permitAll()
                         .antMatchers("/*.js").permitAll()
                         .antMatchers("/*.css").permitAll()
+                        // 離線填報範本允許下載
+                        .antMatchers("/api/vendor/offline-onboarding/template").permitAll()
                         // 需要認證且需要特定角色的接口
                         .antMatchers("/api/admin/**").hasRole("ADMIN")
                         // 所有其他接口需要認證

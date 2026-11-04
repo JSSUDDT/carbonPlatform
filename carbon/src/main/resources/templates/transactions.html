@@ -101,6 +101,16 @@
                                 <i class="fas fa-file-excel mr-1"></i><span th:text="#{export.excel}">匯出Excel</span>
                             </button>
                         </div>
+                        <div class="btn-group mr-2">
+                            <button type="button" class="btn btn-sm btn-outline-info" id="downloadOfflineTemplateBtn" title="下載包含詳細填報指南與範例的標準 Excel 範本">
+                                <i class="fas fa-download mr-1"></i><span>下載建置範本</span>
+                            </button>
+                        </div>
+                        <div class="btn-group mr-2">
+                            <button type="button" class="btn btn-sm btn-primary" id="openOfflineImportBtn" data-toggle="modal" data-target="#offlineImportModal" title="從零一鍵開通業者帳號、場站、充電槍並寫入交易紀錄">
+                                <i class="fas fa-file-upload mr-1"></i><span>離線建置匯入</span>
+                            </button>
+                        </div>
                         <select class="custom-select custom-select-sm mr-2" id="countryFilter" style="min-width: 100px; max-width: 120px;">
                             <option value="" th:text="#{transactions.allCountries}">全部國家</option>
                             <!-- 國家選項將通過JavaScript加載 -->
@@ -204,6 +214,67 @@
                         <p class="card-text" th:text="#{transactions.ecoDesc}">
                             通過使用電動車充電系統，我們為減少碳排放做出了貢獻。根據統計，相比傳統燃油車輛，每充電1kWh可減少約0.5kg的碳排放。
                         </p>
+                    </div>
+                </div>
+            
+                <!-- 離線業者一站式建置匯入 Modal -->
+                <div class="modal fade" id="offlineImportModal" tabindex="-1" role="dialog" aria-labelledby="offlineImportModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title" id="offlineImportModalLabel">
+                                    <i class="fas fa-file-import mr-2"></i>離線業者一站式建置與交易匯入
+                                </h5>
+                                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-info">
+                                    <h6><i class="fas fa-info-circle mr-1"></i> 功能說明：</h6>
+                                    <p class="small mb-1">• 本功能專供<strong>從零建置</strong>之離線業者，上傳 Excel 即可一鍵同時「開通業者帳號」、「建立充電站」、「建立充電槍」與「匯入交易明細」。</p>
+                                    <p class="small mb-1">• 請務必使用官方標準格式。如尚未取得範本，可點擊下方按鈕下載。</p>
+                                    <p class="small mb-0">• 匯入完成後，業者即可直接以此帳密登入系統查看專屬數據。</p>
+                                </div>
+
+                                <form id="offlineImportForm">
+                                    <div class="form-group">
+                                        <label for="offlineExcelFile" class="font-weight-bold">選擇填妥之 Excel 檔案 (.xlsx / .xls)：</label>
+                                        <div class="custom-file">
+                                            <input type="file" class="custom-file-input" id="offlineExcelFile" accept=".xlsx, .xls" required>
+                                            <label class="custom-file-label" for="offlineExcelFile" id="offlineExcelFileLabel">請選擇檔案...</label>
+                                        </div>
+                                    </div>
+                                </form>
+
+                                <div id="offlineImportProgress" class="d-none text-center my-3">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="sr-only">處理中...</span>
+                                    </div>
+                                    <p class="mt-2 text-muted">正在解析並執行階層式入庫，請稍候...</p>
+                                </div>
+
+                                <div id="offlineImportResult" class="d-none mt-3">
+                                    <div class="card border-success">
+                                        <div class="card-header bg-success text-white font-weight-bold">
+                                            <i class="fas fa-check-circle mr-1"></i> 匯入成果回報
+                                        </div>
+                                        <div class="card-body">
+                                            <pre id="offlineImportResultText" class="mb-0 text-dark" style="white-space: pre-wrap; font-family: inherit; font-size: 0.95rem;"></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" id="modalDownloadTemplateBtn">
+                                    <i class="fas fa-download mr-1"></i>下載標準範本
+                                </button>
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
+                                <button type="button" class="btn btn-primary" id="startOfflineImportBtn">
+                                    <i class="fas fa-upload mr-1"></i>開始執行匯入
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </main>
@@ -980,6 +1051,73 @@
             });
             
             // 加載充電記錄數據（使用預設的兩週日期範圍）
+            
+            // 下載離線建置填報範本
+            $('#downloadOfflineTemplateBtn, #modalDownloadTemplateBtn').on('click', function() {
+                window.location.href = '/carbon/api/vendor/offline-onboarding/template';
+            });
+
+            // 檔案選擇變更顯示檔名
+            $('#offlineExcelFile').on('change', function(e) {
+                const fileName = e.target.files[0] ? e.target.files[0].name : '請選擇檔案...';
+                $('#offlineExcelFileLabel').text(fileName);
+            });
+
+            // 開始執行一站式匯入
+            $('#startOfflineImportBtn').on('click', async function() {
+                const fileInput = document.getElementById('offlineExcelFile');
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    alert('請先選擇要匯入的 Excel 檔案！');
+                    return;
+                }
+
+                const file = fileInput.files[0];
+                const formData = new FormData();
+                formData.append('file', file);
+
+                $('#offlineImportProgress').removeClass('d-none');
+                $('#offlineImportResult').addClass('d-none');
+                $('#startOfflineImportBtn').prop('disabled', true);
+
+                try {
+                    const token = getAuthToken();
+                    const headers = {};
+                    if (token) {
+                        headers['Authorization'] = 'Bearer ' + token;
+                    }
+
+                    const response = await fetch('/carbon/api/vendor/offline-onboarding/import', {
+                        method: 'POST',
+                        headers: headers,
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    $('#offlineImportProgress').addClass('d-none');
+                    $('#startOfflineImportBtn').prop('disabled', false);
+
+                    if (result && (result.code === '0000' || result.resultCode === '0000')) {
+                        $('#offlineImportResult').removeClass('d-none');
+                        $('#offlineImportResult .card').removeClass('border-danger').addClass('border-success');
+                        $('#offlineImportResult .card-header').removeClass('bg-danger').addClass('bg-success').html('<i class="fas fa-check-circle mr-1"></i> 匯入成果回報');
+                        $('#offlineImportResultText').text(result.resultMsg || result.message || '匯入成功！');
+                        // 重新加載資料庫最新交易記錄
+                        loadTransactions('', '', startTimeFrom, startTimeTo);
+                    } else {
+                        $('#offlineImportResult').removeClass('d-none');
+                        $('#offlineImportResult .card').removeClass('border-success').addClass('border-danger');
+                        $('#offlineImportResult .card-header').removeClass('bg-success').addClass('bg-danger').html('<i class="fas fa-times-circle mr-1"></i> 匯入失敗');
+                        $('#offlineImportResultText').text(result.resultMsg || result.message || '發生未知錯誤');
+                    }
+                } catch (err) {
+                    $('#offlineImportProgress').addClass('d-none');
+                    $('#startOfflineImportBtn').prop('disabled', false);
+                    $('#offlineImportResult').removeClass('d-none');
+                    $('#offlineImportResult .card').removeClass('border-success').addClass('border-danger');
+                    $('#offlineImportResult .card-header').removeClass('bg-success').addClass('bg-danger').html('<i class="fas fa-times-circle mr-1"></i> 連線或處理異常');
+                    $('#offlineImportResultText').text('錯誤：' + err.message);
+                }
+            });
             loadTransactions('', '', startTimeFrom, startTimeTo);
         });
     </script>

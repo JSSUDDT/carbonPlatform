@@ -13,6 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletOutputStream;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -43,6 +46,9 @@ public class VendorController {
     
     @Autowired
     private ExportService exportService;
+
+    @Autowired
+    private OfflineOnboardingService offlineOnboardingService;
     
     @PostMapping("/GetToken")
     public ResponseEntity<TokenResponse> getToken(@Valid @RequestBody TokenRequest request) {
@@ -633,4 +639,41 @@ public class VendorController {
                     .body(("匯出失敗: " + e.getMessage()).getBytes());
         }
     }
-} 
+
+    /**
+     * 下載離線業者一站式建置填報標準 Excel 範本
+     */
+    @GetMapping("/offline-onboarding/template")
+    public void downloadOfflineOnboardingTemplate(HttpServletResponse response) {
+        try {
+            logger.info("收到下載離線業者建置填報範本請求");
+            java.io.ByteArrayOutputStream out = offlineOnboardingService.generateTemplateExcel();
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            String fileName = java.net.URLEncoder.encode("碳權平台_離線業者一站式建置填報範本.xlsx", "UTF-8").replaceAll("\\+", "%20");
+            response.setHeader("Content-Disposition", String.format("attachment; filename*=UTF-8''%s", fileName));
+            response.setContentLength(out.size());
+            ServletOutputStream sos = response.getOutputStream();
+            out.writeTo(sos);
+            sos.flush();
+            logger.info("離線業者建置範本下載完成，大小: {} bytes", out.size());
+        } catch (Exception e) {
+            logger.error("產製離線建置範本失敗", e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * 離線業者一站式 Excel 匯入
+     */
+    @PostMapping("/offline-onboarding/import")
+    public ResponseEntity<ResultResponse> importOfflineOnboardingData(@RequestParam("file") MultipartFile file) {
+        logger.info("收到離線業者一站式 Excel 匯入請求，檔名: {}", file != null ? file.getOriginalFilename() : "null");
+        try {
+            ResultResponse result = offlineOnboardingService.importOfflineData(file);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            logger.error("離線業者一站式匯入處理異常", e);
+            return ResponseEntity.ok(new ResultResponse("0001", "匯入失敗: " + e.getMessage()));
+        }
+    }
+}
