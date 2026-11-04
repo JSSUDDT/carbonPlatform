@@ -441,10 +441,13 @@
                 endDate: moment()
             });
             
-            // Default: do not force 14-day date range filter on load
-            startTimeFrom = '';
-            startTimeTo = '';
-            $('#dateRangePicker').val('');
+            // 設定預設日期範圍為最近兩週 (14天)，避免一次載入過多歷史交易
+            const defaultStartDate = moment().subtract(14, 'days');
+            const defaultEndDate = moment();
+            
+            $('#dateRangePicker').val(defaultStartDate.format('YYYY-MM-DD') + ' - ' + defaultEndDate.format('YYYY-MM-DD'));
+            startTimeFrom = defaultStartDate.format('YYYY-MM-DD') + ' 00:00:00';
+            startTimeTo = defaultEndDate.format('YYYY-MM-DD') + ' 23:59:59';
             $('#dateRangePicker').on('apply.daterangepicker', function(ev, picker) {
                 $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
                 // 設置開始時間為當天 00:00:00
@@ -880,9 +883,11 @@
             $('#searchInput').val('');
             $('#countryFilter').val('');
             $('#stationFilter').val('');
-            $('#dateRangePicker').val('');
-            startTimeFrom = '';
-            startTimeTo = '';
+            const defaultStartDate = moment().subtract(14, 'days');
+            const defaultEndDate = moment();
+            $('#dateRangePicker').val(defaultStartDate.format('YYYY-MM-DD') + ' - ' + defaultEndDate.format('YYYY-MM-DD'));
+            startTimeFrom = defaultStartDate.format('YYYY-MM-DD') + ' 00:00:00';
+            startTimeTo = defaultEndDate.format('YYYY-MM-DD') + ' 23:59:59';
             // 重新填充充電站篩選（因為國家篩選被清空了）
             populateStationFilter();
         }
