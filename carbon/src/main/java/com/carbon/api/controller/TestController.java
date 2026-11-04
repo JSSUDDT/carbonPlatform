@@ -1,9 +1,12 @@
 package com.carbon.api.controller;
 
+import com.carbon.api.entity.CarbonVendor;
+import com.carbon.api.repository.VendorRepository;
 import com.carbon.api.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Base64;
@@ -16,6 +19,9 @@ public class TestController {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private VendorRepository vendorRepository;
 
     @GetMapping("/check-auth")
     public Map<String, Object> checkAuth() {
@@ -57,15 +63,28 @@ public class TestController {
     }
     
     @PostMapping("/generate-test-token")
-    public Map<String, String> generateTestToken(@RequestParam String vendorId) {
+    public Map<String, String> generateTestToken(
+            @RequestParam String vendorId,
+            @RequestParam(required = false) String role) {
         Map<String, String> response = new HashMap<>();
-        String token = jwtTokenProvider.generateToken(vendorId);
+        String actualRole = role;
+        if (!StringUtils.hasText(actualRole)) {
+            CarbonVendor vendor = vendorRepository.findByVendorId(vendorId);
+            if (vendor != null && StringUtils.hasText(vendor.getRole())) {
+                actualRole = vendor.getRole();
+            } else {
+                actualRole = "ROLE_USER";
+            }
+        }
+        String token = jwtTokenProvider.generateToken(vendorId, actualRole);
         response.put("token", token);
         return response;
     }
     
     @GetMapping("/generate-test-token")
-    public Map<String, String> generateTestTokenGet(@RequestParam String vendorId) {
-        return generateTestToken(vendorId);
+    public Map<String, String> generateTestTokenGet(
+            @RequestParam String vendorId,
+            @RequestParam(required = false) String role) {
+        return generateTestToken(vendorId, role);
     }
-} 
+}

@@ -467,7 +467,7 @@ public class OfflineOnboardingServiceImpl implements OfflineOnboardingService {
                 String conId = cleanCell(df.formatCellValue(row.getCell(2)));
                 String enableDate = cleanCell(df.formatCellValue(row.getCell(3)));
 
-                if (isSampleOrEmpty(chId) || !StringUtils.hasText(conId)) continue;
+                if (isSampleOrEmpty(stId) || isSampleOrEmpty(chId) || !StringUtils.hasText(conId)) continue;
                 if (!StringUtils.hasText(stId)) {
                     // 若無填寫 stationId，嘗試綁定唯一存在的站
                     if (stationCache.size() == 1) {
@@ -514,7 +514,7 @@ public class OfflineOnboardingServiceImpl implements OfflineOnboardingService {
                 String endTime = cleanCell(df.formatCellValue(row.getCell(5)));
                 String kwh = cleanCell(df.formatCellValue(row.getCell(6)));
 
-                if (isSampleOrEmpty(transNo)) continue;
+                if (isSampleOrEmpty(transNo) || isSampleOrEmpty(stId) || isSampleOrEmpty(chId)) continue;
                 transTotal++;
 
                 // 防重檢核 (0006)
