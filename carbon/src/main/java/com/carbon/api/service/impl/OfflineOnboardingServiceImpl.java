@@ -387,13 +387,11 @@ public class OfflineOnboardingServiceImpl implements OfflineOnboardingService {
                 return new ResultResponse("0001", "Sheet 1【1_業者帳號】未填寫有效之業者代碼 (vendorId) 或密碼 (password)");
             }
 
-            // 權限檢查：若當前登入者為一般業者 (ROLE_USER)，只能處理自身的 vendorId
+            // 權限檢查：僅系統管理員 (ROLE_ADMIN) 具備離線建置與匯入權限，普通業者 (ROLE_USER) 不允許上傳/匯入
             if (!authorizationService.isCurrentUserAdmin()) {
                 String currentLoggedInVendor = authorizationService.getCurrentVendorId();
-                if (!targetVendorId.equalsIgnoreCase(currentLoggedInVendor)) {
-                    logger.warn("User {} attempted to import for vendor {}", currentLoggedInVendor, targetVendorId);
-                    return new ResultResponse("0003", "無權限為其他業者建立或匯入資料 (操作帳號與 Excel 業者代碼不符)");
-                }
+                logger.warn("Non-admin user {} attempted to import offline data", currentLoggedInVendor);
+                return new ResultResponse("0003", "權限不足，僅系統管理員 (ROLE_ADMIN) 可執行離線匯入功能");
             }
 
             boolean vendorCreated = false;

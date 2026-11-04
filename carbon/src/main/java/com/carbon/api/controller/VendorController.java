@@ -663,11 +663,17 @@ public class VendorController {
     }
 
     /**
-     * 離線業者一站式 Excel 匯入
+     * 離線業者一站式 Excel 匯入 (僅限系統管理員 ROLE_ADMIN)
      */
     @PostMapping("/offline-onboarding/import")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResultResponse> importOfflineOnboardingData(@RequestParam("file") MultipartFile file) {
         logger.info("收到離線業者一站式 Excel 匯入請求，檔名: {}", file != null ? file.getOriginalFilename() : "null");
+        if (!authorizationService.isCurrentUserAdmin()) {
+            logger.warn("Non-admin user attempted to import offline data");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ResultResponse("0003", "權限不足，僅系統管理員 (ROLE_ADMIN) 可執行離線匯入功能"));
+        }
         try {
             ResultResponse result = offlineOnboardingService.importOfflineData(file);
             return ResponseEntity.ok(result);
