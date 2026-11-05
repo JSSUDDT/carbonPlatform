@@ -59,4 +59,17 @@ Thumbs.db
 *.docx
 *.pptx
 ~$*
-test_results.json 
+test_results.json
+
+# Local Backups & Scratch
+backup/
+scratch/
+匯入資料/
+
+# Local Test Scripts & PDF Manuals
+test_api_suite.ps1
+*.pdf
+
+# Local Working & Memo Files
+* - 複製.*
+carbon/老闆指示.txt
