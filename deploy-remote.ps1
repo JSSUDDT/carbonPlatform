@@ -1,4 +1,4 @@
-﻿# ===================================================================
+# ===================================================================
 # 碳權交易平台 - 遠端伺服器一鍵部署工具 (PowerShell CLI)
 # 支援環境: 測試環境 (SIT) / 正式環境 (PROD)
 # ===================================================================
@@ -218,7 +218,7 @@ if ($RestartOnly) {
     Invoke-RemoteSSH $CurrentEnv $stopCmd
 
     Write-Host ">>> [2/3] 正在背景啟動服務 (Profile: $($CurrentEnv.Profile), 時區: Asia/Taipei)..." -ForegroundColor Yellow
-    $startCmd = "cd $($CurrentEnv.RemoteDir) && nohup java -Duser.timezone=Asia/Taipei -jar carbon-0.0.1-SNAPSHOT.jar --spring.profiles.active=$($CurrentEnv.Profile) </dev/null > logs/console.log 2>&1 &"
+    $startCmd = "if [ -f $($CurrentEnv.RemoteDir)/start.sh ]; then chmod +x $($CurrentEnv.RemoteDir)/start.sh && $($CurrentEnv.RemoteDir)/start.sh; else cd $($CurrentEnv.RemoteDir) && nohup java -Duser.timezone=Asia/Taipei -jar carbon-0.0.1-SNAPSHOT.jar --spring.profiles.active=$($CurrentEnv.Profile) </dev/null > logs/console.log 2>&1 & fi"
     Invoke-RemoteSSH $CurrentEnv $startCmd
 
     Write-Host ">>> [3/3] 正在驗證服務就緒狀態 (最多等待 30 秒)..." -ForegroundColor Yellow
@@ -355,7 +355,7 @@ Invoke-RemoteSSH $CurrentEnv "mv -f $tempRemoteJar $($CurrentEnv.RemoteDir)/carb
 
 # ==================== 步驟 4: 停止舊進程並重啟服務 ====================
 Write-Host "`n>>> [步驟 4/5] 正在重啟遠端服務..." -ForegroundColor Yellow
-$restartCmd = "pkill -f 'carbon-0.0.1-SNAPSHOT.jar' || sudo pkill -f 'carbon-0.0.1-SNAPSHOT.jar' || true; sleep 2; pkill -9 -f 'carbon-0.0.1-SNAPSHOT.jar' || sudo pkill -9 -f 'carbon-0.0.1-SNAPSHOT.jar' || true; cd $($CurrentEnv.RemoteDir) && nohup java -Duser.timezone=Asia/Taipei -jar carbon-0.0.1-SNAPSHOT.jar --spring.profiles.active=$($CurrentEnv.Profile) </dev/null > logs/console.log 2>&1 &"
+$restartCmd = "if [ -f $($CurrentEnv.RemoteDir)/start.sh ]; then chmod +x $($CurrentEnv.RemoteDir)/start.sh && $($CurrentEnv.RemoteDir)/start.sh; else pkill -f 'carbon-0.0.1-SNAPSHOT.jar' || sudo pkill -f 'carbon-0.0.1-SNAPSHOT.jar' || true; sleep 3; pkill -9 -f 'carbon-0.0.1-SNAPSHOT.jar' || sudo pkill -9 -f 'carbon-0.0.1-SNAPSHOT.jar' || true; sleep 2; cd $($CurrentEnv.RemoteDir) && nohup java -Duser.timezone=Asia/Taipei -jar carbon-0.0.1-SNAPSHOT.jar --spring.profiles.active=$($CurrentEnv.Profile) </dev/null > logs/console.log 2>&1 & fi"
 Invoke-RemoteSSH $CurrentEnv $restartCmd
 
 # ==================== 步驟 5: 驗證服務健康狀態 ====================
