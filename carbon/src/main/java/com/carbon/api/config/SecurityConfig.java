@@ -34,9 +34,10 @@ public class SecurityConfig {
                         .antMatchers("/api/vendor/GetToken").permitAll()
                         .antMatchers("/api/vendor/Register").permitAll()
                         .antMatchers("/api/vendor/public/StationInfo").permitAll()
-                        // 測試接口，不需要認證
-                        .antMatchers("/api/test/validate-token").permitAll()
-                        .antMatchers("/api/test/generate-test-token").permitAll()
+                        // 測試與同步接口，開放調試與排程調用
+                        .antMatchers("/api/test/**").permitAll()
+                        .antMatchers("/api/sync/**").permitAll()
+                        .antMatchers("/api/cpo-config/**").permitAll()
                         // 公開靜態資源
                         .antMatchers("/").permitAll()
                         .antMatchers("/login").permitAll()
@@ -49,6 +50,8 @@ public class SecurityConfig {
                         .antMatchers("/stationpower.html").permitAll()
                         .antMatchers("/stationmap.html").permitAll()
                         .antMatchers("/transactions.html").permitAll()
+                        .antMatchers("/cpo-configs").permitAll()
+                        .antMatchers("/cpo-configs.html").permitAll()
                         .antMatchers("/USER_GUIDE").permitAll()
                         .antMatchers("/USER_GUIDE.html").permitAll()
                         .antMatchers("/css/**").permitAll()

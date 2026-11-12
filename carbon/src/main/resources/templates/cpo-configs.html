@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>業者 API 連線管理 - 碳權平台</title>
+    <!-- Bootstrap 4 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- 自定義CSS -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        .flag-icon {
+            width: 20px;
+            height: 15px;
+            margin-right: 8px;
+            vertical-align: middle;
+            border-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .action-buttons .btn {
+            margin-right: 4px;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.85rem;
+        }
+        .url-truncate {
+            max-width: 260px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: inline-block;
+            vertical-align: middle;
+            font-family: monospace;
+            font-size: 0.88rem;
+        }
+        .stat-card {
+            border-radius: 8px;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transition: transform 0.2s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        .token-badge {
+            font-family: monospace;
+            background: #f1f3f5;
+            color: #495057;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.82rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+        <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="#">
+            <i class="fas fa-leaf mr-2"></i><span th:text="#{app.name}">碳權平台</span>
+        </a>
+        <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-toggle="collapse" data-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <ul class="navbar-nav px-3 ml-auto d-flex flex-row">
+            <li class="nav-item dropdown mr-3">
+                <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-globe-asia mr-2"></i><span th:text="#{language.select}">語言</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="languageDropdown">
+                    <button class="dropdown-item language-switch-btn" data-lang="en">
+                        <img src="https://cdn.jsdelivr.net/npm/flag-icon-css@3.5.0/flags/4x3/us.svg" class="flag-icon" alt="USA flag">
+                        <span th:text="#{language.en}">English</span>
+                    </button>
+                    <button class="dropdown-item language-switch-btn" data-lang="zh_TW">
+                        <img src="https://cdn.jsdelivr.net/npm/flag-icon-css@3.5.0/flags/4x3/tw.svg" class="flag-icon" alt="Taiwan flag">
+                        <span th:text="#{language.zh}">繁體中文</span>
+                    </button>
+                </div>
+            </li>
+            <li class="nav-item text-nowrap">
+                <a class="nav-link" href="#" onclick="logout()">
+                    <i class="fas fa-sign-out-alt mr-2"></i><span th:text="#{nav.logout}">退出</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 引入側邊欄 -->
+            <div th:replace="sidebar :: sidebar"></div>
+            
+            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <div>
+                        <h1 class="h2 mb-1">
+                            <i class="fas fa-network-wired text-primary mr-2"></i>
+                            <span>業者 API 連線管理</span>
+                        </h1>
+                        <p class="text-muted small mb-0">管理合作充電營運商 (CPO) 之單一數據查詢 API 端點，支援排程增量拉取、手動補抓與即時連線測試。</p>
+                    </div>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button class="btn btn-outline-secondary mr-2" id="refreshBtn">
+                            <i class="fas fa-sync-alt mr-1"></i>刷新
+                        </button>
+                        <button class="btn btn-outline-info mr-2" id="syncAllBtn">
+                            <i class="fas fa-bolt mr-1"></i>全量排程立即執行
+                        </button>
+                        <button class="btn btn-primary" id="addConfigBtn">
+                            <i class="fas fa-plus mr-1"></i>新增業者 API
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 統計卡片 -->
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="card stat-card bg-light border-left border-primary" style="border-left-width: 4px !important;">
+                            <div class="card-body py-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="text-muted small">總連線業者數</div>
+                                        <h3 class="font-weight-bold mb-0 text-dark" id="statTotal">0</h3>
+                                    </div>
+                                    <i class="fas fa-building fa-2x text-primary opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card stat-card bg-light border-left border-success" style="border-left-width: 4px !important;">
+                            <div class="card-body py-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="text-muted small">自動排程啟用中</div>
+                                        <h3 class="font-weight-bold mb-0 text-success" id="statActive">0</h3>
+                                    </div>
+                                    <i class="fas fa-check-circle fa-2x text-success opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card stat-card bg-light border-left border-info" style="border-left-width: 4px !important;">
+                            <div class="card-body py-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="text-muted small">介接模式</div>
+                                        <div class="font-weight-bold text-info" style="font-size: 1.15rem;">單一端點增量拉取</div>
+                                    </div>
+                                    <i class="fas fa-cloud-download-alt fa-2x text-info opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 資料表格 Card -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover" id="cpoTable" style="width:100%">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>業者代碼 (Vendor ID)</th>
+                                        <th>業者名稱</th>
+                                        <th>API 端點 URL</th>
+                                        <th>排程狀態</th>
+                                        <th>上次同步時間</th>
+                                        <th>同步狀態與結果</th>
+                                        <th style="min-width: 170px;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- 由 JavaScript 動態渲染 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 新增 / 編輯業者 API Modal -->
+    <div class="modal fade" id="configModal" tabindex="-1" role="dialog" aria-labelledby="configModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="configModalLabel">
+                        <i class="fas fa-network-wired mr-2"></i><span>業者 API 連線設定</span>
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="configForm">
+                        <input type="hidden" id="configId">
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="vendorId" class="font-weight-bold">
+                                    業者識別代碼 (Vendor ID) <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="vendorId" placeholder="例如：TAIPEI_EV" required>
+                                <small class="form-text text-muted">雙方約定之代碼，將作為查詢參數與前台帳號。</small>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="vendorName" class="font-weight-bold">業者名稱 (備註)</label>
+                                <input type="text" class="form-control" id="vendorName" placeholder="例如：台北信義旗艦充電營運">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="apiUrl" class="font-weight-bold">
+                                API 端點 URL (Endpoint) <span class="text-danger">*</span>
+                            </label>
+                            <input type="url" class="form-control font-monospace" id="apiUrl" placeholder="https://cpo-api.example.com/api/v1/carbon/dataset" required>
+                            <small class="form-text text-muted">必須支援 HTTPS GET，單次打包站點、設備與充電明細。</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="token" class="font-weight-bold">授權金鑰 (Bearer Token / API Key)</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control font-monospace" id="token" placeholder="填入雙方約定之 Token (若無驗證可留空)">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleTokenBtn" title="顯示/隱藏 Token">
+                                        <i class="fas fa-eye" id="toggleTokenIcon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="syncIntervalMins" class="font-weight-bold">排程拉取頻率 (分鐘)</label>
+                                <input type="number" class="form-control" id="syncIntervalMins" value="15" min="1" max="1440">
+                                <small class="form-text text-muted">建議預設為 15 分鐘。</small>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold d-block">自動排程狀態</label>
+                                <div class="custom-control custom-switch mt-2">
+                                    <input type="checkbox" class="custom-control-input" id="enabledSwitch" checked>
+                                    <label class="custom-control-label" for="enabledSwitch" id="enabledLabel">啟用自動增量拉取</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 測試連線回饋提示區塊 -->
+                        <div id="testConnAlert" class="alert d-none mt-2" role="alert"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-info mr-auto" id="testConnBtn">
+                        <i class="fas fa-vial mr-1"></i>測試連線 (Test Connection)
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveConfigBtn">
+                        <i class="fas fa-save mr-1"></i>儲存設定
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 手動同步時間區間 Modal -->
+    <div class="modal fade" id="syncModal" tabindex="-1" role="dialog" aria-labelledby="syncModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="syncModalLabel">
+                        <i class="fas fa-cloud-download-alt mr-2"></i><span>手動觸發數據拉取</span>
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">即將向業者端 API 發起增量查詢，並自動進行站點、設備及交易檢核入庫。</p>
+                    <div class="form-group">
+                        <label class="font-weight-bold">目標業者代碼：</label>
+                        <input type="text" class="form-control" id="syncVendorId" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="syncStartTime" class="font-weight-bold">查詢起始時間 (Start Time)：</label>
+                        <input type="text" class="form-control" id="syncStartTime" placeholder="YYYY-MM-DD HH:mm:ss">
+                        <small class="form-text text-muted">預設為 24 小時前。</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="syncEndTime" class="font-weight-bold">查詢截止時間 (End Time)：</label>
+                        <input type="text" class="form-control" id="syncEndTime" placeholder="YYYY-MM-DD HH:mm:ss">
+                        <small class="form-text text-muted">預設為當前時間。</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-info" id="doSyncBtn">
+                        <i class="fas fa-play mr-1"></i>立即執行拉取
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script th:src="@{/js/common.js}"></script>
+
+    <script>
+        let dataTable = null;
+        let cpoList = [];
+
+        function formatDateTime(d) {
+            const pad = (n) => n < 10 ? '0' + n : n;
+            return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' +
+                   pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+        }
+
+        function getAuthHeader() {
+            const token = localStorage.getItem('token');
+            return token ? { 'Authorization': 'Bearer ' + token } : {};
+        }
+
+        async function loadConfigs() {
+            try {
+                const response = await fetch('/carbon/api/cpo-config', {
+                    headers: Object.assign({ 'Accept': 'application/json' }, getAuthHeader())
+                });
+                if (!response.ok) {
+                    throw new Error('無法載入連線清單: HTTP ' + response.status);
+                }
+                cpoList = await response.json();
+                renderTable(cpoList);
+                updateStats(cpoList);
+            } catch (err) {
+                console.error(err);
+                Swal.fire({
+                    icon: 'error',
+                    title: '載入失敗',
+                    text: err.message
+                });
+            }
+        }
+
+        function updateStats(list) {
+            $('#statTotal').text(list.length);
+            const activeCount = list.filter(item => item.enabled === '1' || item.enabled === true).length;
+            $('#statActive').text(activeCount);
+        }
+
+        function renderTable(list) {
+            const tbody = $('#cpoTable tbody');
+            tbody.empty();
+
+            if (!list || list.length === 0) {
+                tbody.append('<tr><td colspan="7" class="text-center py-4 text-muted"><i class="fas fa-inbox fa-2x mb-2 d-block"></i>目前尚無任何業者 API 連線設定，請點選上方「新增業者 API」進行建立。</td></tr>');
+                return;
+            }
+
+            list.forEach(item => {
+                const isEnabled = item.enabled === '1' || item.enabled === true;
+                const statusBadge = isEnabled
+                    ? '<span class="badge badge-success px-2 py-1"><i class="fas fa-check-circle mr-1"></i>已啟用</span>'
+                    : '<span class="badge badge-secondary px-2 py-1"><i class="fas fa-pause-circle mr-1"></i>已停用</span>';
+
+                let syncBadge = '<span class="badge badge-light text-muted">尚未執行</span>';
+                if (item.lastSyncStatus === 'SUCCESS') {
+                    syncBadge = `<span class="badge badge-success" title="${item.lastSyncMessage || '成功'}"><i class="fas fa-check mr-1"></i>成功</span>`;
+                } else if (item.lastSyncStatus === 'FAILED') {
+                    syncBadge = `<span class="badge badge-danger" title="${item.lastSyncMessage || '失敗'}"><i class="fas fa-times mr-1"></i>失敗</span>`;
+                }
+
+                const lastTime = item.lastSyncTime ? item.lastSyncTime : '<span class="text-muted">-</span>';
+                const tokenMasked = item.token ? `<span class="token-badge" title="${item.token}">Bearer ••••••••</span>` : '<span class="text-muted">無</span>';
+
+                const tr = $(`
+                    <tr>
+                        <td><strong class="text-primary">${item.vendorId}</strong></td>
+                        <td>${item.vendorName || item.vendorId}</td>
+                        <td>
+                            <span class="url-truncate" title="${item.apiUrl}">${item.apiUrl}</span>
+                            <button class="btn btn-sm btn-link text-muted p-0 ml-1 copy-url-btn" data-url="${item.apiUrl}" title="複製網址">
+                                <i class="far fa-copy"></i>
+                            </button>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-light border toggle-status-btn" data-vendor="${item.vendorId}">
+                                ${statusBadge}
+                            </button>
+                        </td>
+                        <td><small class="text-muted">${lastTime}</small></td>
+                        <td>
+                            ${syncBadge}
+                            ${item.lastSyncMessage ? `<small class="d-block text-truncate text-muted mt-1" style="max-width:180px;" title="${item.lastSyncMessage}">${item.lastSyncMessage}</small>` : ''}
+                        </td>
+                        <td class="action-buttons">
+                            <button class="btn btn-sm btn-info trigger-sync-btn" data-vendor="${item.vendorId}" data-name="${item.vendorName || item.vendorId}" title="立即拉取">
+                                <i class="fas fa-cloud-download-alt"></i> 同步
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary edit-btn" data-vendor="${item.vendorId}" title="編輯">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-btn" data-vendor="${item.vendorId}" title="刪除">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `);
+                tbody.append(tr);
+            });
+        }
+
+        // 複製網址
+        $(document).on('click', '.copy-url-btn', function() {
+            const url = $(this).data('url');
+            navigator.clipboard.writeText(url).then(() => {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: '已複製 API 網址',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            });
+        });
+
+        // 切換啟用狀態
+        $(document).on('click', '.toggle-status-btn', async function() {
+            const vendorId = $(this).data('vendor');
+            try {
+                const response = await fetch(`/carbon/api/cpo-config/${encodeURIComponent(vendorId)}/toggle`, {
+                    method: 'POST',
+                    headers: Object.assign({ 'Accept': 'application/json' }, getAuthHeader())
+                });
+                if (response.ok) {
+                    loadConfigs();
+                } else {
+                    Swal.fire('錯誤', '切換狀態失敗', 'error');
+                }
+            } catch (e) {
+                Swal.fire('錯誤', e.message, 'error');
+            }
+        });
+
+        // 開啟新增 Modal
+        $('#addConfigBtn').click(function() {
+            $('#configModalLabel span').text('新增業者 API 連線');
+            $('#configId').val('');
+            $('#vendorId').val('').prop('readonly', false);
+            $('#vendorName').val('');
+            $('#apiUrl').val('');
+            $('#token').val('');
+            $('#syncIntervalMins').val(15);
+            $('#enabledSwitch').prop('checked', true);
+            $('#testConnAlert').addClass('d-none');
+            $('#configModal').modal('show');
+        });
+
+        // 開啟編輯 Modal
+        $(document).on('click', '.edit-btn', function() {
+            const vendorId = $(this).data('vendor');
+            const item = cpoList.find(c => c.vendorId === vendorId);
+            if (!item) return;
+
+            $('#configModalLabel span').text('編輯業者 API 連線: ' + vendorId);
+            $('#configId').val(item.id || '');
+            $('#vendorId').val(item.vendorId).prop('readonly', true);
+            $('#vendorName').val(item.vendorName || '');
+            $('#apiUrl').val(item.apiUrl || '');
+            $('#token').val(item.token || '');
+            $('#syncIntervalMins').val(item.syncIntervalMins || 15);
+            $('#enabledSwitch').prop('checked', item.enabled === '1' || item.enabled === true);
+            $('#testConnAlert').addClass('d-none');
+            $('#configModal').modal('show');
+        });
+
+        // 測試連線
+        $('#testConnBtn').click(async function() {
+            const apiUrl = $('#apiUrl').val().trim();
+            const token = $('#token').val().trim();
+            const vendorId = $('#vendorId').val().trim() || 'TEST_VENDOR';
+
+            if (!apiUrl) {
+                Swal.fire('提示', '請先輸入 API 端點 URL', 'warning');
+                return;
+            }
+
+            const alertBox = $('#testConnAlert');
+            alertBox.removeClass('d-none alert-success alert-danger alert-info')
+                    .addClass('alert-info')
+                    .html('<i class="fas fa-spinner fa-spin mr-2"></i>正在發送連線測試請求...');
+
+            try {
+                const response = await fetch('/carbon/api/cpo-config/test-connection', {
+                    method: 'POST',
+                    headers: Object.assign({ 'Content-Type': 'application/json' }, getAuthHeader()),
+                    body: JSON.stringify({ apiUrl, token, vendorId })
+                });
+                const res = await response.json();
+                if (res.success) {
+                    alertBox.removeClass('alert-info').addClass('alert-success')
+                            .html(`<strong><i class="fas fa-check-circle mr-1"></i>連線成功！</strong> ${res.message} (站點: ${res.stationsFound || 0}, 設備: ${res.chargersFound || 0}, 交易: ${res.transactionsFound || 0})`);
+                } else {
+                    alertBox.removeClass('alert-info').addClass('alert-danger')
+                            .html(`<strong><i class="fas fa-times-circle mr-1"></i>連線失敗！</strong> ${res.message}`);
+                }
+            } catch (err) {
+                alertBox.removeClass('alert-info').addClass('alert-danger')
+                        .html(`<strong>連線異常：</strong> ${err.message}`);
+            }
+        });
+
+        // 儲存設定
+        $('#saveConfigBtn').click(async function() {
+            const vendorId = $('#vendorId').val().trim();
+            const apiUrl = $('#apiUrl').val().trim();
+            if (!vendorId || !apiUrl) {
+                Swal.fire('提示', '業者代碼與 API URL 為必填欄位', 'warning');
+                return;
+            }
+
+            const payload = {
+                vendorId: vendorId,
+                vendorName: $('#vendorName').val().trim(),
+                apiUrl: apiUrl,
+                token: $('#token').val().trim(),
+                syncIntervalMins: parseInt($('#syncIntervalMins').val()) || 15,
+                enabled: $('#enabledSwitch').is(':checked') ? '1' : '0'
+            };
+
+            try {
+                const response = await fetch('/carbon/api/cpo-config', {
+                    method: 'POST',
+                    headers: Object.assign({ 'Content-Type': 'application/json' }, getAuthHeader()),
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok) {
+                    $('#configModal').modal('hide');
+                    Swal.fire({
+                        icon: 'success',
+                        title: '儲存成功',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    loadConfigs();
+                } else {
+                    const err = await response.json();
+                    Swal.fire('儲存失敗', err.message || '伺服器處理錯誤', 'error');
+                }
+            } catch (e) {
+                Swal.fire('錯誤', e.message, 'error');
+            }
+        });
+
+        // 刪除設定
+        $(document).on('click', '.delete-btn', function() {
+            const vendorId = $(this).data('vendor');
+            Swal.fire({
+                title: '確定要刪除此連線設定？',
+                text: `業者代號：${vendorId}，刪除後將不再定時拉取其數據。`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: '確定刪除',
+                cancelButtonText: '取消'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`/carbon/api/cpo-config/${encodeURIComponent(vendorId)}`, {
+                            method: 'DELETE',
+                            headers: getAuthHeader()
+                        });
+                        if (response.ok) {
+                            Swal.fire('已刪除', '該業者連線設定已移除', 'success');
+                            loadConfigs();
+                        } else {
+                            Swal.fire('錯誤', '刪除失敗', 'error');
+                        }
+                    } catch (e) {
+                        Swal.fire('錯誤', e.message, 'error');
+                    }
+                }
+            });
+        });
+
+        // 打開手動同步 Modal
+        $(document).on('click', '.trigger-sync-btn', function() {
+            const vendorId = $(this).data('vendor');
+            const vendorName = $(this).data('name');
+            $('#syncVendorId').val(`${vendorName} (${vendorId})`);
+            $('#syncVendorId').data('raw-vendor', vendorId);
+
+            const now = new Date();
+            const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            $('#syncStartTime').val(formatDateTime(yesterday));
+            $('#syncEndTime').val(formatDateTime(now));
+
+            $('#syncModal').modal('show');
+        });
+
+        // 執行單一業者手動同步
+        $('#doSyncBtn').click(async function() {
+            const vendorId = $('#syncVendorId').data('raw-vendor');
+            const startTime = $('#syncStartTime').val().trim();
+            const endTime = $('#syncEndTime').val().trim();
+
+            $('#syncModal').modal('hide');
+            Swal.fire({
+                title: '正在拉取數據...',
+                text: `連線至 ${vendorId} API 中，請稍候`,
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                const url = `/carbon/api/cpo-config/${encodeURIComponent(vendorId)}/sync?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: Object.assign({ 'Accept': 'application/json' }, getAuthHeader())
+                });
+                const res = await response.json();
+                if (res.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '同步作業完成！',
+                        html: `<div class="text-left py-2">
+                                <p class="mb-1"><strong>結果：</strong> ${res.message}</p>
+                                <p class="mb-1"><strong>總拉取筆數：</strong> ${res.totalRecords}</p>
+                                <p class="mb-1 text-success"><strong>成功存檔：</strong> ${res.syncedRecords}</p>
+                                <p class="mb-0 text-muted"><strong>略過筆數：</strong> ${res.skippedRecords}</p>
+                               </div>`
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '同步失敗',
+                        text: res.message || '拉取過程發生異常'
+                    });
+                }
+                loadConfigs();
+            } catch (e) {
+                Swal.fire('錯誤', e.message, 'error');
+            }
+        });
+
+        // 全量立即執行
+        $('#syncAllBtn').click(async function() {
+            Swal.fire({
+                title: '確認全量排程同步？',
+                text: '系統將立即針對所有「已啟用」的業者 API 端點依序執行增量數據拉取。',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '立即執行',
+                cancelButtonText: '取消'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: '全量同步執行中...',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+                    try {
+                        const response = await fetch('/carbon/api/sync/pull', {
+                            method: 'POST',
+                            headers: Object.assign({ 'Accept': 'application/json' }, getAuthHeader())
+                        });
+                        const res = await response.json();
+                        Swal.fire({
+                            icon: res.success ? 'success' : 'warning',
+                            title: '全量同步完成',
+                            text: res.message
+                        });
+                        loadConfigs();
+                    } catch (e) {
+                        Swal.fire('錯誤', e.message, 'error');
+                    }
+                }
+            });
+        });
+
+        // 顯示/隱藏 Token
+        $('#toggleTokenBtn').click(function() {
+            const tokenInput = $('#token');
+            const icon = $('#toggleTokenIcon');
+            if (tokenInput.attr('type') === 'password') {
+                tokenInput.attr('type', 'text');
+                icon.removeClass('fa-eye').addClass('fa-eye-slash');
+            } else {
+                tokenInput.attr('type', 'password');
+                icon.removeClass('fa-eye-slash').addClass('fa-eye');
+            }
+        });
+
+        // 刷新按鈕
+        $('#refreshBtn').click(function() {
+            loadConfigs();
+        });
+
+        // 頁面初始化
+        $(document).ready(function() {
+            loadConfigs();
+        });
+    </script>
+</body>
+</html>

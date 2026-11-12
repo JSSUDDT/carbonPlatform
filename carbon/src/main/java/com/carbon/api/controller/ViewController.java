@@ -96,6 +96,14 @@ public class ViewController {
     }
     
     /**
+     * 業者 API 連線管理頁面
+     */
+    @GetMapping({"/cpo-configs", "/cpo-configs.html"})
+    public String cpoConfigs() {
+        return "cpo-configs";
+    }
+    
+    /**
      * 充電站電力頁面 (暫時隱藏，重定向至充電站管理頁面)
      */
     @GetMapping({"/stationpower", "/stationpower.html"})
