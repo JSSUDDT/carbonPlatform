@@ -49,13 +49,13 @@ public class ChargeServiceTimeNormalizationTest {
         CarbonStation stationLinbros = new CarbonStation();
         stationLinbros.setStationId("ST001");
         stationLinbros.setVendorId("linbros");
-        when(stationRepository.findByStationId("ST001")).thenReturn(stationLinbros);
+        when(stationRepository.findByStationId("ST001")).thenReturn(java.util.Collections.singletonList(stationLinbros));
 
         // Default mock for station ST002 owned by EVRun
         CarbonStation stationEVRun = new CarbonStation();
         stationEVRun.setStationId("ST002");
         stationEVRun.setVendorId("EVRun");
-        when(stationRepository.findByStationId("ST002")).thenReturn(stationEVRun);
+        when(stationRepository.findByStationId("ST002")).thenReturn(java.util.Collections.singletonList(stationEVRun));
     }
 
     @Test
@@ -77,7 +77,7 @@ public class ChargeServiceTimeNormalizationTest {
         request.setTransAry(list);
 
         CarbonCharger charger = new CarbonCharger("CH001", "1", "linbros", "ST001");
-        when(chargerRepository.findByChargerIdAndConnectId("CH001", "1")).thenReturn(charger);
+        when(chargerRepository.findByChargerIdAndConnectId("CH001", "1")).thenReturn(java.util.Collections.singletonList(charger));
 
         // Act
         chargeService.updateChargeInfo(request);
@@ -110,7 +110,7 @@ public class ChargeServiceTimeNormalizationTest {
         request.setTransAry(list);
 
         CarbonCharger charger = new CarbonCharger("CH001", "1", "linbros", "ST001");
-        when(chargerRepository.findByChargerIdAndConnectId("CH001", "1")).thenReturn(charger);
+        when(chargerRepository.findByChargerIdAndConnectId("CH001", "1")).thenReturn(java.util.Collections.singletonList(charger));
 
         // Act
         chargeService.updateChargeInfo(request);
@@ -143,7 +143,7 @@ public class ChargeServiceTimeNormalizationTest {
         request.setTransAry(list);
 
         CarbonCharger charger = new CarbonCharger("CH002", "1", "EVRun", "ST002");
-        when(chargerRepository.findByChargerIdAndConnectId("CH002", "1")).thenReturn(charger);
+        when(chargerRepository.findByChargerIdAndConnectId("CH002", "1")).thenReturn(java.util.Collections.singletonList(charger));
 
         // Act
         chargeService.updateChargeInfo(request);
@@ -179,7 +179,7 @@ public class ChargeServiceTimeNormalizationTest {
         list.add(trans);
         request.setTransAry(list);
 
-        when(chargerRepository.findByChargerIdAndConnectId("CH001", "1")).thenReturn(charger);
+        when(chargerRepository.findByChargerIdAndConnectId("CH001", "1")).thenReturn(java.util.Collections.singletonList(charger));
 
         // Act
         chargeService.updateChargeInfo(request);
