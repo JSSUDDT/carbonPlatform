@@ -16,6 +16,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
 
@@ -35,6 +37,24 @@ public class DataSyncServiceImpl implements DataSyncService {
 
     @Autowired
     private com.carbon.api.repository.ChargerRepository chargerRepository;
+
+    @Autowired
+    private com.carbon.api.repository.StationRepository stationRepository;
+
+    @Autowired
+    private com.carbon.api.repository.VendorRepository vendorRepository;
+
+    @Autowired
+    private com.carbon.api.repository.CpoConfigRepository cpoConfigRepository;
+
+    @Autowired
+    private com.carbon.api.service.GeocodingService geocodingService;
+
+    @Autowired
+    private com.carbon.api.service.CpoApiClientService cpoApiClientService;
+
+    @Autowired
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
     
     // 外部數據查詢SQL
     private static final String EXTERNAL_QUERY = 
@@ -389,5 +409,374 @@ public class DataSyncServiceImpl implements DataSyncService {
         }
         
         return false;
+    }
+
+    @Override
+    @Transactional
+    public void ensureVendorExists(String vendorId) {
+        if (vendorId == null || vendorId.trim().isEmpty()) {
+            return;
+        }
+        String cleanVendorId = vendorId.trim();
+        com.carbon.api.entity.CarbonVendor vendor = vendorRepository.findByVendorId(cleanVendorId);
+        if (vendor == null) {
+            String initialPassword = "Pass@" + cleanVendorId + "2026!";
+            com.carbon.api.entity.CarbonVendor newVendor = new com.carbon.api.entity.CarbonVendor();
+            newVendor.setVendorId(cleanVendorId);
+            newVendor.setPassword(passwordEncoder.encode(initialPassword));
+            newVendor.setStatus("1"); // 預設啟用
+            newVendor.setRole("ROLE_USER");
+            String now = formatDateTime(LocalDateTime.now());
+            newVendor.setCreateTime(now);
+            newVendor.setUpdateTime(now);
+            vendorRepository.save(newVendor);
+
+            log.warn("=================================================================");
+            log.warn(">>> [Vendor Auto-Provisioned] 新業者帳號已由 CPO API 同步自動建立！");
+            log.warn(">>> 業者代號 (vendorId): {}", cleanVendorId);
+            log.warn(">>> 初始預設密碼       : {}", initialPassword);
+            log.warn("=================================================================");
+        }
+    }
+
+    @Override
+    @Transactional
+    public SyncResult syncFromCpoApi(String apiUrl, String token, String vendorId, String startTime, String endTime) {
+        try {
+            log.info("Starting CPO API data sync for vendor: {}, URL: {}, range: {} ~ {}", vendorId, apiUrl, startTime, endTime);
+
+            if (vendorId == null || vendorId.trim().isEmpty()) {
+                return SyncResult.failure("vendorId cannot be empty", "Missing vendorId parameter");
+            }
+            String cleanVendorId = vendorId.trim();
+
+            // Step 0: 自動審查並開通廠商帳號
+            ensureVendorExists(cleanVendorId);
+
+            // 呼叫 CPO Client 自動分頁拉取數據
+            com.carbon.api.dto.external.cpo.CpoDatasetData data = cpoApiClientService.fetchAllPages(
+                    apiUrl, token, cleanVendorId, startTime, endTime, 1000
+            );
+
+            if (data == null) {
+                return SyncResult.failure("Failed to retrieve dataset from CPO API", "CPO response data is null");
+            }
+
+            // Step 1: 站點同步 (Stations)
+            int stationCount = 0;
+            if (data.getStations() != null) {
+                for (com.carbon.api.dto.external.cpo.CpoStationDto st : data.getStations()) {
+                    if (st == null || st.getStationId() == null || st.getStationId().trim().isEmpty()) {
+                        continue;
+                    }
+                    String stId = st.getStationId().trim();
+                    com.carbon.api.entity.CarbonStation station = stationRepository.findByVendorIdAndStationId(cleanVendorId, stId);
+                    if (station == null) {
+                        station = new com.carbon.api.entity.CarbonStation();
+                        station.setVendorId(cleanVendorId);
+                        station.setStationId(stId);
+                        station.setStationName(st.getStationName() != null ? st.getStationName() : stId);
+                        station.setGpsLatitude(st.getGpsLatitude());
+                        station.setGpsLongitude(st.getGpsLongitude());
+                        station.setAddress(st.getAddress());
+                        station.setStationStatus("1");
+                        
+                        // 逆地理編碼反查國家代碼
+                        if (st.getGpsLatitude() != null && st.getGpsLongitude() != null) {
+                            try {
+                                String country = geocodingService.getCountryCode(st.getGpsLatitude(), st.getGpsLongitude());
+                                station.setCountry((country != null && !country.isEmpty()) ? country : "TW");
+                            } catch (Exception e) {
+                                station.setCountry("TW");
+                            }
+                        } else {
+                            station.setCountry("TW");
+                        }
+                        
+                        String now = formatDateTime(LocalDateTime.now());
+                        station.setCreateTime(now);
+                        station.setUpdateTime(now);
+                        stationRepository.save(station);
+                        stationCount++;
+                        log.debug("Auto-created station: {} for vendor {}", stId, cleanVendorId);
+                    } else {
+                        boolean modified = false;
+                        if (st.getStationName() != null && !st.getStationName().equals(station.getStationName())) {
+                            station.setStationName(st.getStationName());
+                            modified = true;
+                        }
+                        if (st.getGpsLatitude() != null && !st.getGpsLatitude().equals(station.getGpsLatitude())) {
+                            station.setGpsLatitude(st.getGpsLatitude());
+                            modified = true;
+                        }
+                        if (st.getGpsLongitude() != null && !st.getGpsLongitude().equals(station.getGpsLongitude())) {
+                            station.setGpsLongitude(st.getGpsLongitude());
+                            modified = true;
+                        }
+                        if (st.getAddress() != null && !st.getAddress().equals(station.getAddress())) {
+                            station.setAddress(st.getAddress());
+                            modified = true;
+                        }
+                        if (modified) {
+                            station.setUpdateTime(formatDateTime(LocalDateTime.now()));
+                            stationRepository.save(station);
+                        }
+                    }
+                }
+            }
+
+            // Step 2: 充電槍頭設備同步 (Chargers)
+            int chargerCount = 0;
+            if (data.getChargers() != null) {
+                for (com.carbon.api.dto.external.cpo.CpoChargerDto ch : data.getChargers()) {
+                    if (ch == null || ch.getStationId() == null || ch.getChargerId() == null || ch.getConnectId() == null) {
+                        continue;
+                    }
+                    String stId = ch.getStationId().trim();
+                    String chId = ch.getChargerId().trim();
+                    String connId = ch.getConnectId().trim();
+
+                    com.carbon.api.entity.CarbonCharger charger = chargerRepository.findByVendorIdAndStationIdAndChargerIdAndConnectId(
+                            cleanVendorId, stId, chId, connId
+                    );
+
+                    if (charger == null) {
+                        charger = new com.carbon.api.entity.CarbonCharger();
+                        charger.setVendorId(cleanVendorId);
+                        charger.setStationId(stId);
+                        charger.setChargerId(chId);
+                        charger.setConnectId(connId);
+                        charger.setFirstEnableDate(ch.getFirstEnableDate());
+                        charger.setChargerType(ch.getChargerType() != null ? ch.getChargerType() : "DC");
+                        charger.setChargerKw(ch.getChargerKw() != null ? ch.getChargerKw() : "120");
+                        charger.setChargerStatus("1");
+                        String now = formatDateTime(LocalDateTime.now());
+                        charger.setCreateTime(now);
+                        charger.setUpdateTime(now);
+                        chargerRepository.save(charger);
+                        chargerCount++;
+                        log.debug("Auto-created charger {}-{} for station {}", chId, connId, stId);
+                    } else {
+                        boolean modified = false;
+                        if (ch.getFirstEnableDate() != null && !ch.getFirstEnableDate().trim().isEmpty()
+                                && !ch.getFirstEnableDate().equals(charger.getFirstEnableDate())) {
+                            charger.setFirstEnableDate(ch.getFirstEnableDate().trim());
+                            modified = true;
+                        }
+                        if (ch.getChargerKw() != null && !ch.getChargerKw().equals(charger.getChargerKw())) {
+                            charger.setChargerKw(ch.getChargerKw());
+                            modified = true;
+                        }
+                        if (ch.getChargerType() != null && !ch.getChargerType().equals(charger.getChargerType())) {
+                            charger.setChargerType(ch.getChargerType());
+                            modified = true;
+                        }
+                        if (modified) {
+                            charger.setUpdateTime(formatDateTime(LocalDateTime.now()));
+                            chargerRepository.save(charger);
+                        }
+                    }
+                }
+            }
+
+            // Step 3: 交易記錄合規入庫 (Transactions - Verra 5455 防呆)
+            List<com.carbon.api.dto.external.cpo.CpoTransactionDto> transactions = data.getTransactions();
+            if (transactions == null || transactions.isEmpty()) {
+                log.info("No transaction records found in CPO API response for vendor {}", cleanVendorId);
+                return SyncResult.builder()
+                        .success(true)
+                        .message("同步完成（站點:" + stationCount + ", 設備:" + chargerCount + ", 交易:0）")
+                        .totalRecords(0)
+                        .syncedRecords(0)
+                        .skippedRecords(0)
+                        .errorRecords(0)
+                        .syncTime(LocalDateTime.now())
+                        .build();
+            }
+
+            int syncedCount = 0;
+            int skippedCount = 0;
+            List<String> successfulTransNos = new ArrayList<>();
+
+            for (com.carbon.api.dto.external.cpo.CpoTransactionDto tx : transactions) {
+                try {
+                    String transNo = tx.getTransNo();
+                    if (transNo == null || transNo.trim().isEmpty()) {
+                        skippedCount++;
+                        continue;
+                    }
+                    transNo = transNo.trim();
+
+                    // 1. 冪等性防重：若已存在則安全略過
+                    if (chargeRepository.findByTransNo(transNo) != null) {
+                        log.debug("Transaction {} already exists, skipping", transNo);
+                        skippedCount++;
+                        continue;
+                    }
+
+                    // 2. 日期時間有效性檢查
+                    String txStartTime = tx.getStartTime();
+                    String txEndTime = tx.getEndTime();
+                    if (isInvalidDate(txStartTime) || isInvalidDate(txEndTime)) {
+                        log.warn("Skipping transaction {} due to invalid date: start={}, end={}", transNo, txStartTime, txEndTime);
+                        skippedCount++;
+                        continue;
+                    }
+
+                    LocalDateTime startDt = parseDateTime(txStartTime);
+                    LocalDateTime endDt = parseDateTime(txEndTime);
+                    if (startDt == null || endDt == null || !startDt.isBefore(endDt)) {
+                        log.warn("Skipping transaction {} due to invalid time sequence: {} -> {}", transNo, txStartTime, txEndTime);
+                        skippedCount++;
+                        continue;
+                    }
+
+                    // 3. Verra 5455: 時長物理極限檢核 (0 < duration <= 72小時)
+                    long durationMinutes = java.time.Duration.between(startDt, endDt).toMinutes();
+                    if (durationMinutes <= 0 || durationMinutes > 72 * 60) {
+                        log.warn("Skipping transaction {} due to duration out of bounds ({} mins)", transNo, durationMinutes);
+                        skippedCount++;
+                        continue;
+                    }
+
+                    // 4. Verra 5455: 電量合理邊界 (0.01 <= kwh <= 1000.00)
+                    Double kwhVal = parseDouble(tx.getKwh());
+                    if (kwhVal == null || kwhVal < 0.01 || kwhVal > 1000.00) {
+                        log.warn("Skipping transaction {} due to abnormal kwh: {}", transNo, kwhVal);
+                        skippedCount++;
+                        continue;
+                    }
+
+                    // 5. Verra 5455: 基準日校驗 (交易開始時間不得早於該槍頭首次啟用日)
+                    String stId = tx.getStationId();
+                    String chId = tx.getChargerId();
+                    String connId = tx.getConnectId();
+                    com.carbon.api.entity.CarbonCharger targetCharger = null;
+                    if (stId != null && chId != null && connId != null) {
+                        targetCharger = chargerRepository.findByVendorIdAndStationIdAndChargerIdAndConnectId(
+                                cleanVendorId, stId.trim(), chId.trim(), connId.trim()
+                        );
+                    }
+
+                    if (targetCharger != null && targetCharger.getFirstEnableDate() != null && !targetCharger.getFirstEnableDate().trim().isEmpty()) {
+                        String enableDateUtc = convertEnableDateToUtc(targetCharger.getFirstEnableDate());
+                        String formattedStart = formatDateTime(startDt);
+                        if (enableDateUtc != null && formattedStart.compareTo(enableDateUtc) < 0) {
+                            log.warn("Skipping transaction {} because startTime ({}) is earlier than firstEnableDate ({})",
+                                    transNo, formattedStart, enableDateUtc);
+                            skippedCount++;
+                            continue;
+                        }
+                    }
+
+                    // 構建碳權充電實體入庫
+                    CarbonCharge charge = new CarbonCharge();
+                    charge.setTransNo(transNo);
+                    charge.setVendorId(cleanVendorId);
+                    charge.setStationId(stId != null ? stId.trim() : "");
+                    charge.setChargerId(chId != null ? chId.trim() : "");
+                    charge.setConnectId(connId != null ? connId.trim() : "1");
+                    charge.setInvoiceNo(tx.getInvoiceNo());
+                    charge.setCarbonCredit("1");
+                    charge.setStartTime(formatDateTime(startDt));
+                    charge.setEndTime(formatDateTime(endDt));
+                    charge.setKwh(formatDouble(kwhVal));
+                    charge.setCarType(tx.getCarType() != null ? tx.getCarType() : "");
+                    charge.setCarNo(tx.getCarNo() != null ? tx.getCarNo() : "");
+
+                    String currentTime = formatDateTime(LocalDateTime.now());
+                    charge.setCreateTime(currentTime);
+                    charge.setUpdateTime(currentTime);
+
+                    chargeRepository.save(charge);
+                    updateChargerFirstTransactionTime(cleanVendorId, charge.getStationId(), charge.getChargerId(), charge.getConnectId(), charge.getStartTime());
+
+                    syncedCount++;
+                    successfulTransNos.add(transNo);
+                } catch (Exception e) {
+                    log.error("Failed to ingest transaction {}: {}", tx.getTransNo(), e.getMessage());
+                    skippedCount++;
+                }
+            }
+
+            log.info("CPO API Sync completed for vendor {}: stations={}, chargers={}, totalTx={}, syncedTx={}, skippedTx={}",
+                    cleanVendorId, stationCount, chargerCount, transactions.size(), syncedCount, skippedCount);
+
+            return SyncResult.builder()
+                    .success(true)
+                    .message(String.format("CPO API 同步成功 (站點新增/更新:%d, 設備新增/更新:%d, 交易入庫:%d, 略過:%d)",
+                            stationCount, chargerCount, syncedCount, skippedCount))
+                    .totalRecords(transactions.size())
+                    .syncedRecords(syncedCount)
+                    .skippedRecords(skippedCount)
+                    .errorRecords(0)
+                    .syncTime(LocalDateTime.now())
+                    .build();
+
+        } catch (Exception e) {
+            log.error("CPO API Sync failed for vendor {}: {}", vendorId, e.getMessage(), e);
+            return SyncResult.failure("CPO API 同步異常: " + e.getMessage(), e.toString());
+        }
+    }
+
+    @Override
+    public SyncResult syncAllConfiguredCpos() {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
+        String startTime = now.minusDays(syncConfig.getSyncDays()).format(dtf);
+        String endTime = now.format(dtf);
+
+        int totalTx = 0;
+        int totalSynced = 0;
+        int totalSkipped = 0;
+        Set<String> processedVendorIds = new HashSet<>();
+
+        // 1. 優先處理資料庫中設定且啟用 (enabled="1") 的 CPO 來源
+        try {
+            List<com.carbon.api.entity.CarbonCpoConfig> dbConfigs = cpoConfigRepository.findByEnabled("1");
+            if (dbConfigs != null && !dbConfigs.isEmpty()) {
+                log.info("Found {} active CPO configurations in database", dbConfigs.size());
+                for (com.carbon.api.entity.CarbonCpoConfig cfg : dbConfigs) {
+                    try {
+                        SyncResult r = syncFromCpoApi(cfg.getApiUrl(), cfg.getToken(), cfg.getVendorId(), startTime, endTime);
+                        totalTx += r.getTotalRecords();
+                        totalSynced += r.getSyncedRecords();
+                        totalSkipped += r.getSkippedRecords();
+                        processedVendorIds.add(cfg.getVendorId().toUpperCase());
+
+                        // 更新執行結果回資料庫記錄
+                        cfg.setLastSyncTime(now.format(dtf));
+                        cfg.setLastSyncStatus(r.isSuccess() ? "SUCCESS" : "FAILED");
+                        cfg.setLastSyncMessage(r.getMessage());
+                        cfg.setUpdateTime(now.format(dtf));
+                        cpoConfigRepository.save(cfg);
+                    } catch (Exception e) {
+                        log.error("Failed to sync DB-configured CPO: {}", cfg.getVendorId(), e);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Could not query carbon_cpo_config table: {}", e.getMessage());
+        }
+
+        // 2. 處理 application.yml 中的備用靜態清單 (排除已在 DB 處理過的業者)
+        List<SyncConfig.CpoApiConfig> sources = syncConfig.getCpoSources();
+        if (sources != null && !sources.isEmpty()) {
+            for (SyncConfig.CpoApiConfig cpo : sources) {
+                if (!cpo.isEnabled() || (cpo.getVendorId() != null && processedVendorIds.contains(cpo.getVendorId().toUpperCase()))) {
+                    continue;
+                }
+                try {
+                    SyncResult r = syncFromCpoApi(cpo.getApiUrl(), cpo.getToken(), cpo.getVendorId(), startTime, endTime);
+                    totalTx += r.getTotalRecords();
+                    totalSynced += r.getSyncedRecords();
+                    totalSkipped += r.getSkippedRecords();
+                } catch (Exception e) {
+                    log.error("Failed to sync YAML-configured CPO: {}", cpo.getVendorId(), e);
+                }
+            }
+        }
+
+        return SyncResult.success(totalTx, totalSynced, totalSkipped);
     }
 }

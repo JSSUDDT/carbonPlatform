@@ -34,6 +34,12 @@ public class DataSyncScheduler {
         try {
             log.info("Scheduled task triggered data synchronization...");
             dataSyncService.syncData();
+            
+            // 若有配置 CPO API 來源，亦定時拉取
+            if (syncConfig.getCpoSources() != null && !syncConfig.getCpoSources().isEmpty()) {
+                log.info("Scheduled task triggering CPO API synchronization...");
+                dataSyncService.syncAllConfiguredCpos();
+            }
         } catch (Exception e) {
             log.error("Scheduled data synchronization failed", e);
         }

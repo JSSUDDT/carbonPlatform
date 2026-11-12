@@ -22,6 +22,21 @@ public class SyncConfig {
     // 即時同步配置
     private RealTime realTime = new RealTime();
     
+    // CPO API 外部來源配置清單
+    private java.util.List<CpoApiConfig> cpoSources = new java.util.ArrayList<>();
+
+    @Data
+    public static class CpoApiConfig {
+        private String vendorId;
+        private String name;
+        private String apiUrl;
+        private String token;
+        private boolean enabled = true;
+        private int connectTimeoutMs = 5000;
+        private int readTimeoutMs = 30000;
+        private int pageSize = 1000;
+    }
+    
     @Data
     public static class RealTime {
         private boolean enabled = true;
