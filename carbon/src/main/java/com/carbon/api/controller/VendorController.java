@@ -666,22 +666,52 @@ public class VendorController {
 
     /**
      * 離線業者一站式 Excel 匯入 (僅限系統管理員 ROLE_ADMIN)
+     * 受理後於背景執行，回傳 jobId，前端以 /offline-onboarding/progress/{jobId} 輪詢進度
      */
     @PostMapping("/offline-onboarding/import")
     @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResultResponse> importOfflineOnboardingData(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<java.util.Map<String, Object>> importOfflineOnboardingData(@RequestParam("file") MultipartFile file) {
         logger.info("收到離線業者一站式 Excel 匯入請求，檔名: {}", file != null ? file.getOriginalFilename() : "null");
+        java.util.Map<String, Object> body = new java.util.LinkedHashMap<>();
         if (!authorizationService.isCurrentUserAdmin()) {
             logger.warn("Non-admin user attempted to import offline data");
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new ResultResponse("0003", "權限不足，僅系統管理員 (ROLE_ADMIN) 可執行離線匯入功能"));
+            body.put("resultCode", "0003");
+            body.put("resultMsg", "權限不足，僅系統管理員 (ROLE_ADMIN) 可執行離線匯入功能");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
         }
         try {
-            ResultResponse result = offlineOnboardingService.importOfflineData(file);
-            return ResponseEntity.ok(result);
+            com.carbon.api.dto.OfflineImportJob job = offlineOnboardingService.startImport(file);
+            body.put("resultCode", "0000");
+            body.put("resultMsg", "已受理，背景匯入中");
+            body.put("jobId", job.getJobId());
+        } catch (com.carbon.api.service.ImportBusyException busy) {
+            body.put("resultCode", "0009");
+            body.put("resultMsg", "目前已有匯入任務執行中，已為您接續顯示該任務進度");
+            body.put("jobId", busy.getRunningJob().getJobId());
+        } catch (IllegalArgumentException bad) {
+            body.put("resultCode", "0001");
+            body.put("resultMsg", bad.getMessage());
         } catch (Exception e) {
-            logger.error("離線業者一站式匯入處理異常", e);
-            return ResponseEntity.ok(new ResultResponse("0001", "匯入失敗: " + e.getMessage()));
+            logger.error("離線業者一站式匯入受理異常", e);
+            body.put("resultCode", "0001");
+            body.put("resultMsg", "匯入失敗: " + e.getMessage());
         }
+        return ResponseEntity.ok(body);
+    }
+
+    /**
+     * 查詢離線匯入進度 (jobId 為 "current" 時，回傳執行中或最近一次任務)
+     */
+    @GetMapping("/offline-onboarding/progress/{jobId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getOfflineImportProgress(@PathVariable("jobId") String jobId) {
+        com.carbon.api.dto.OfflineImportJob job = "current".equals(jobId)
+                ? offlineOnboardingService.getCurrentJob()
+                : offlineOnboardingService.getJob(jobId);
+        if (job == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ResultResponse("0404", "查無此匯入任務"));
+        }
+        return ResponseEntity.ok(job);
     }
 }

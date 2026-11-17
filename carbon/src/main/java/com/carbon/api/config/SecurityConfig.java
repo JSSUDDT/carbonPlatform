@@ -64,6 +64,7 @@ public class SecurityConfig {
                         .antMatchers("/api/vendor/offline-onboarding/template").permitAll()
                         // 離線一站式建置匯入功能僅限系統管理員 ROLE_ADMIN
                         .antMatchers("/api/vendor/offline-onboarding/import").hasRole("ADMIN")
+                        .antMatchers("/api/vendor/offline-onboarding/progress/**").hasRole("ADMIN")
                         // 需要認證且需要特定角色的接口
                         .antMatchers("/api/admin/**").hasRole("ADMIN")
                         // 所有其他接口需要認證

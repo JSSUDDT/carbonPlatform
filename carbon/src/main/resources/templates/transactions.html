@@ -247,11 +247,15 @@
                                     </div>
                                 </form>
 
-                                <div id="offlineImportProgress" class="d-none text-center my-3">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="sr-only">處理中...</span>
+                                <div id="offlineImportProgress" class="d-none my-3">
+                                    <div class="d-flex justify-content-between small text-muted mb-1">
+                                        <span id="offlineImportPhase">準備中...</span>
+                                        <span id="offlineImportCounts"></span>
                                     </div>
-                                    <p class="mt-2 text-muted">正在解析並執行階層式入庫，請稍候...</p>
+                                    <div class="progress" style="height: 22px;">
+                                        <div id="offlineImportBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;">0%</div>
+                                    </div>
+                                    <div class="small text-muted mt-1" id="offlineImportHint">匯入於背景執行，關閉此視窗或重新整理頁面不會中斷，重新開啟即可看到進度。</div>
                                 </div>
 
                                 <div id="offlineImportResult" class="d-none mt-3">
@@ -1070,6 +1074,83 @@
                 $('#offlineExcelFileLabel').text(fileName);
             });
 
+            // ===== 離線匯入：背景執行 + 進度輪詢 =====
+            let offlineImportTimer = null;
+
+            function offlineAuthHeaders() {
+                const token = getAuthToken();
+                return token ? { 'Authorization': 'Bearer ' + token } : {};
+            }
+
+            function showOfflineResult(ok, title, text) {
+                $('#offlineImportResult').removeClass('d-none');
+                $('#offlineImportResult .card').toggleClass('border-success', ok).toggleClass('border-danger', !ok);
+                $('#offlineImportResult .card-header').toggleClass('bg-success', ok).toggleClass('bg-danger', !ok)
+                    .html('<i class="fas ' + (ok ? 'fa-check-circle' : 'fa-times-circle') + ' mr-1"></i> ' + title);
+                $('#offlineImportResultText').text(text);
+            }
+
+            function renderOfflineProgress(job) {
+                $('#offlineImportProgress').removeClass('d-none');
+                const pct = job.percent || 0;
+                $('#offlineImportBar').css('width', pct + '%').text(pct + '%');
+                $('#offlineImportPhase').text((job.phase || '') + (job.fileName ? '（' + job.fileName + '）' : ''));
+                let counts = '';
+                if (job.totalRows > 0) {
+                    counts = '列 ' + job.processedRows + ' / ' + job.totalRows +
+                        '　寫入 ' + job.inserted + '　重複 ' + job.skippedDuplicate + '　異常 ' + job.errorCount;
+                }
+                $('#offlineImportCounts').text(counts);
+            }
+
+            function finishOfflineImport(job) {
+                if (offlineImportTimer) { clearInterval(offlineImportTimer); offlineImportTimer = null; }
+                $('#offlineImportProgress').addClass('d-none');
+                $('#startOfflineImportBtn').prop('disabled', false);
+                let text = job.resultMsg || '';
+                if (job.errors && job.errors.length > 0) {
+                    const shown = job.errors.slice(0, 50);
+                    text += '\n\n異常明細（' + shown.length + ' / ' + job.errorCount + ' 筆）：\n' + shown.join('\n');
+                    if (job.errorCount > shown.length) { text += '\n...其餘請洽管理員查看伺服器日誌'; }
+                }
+                if (job.status === 'DONE') {
+                    showOfflineResult(true, '匯入成果回報', text);
+                    loadTransactions('', '', startTimeFrom, startTimeTo);
+                } else {
+                    showOfflineResult(false, '匯入失敗', text || '發生未知錯誤');
+                }
+            }
+
+            function pollOfflineImport(jobId) {
+                $('#startOfflineImportBtn').prop('disabled', true);
+                $('#offlineImportResult').addClass('d-none');
+                if (offlineImportTimer) { clearInterval(offlineImportTimer); }
+                const tick = async function() {
+                    try {
+                        const resp = await fetch('/carbon/api/vendor/offline-onboarding/progress/' + encodeURIComponent(jobId), { headers: offlineAuthHeaders() });
+                        if (!resp.ok) { return; }
+                        const job = await resp.json();
+                        renderOfflineProgress(job);
+                        if (job.finished) { finishOfflineImport(job); }
+                    } catch (e) {
+                        console.warn('查詢匯入進度失敗，稍後重試', e);
+                    }
+                };
+                tick();
+                offlineImportTimer = setInterval(tick, 1000);
+            }
+
+            // 開啟視窗時，若有執行中的匯入任務則接續顯示進度
+            $('#offlineImportModal').on('shown.bs.modal', async function() {
+                if (offlineImportTimer) { return; }
+                try {
+                    const resp = await fetch('/carbon/api/vendor/offline-onboarding/progress/current', { headers: offlineAuthHeaders() });
+                    if (!resp.ok) { return; }
+                    const job = await resp.json();
+                    if (job && !job.finished) { pollOfflineImport(job.jobId); }
+                } catch (e) { /* 忽略，非必要 */ }
+            });
+
             // 開始執行一站式匯入
             $('#startOfflineImportBtn').on('click', async function() {
                 const fileInput = document.getElementById('offlineExcelFile');
@@ -1078,54 +1159,37 @@
                     return;
                 }
 
-                const file = fileInput.files[0];
                 const formData = new FormData();
-                formData.append('file', file);
+                formData.append('file', fileInput.files[0]);
 
-                $('#offlineImportProgress').removeClass('d-none');
                 $('#offlineImportResult').addClass('d-none');
                 $('#startOfflineImportBtn').prop('disabled', true);
+                $('#offlineImportBar').css('width', '0%').text('上傳中...');
+                $('#offlineImportPhase').text('檔案上傳中...');
+                $('#offlineImportCounts').text('');
+                $('#offlineImportProgress').removeClass('d-none');
 
                 try {
-                    const token = getAuthToken();
-                    const headers = {};
-                    if (token) {
-                        headers['Authorization'] = 'Bearer ' + token;
-                    }
-
                     const response = await fetch('/carbon/api/vendor/offline-onboarding/import', {
                         method: 'POST',
-                        headers: headers,
+                        headers: offlineAuthHeaders(),
                         body: formData
                     });
-
                     const result = await response.json();
-                    $('#offlineImportProgress').addClass('d-none');
-                    $('#startOfflineImportBtn').prop('disabled', false);
-
-                    if (result && (result.code === '0000' || result.resultCode === '0000')) {
-                        $('#offlineImportResult').removeClass('d-none');
-                        $('#offlineImportResult .card').removeClass('border-danger').addClass('border-success');
-                        $('#offlineImportResult .card-header').removeClass('bg-danger').addClass('bg-success').html('<i class="fas fa-check-circle mr-1"></i> 匯入成果回報');
-                        $('#offlineImportResultText').text(result.resultMsg || result.message || '匯入成功！');
-                        // 重新加載資料庫最新交易記錄
-                        loadTransactions('', '', startTimeFrom, startTimeTo);
+                    const code = result && (result.resultCode || result.code);
+                    if ((code === '0000' || code === '0009') && result.jobId) {
+                        pollOfflineImport(result.jobId);
                     } else {
-                        $('#offlineImportResult').removeClass('d-none');
-                        $('#offlineImportResult .card').removeClass('border-success').addClass('border-danger');
-                        $('#offlineImportResult .card-header').removeClass('bg-success').addClass('bg-danger').html('<i class="fas fa-times-circle mr-1"></i> 匯入失敗');
-                        $('#offlineImportResultText').text(result.resultMsg || result.message || '發生未知錯誤');
+                        $('#offlineImportProgress').addClass('d-none');
+                        $('#startOfflineImportBtn').prop('disabled', false);
+                        showOfflineResult(false, '匯入失敗', (result && (result.resultMsg || result.message)) || '發生未知錯誤');
                     }
                 } catch (err) {
                     $('#offlineImportProgress').addClass('d-none');
                     $('#startOfflineImportBtn').prop('disabled', false);
-                    $('#offlineImportResult').removeClass('d-none');
-                    $('#offlineImportResult .card').removeClass('border-success').addClass('border-danger');
-                    $('#offlineImportResult .card-header').removeClass('bg-success').addClass('bg-danger').html('<i class="fas fa-times-circle mr-1"></i> 連線或處理異常');
-                    $('#offlineImportResultText').text('錯誤：' + err.message);
+                    showOfflineResult(false, '連線或處理異常', '錯誤：' + err.message);
                 }
-            });
-            loadTransactions('', '', startTimeFrom, startTimeTo);
+            });            loadTransactions('', '', startTimeFrom, startTimeTo);
         });
     </script>
 </body>
