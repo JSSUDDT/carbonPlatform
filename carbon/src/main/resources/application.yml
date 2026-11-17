@@ -27,6 +27,12 @@ spring:
       force-response: true
       force-request: true
       
+  # 檔案上傳大小限制 (離線業者 Excel 匯入等)
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 25MB
+
   # JSON 序列化時間與時區配置 (強制台北時區 UTC+8)
   jackson:
     time-zone: Asia/Taipei
