@@ -1,6 +1,6 @@
 package com.carbon.api.service;
 
-import com.carbon.api.dto.ResultResponse;
+import com.carbon.api.dto.OfflineImportJob;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
@@ -19,10 +19,15 @@ public interface OfflineOnboardingService {
     ByteArrayOutputStream generateTemplateExcel() throws Exception;
 
     /**
-     * 解析上傳的 Excel 檔案並執行階層式自動入庫
-     * @param file 上傳的 .xlsx 檔案
-     * @return 包含開通與入庫統計結果之 Response
-     * @throws Exception 解析或處理異常
+     * 受理離線匯入並於背景執行 (立即回傳任務，進度請以 getJob 輪詢)
+     * @throws IllegalArgumentException 檔案為空或格式不正確
+     * @throws ImportBusyException 已有匯入任務執行中
      */
-    ResultResponse importOfflineData(MultipartFile file) throws Exception;
+    OfflineImportJob startImport(MultipartFile file) throws Exception;
+
+    /** 依任務編號取得匯入進度 */
+    OfflineImportJob getJob(String jobId);
+
+    /** 取得執行中的任務；若無則回傳最近一次任務 (可能為 null) */
+    OfflineImportJob getCurrentJob();
 }

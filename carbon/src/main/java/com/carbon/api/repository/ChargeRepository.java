@@ -12,6 +12,12 @@ public interface ChargeRepository extends JpaRepository<CarbonCharge, Long> {
      * 根據交易編號查詢充電交易
      */
     CarbonCharge findByTransNo(String transNo);
+
+    /**
+     * 批次查詢已存在的交易編號 (離線匯入防重複用，一次查一批取代逐筆查詢)
+     */
+    @org.springframework.data.jpa.repository.Query("SELECT c.transNo FROM CarbonCharge c WHERE c.transNo IN :ids")
+    List<String> findExistingTransNos(@org.springframework.data.repository.query.Param("ids") java.util.Collection<String> ids);
     
     /**
      * 根據廠商ID、場站ID和充電樁ID查詢充電交易
